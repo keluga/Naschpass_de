@@ -1,0 +1,30 @@
+# Naschpass – Regeln für Claude
+
+Content-Repo für den Kanal **@naschpass_de** (TikTok, Instagram, Pinterest): Karussell-Posts über Süßigkeiten aus aller Welt (Fakten, Verbote, Kuriositäten). Betreiber: Kev. Er hat keine Ware zuhause.
+
+## Harte Regeln
+- **Kein Geld und keine Credits ausgeben** (vidIQ, Higgsfield, bezahlte APIs, Metricool-Upgrade), ohne vorher Kevs OK.
+- **Fakten nur mit Beleg:** Jede Zahl und jedes Datum auf einer geöffneten Webseite prüfen, Quelle in `sources`. Unsicheres weglassen.
+- **Recht:** keine Gesundheitsversprechen (HCVO), nichts Abwertendes über Marken (§ 4 UWG), keine Kaufappelle und keine Ansprache von Kindern (UWG Anh. Nr. 28). Enthält ein Post Affiliate-Links oder Produkte eines Partner-Shops: „Anzeige“ auf Folie 1 und in der Caption.
+- **Keine fremden Bilder** außer CC0/CC BY mit Quellenangabe. Keine Emojis auf Folien, nur in Captions.
+
+## Aufbau
+- `generator/posts.json`: alle Posts (Schema siehe unten). `generator/make_slides.py <id>` rendert nach `fertige_posts/<id>_<name>/` (`01.jpg…`, `pinterest.jpg`, `caption.txt`).
+- `THEMEN.md`: Themenliste mit Status. Immer die nächsten offenen Themen von oben nehmen und den Status aktualisieren.
+- Öffentliche Bild-URL: `https://raw.githubusercontent.com/keluga/naschpass_de/main/fertige_posts/<ordner>/<datei>.jpg`
+
+## Wochenlauf (geplante Aufgabe, sonntags)
+1. `THEMEN.md` lesen und die nächsten 3 offenen Themen nehmen (saisonale Themen rechtzeitig vorziehen).
+2. Recherchieren und 3 Posts als JSON an `generator/posts.json` anhängen (`id` fortlaufend, `theme` 0–3 abwechseln). Textregeln: Hook max. 10 Wörter mit 1–2 `*Akzentwörtern*`, 3–4 Fakten-Folien (Titel max. 5 Wörter, Text max. 40 Wörter), 1 Folie `"senf": true` mit Kevs Meinung und einer Frage, CTA max. 8 Wörter, Caption 1–2 Sätze plus Frage, 6 Hashtags inklusive `naschpass`.
+3. Rendern, eine Kontaktübersicht der Folien ansehen (Text nicht abgeschnitten, keine Überlappung), dann committen und pushen.
+4. Metricool (blogId `7170990`): mit `getScheduledPosts` die Posts des laufenden Monats zählen. **Gratis-Limit: 20 pro Monat, jede Plattform zählt einzeln.** Nur so viele Entwürfe anlegen, dass das Limit nicht überschritten wird. Entwürfe (`draft: true`) für TikTok + Instagram (Karussell, alle Folien in Reihenfolge) auf Mo/Mi/Fr 18:00 Europe/Berlin. Pinterest nur, wenn ein Board verbunden ist und Limit übrig ist.
+5. `THEMEN.md` aktualisieren (Status „Entwurf in Metricool“ oder „Dateien – selbst posten“) und pushen.
+6. Kev eine kurze Nachricht schicken: welche 3 Posts, welche in Metricool liegen, welche er selbst posten muss (mit Links zu den Ordnern auf GitHub).
+
+## JSON-Schema eines Posts
+```json
+{"id":"09","short":"Kurzname","series":"#09","tag":"USA","theme":1,
+ "hook":"…","sub":"…",
+ "slides":[{"label":"…","title":"…","body":"…"},{"label":"Mein Senf","senf":true,"title":"…","body":"…"}],
+ "cta":"…","caption":"…","hashtags":["…"],"sources":[{"title":"…","url":"https://…"}]}
+```

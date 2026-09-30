@@ -1,0 +1,183 @@
+{
+  "brand": "NASCHPASS",
+  "handle": "@naschpass_de",
+  "cta_lines": ["Folgen für die nächste Folge", "Quellen stehen in der Beschreibung"],
+  "pin_footer": "Mehr Snack-Fakten: @naschpass_de auf Instagram & TikTok",
+  "posts": [
+    {
+      "id": "01",
+      "short": "Ueberraschungsei USA",
+      "series": "#01",
+      "tag": "USA vs. EU",
+      "theme": 0,
+      "hook": "Das *Überraschungsei* ist in den USA *verboten.*",
+      "sub": "Und die Amis haben sich was einfallen lassen.",
+      "slides": [
+        {"label": "Das Gesetz", "title": "Kein Spielzeug im Essen", "body": "Das US-Lebensmittelgesetz (Federal Food, Drug, and Cosmetic Act) verbietet Lebensmittel, in denen ein nicht essbarer Gegenstand steckt. Ein Spielzeug in der Schokolade fällt genau darunter."},
+        {"label": "Die Lösung", "title": "*Kinder Joy*", "body": "Ferrero hat das Ei geteilt: eine Hälfte Creme mit Waffelkugeln, die andere Hälfte Spielzeug, getrennt verpackt. Erfunden 2001 in Italien, in den USA seit 2018 im Regal."},
+        {"label": "Der Unterschied", "title": "Schokohülle? Nur bei uns.", "body": "Das klassische Ei mit Schokoladenhülle bleibt in den USA tabu. Selbst im Reisegepäck kann es der US-Zoll einkassieren."},
+        {"label": "Mein Senf", "senf": true, "title": "Heimvorteil Europa", "body": "Ehrlich: Die Schokohülle ist das Beste am ganzen Ei. Kinder Joy ist okay, aber das Original gewinnt. Seht ihr das anders?"}
+      ],
+      "cta": "Überraschungsei oder *Kinder Joy*?",
+      "caption": "Warum es das Überraschungsei in den USA nicht gibt – und was die stattdessen essen 🥚🇺🇸\n\nTeam Schokohülle oder Team Kinder Joy? Schreib's in die Kommentare 👇",
+      "hashtags": ["süßigkeiten", "wusstestdu", "usa", "kinderüberraschung", "snackfakten", "naschpass"],
+      "sources": [
+        {"title": "Wikipedia – Kinder Joy", "url": "https://en.wikipedia.org/wiki/Kinder_Joy"},
+        {"title": "The Takeout – Why Kinder Surprise is banned in the US", "url": "https://www.thetakeout.com/1757234/kinder-surprise-egg-banned-usa/"}
+      ]
+    },
+    {
+      "id": "02",
+      "short": "KitKat Japan",
+      "series": "#02",
+      "tag": "Japan",
+      "theme": 1,
+      "hook": "Japan hat über *400 KitKat*-Sorten.",
+      "sub": "Und das liegt an einem Wortspiel.",
+      "slides": [
+        {"label": "Die Zahl", "title": "*400+* Sorten seit 2000", "body": "Seit dem Jahr 2000 sind in Japan über 400 limitierte KitKat-Sorten erschienen. Viele gibt es nur in einer Region oder für eine Saison."},
+        {"label": "Der Grund", "title": "„Kitto Katsu“", "body": "KitKat klingt auf Japanisch wie „Kitto Katsu“, übersetzt: „Du wirst bestimmt gewinnen“. Deshalb gilt KitKat dort als Glücksbringer vor Prüfungen."},
+        {"label": "Der Trick", "title": "Glück per Post", "body": "Nestlé hat mit der japanischen Post zusammengearbeitet: KitKat mit Glückwunsch-Botschaft ließ sich direkt an Schüler vor der Uni-Aufnahmeprüfung verschicken."},
+        {"label": "Mein Senf", "senf": true, "title": "Marketing auf Profi-Level", "body": "Aus einem Wortspiel wird der Glücksbringer eines ganzen Landes. Welche Sorte würdet ihr probieren: Matcha, Sake oder Wasabi?"}
+      ],
+      "cta": "Matcha, Sake oder *Wasabi*?",
+      "caption": "Über 400 KitKat-Sorten – warum ausgerechnet Japan? 🍫🇯🇵\n\nWelche würdest du probieren? 👇",
+      "hashtags": ["kitkat", "japan", "süßigkeiten", "wusstestdu", "snackfakten", "naschpass"],
+      "sources": [
+        {"title": "Wikipedia – Kit Kats in Japan", "url": "https://en.wikipedia.org/wiki/Kit_Kats_in_Japan"}
+      ]
+    },
+    {
+      "id": "03",
+      "short": "Kinoko vs Takenoko",
+      "series": "#03",
+      "tag": "Japan",
+      "theme": 3,
+      "hook": "Japans *40-jähriger* Schokoladen-Krieg.",
+      "sub": "Pilz gegen Bambus. Kein Witz.",
+      "slides": [
+        {"label": "Die Gegner", "title": "*Pilz* vs. *Bambus*", "body": "Kinoko no Yama (1975): Keks-Stiel mit Schoko-Hut, wie ein Pilz. Takenoko no Sato (1979): Schoko auf Mürbeteig, wie eine Bambussprosse. Beide vom selben Hersteller: Meiji."},
+        {"label": "Der Streit", "title": "Seit 1980 Glaubensfrage", "body": "Weil sich beide so ähneln, streitet Japan seit etwa 1980, welcher besser ist. Heute ist das ein Internet-Meme mit echten Fanlagern."},
+        {"label": "Die Wahlen", "title": "*6,9* zu *6,7* Millionen", "body": "Meiji lässt offiziell abstimmen. 2018 gewann Takenoko knapp mit 6,9 zu 6,7 Millionen Stimmen. 2019 siegte zum ersten Mal Kinoko, danach gab es einen „Friedensvertrag“."},
+        {"label": "Mein Senf", "senf": true, "title": "Ich bin Team Pilz", "body": "Allein vom Aussehen ist ein Schoko-Pilz unschlagbar. Die Bambus-Fans sind trotzdem meistens in der Überzahl. Auf welcher Seite steht ihr?"}
+      ],
+      "cta": "Team *Pilz* oder Team *Bambus*?",
+      "caption": "Japan streitet seit über 40 Jahren über zwei Schokosnacks 🍄🎋\n\nTeam Pilz oder Team Bambus? Stimm in den Kommentaren ab 👇",
+      "hashtags": ["japan", "schokolade", "süßigkeiten", "snackfakten", "wusstestdu", "naschpass"],
+      "sources": [
+        {"title": "Wikipedia – Kinoko no yama vs Takenoko no sato", "url": "https://en.wikipedia.org/wiki/Kinoko_no_yama_vs_Takenoko_no_sato"},
+        {"title": "Meiji – Kinoko no Yama & Takenoko no Sato", "url": "https://www.meiji.co.jp/products/brand/global/choco/en/kinotake/"}
+      ]
+    },
+    {
+      "id": "04",
+      "short": "Red 3 Farbstoff",
+      "series": "#04",
+      "tag": "USA vs. EU",
+      "theme": 2,
+      "hook": "Die USA verbieten einen *roten Farbstoff*. Bei uns ist er *fast überall* schon raus.",
+      "sub": "Die Geschichte von Red No. 3.",
+      "slides": [
+        {"label": "Was passiert", "title": "Red No. 3 fliegt raus", "body": "Am 15. Januar 2025 hat die US-Behörde FDA den Farbstoff „Red No. 3“ (bei uns: Erythrosin, E127) für Lebensmittel gestrichen. Hersteller haben bis 15. Januar 2027 Zeit."},
+        {"label": "Der Grund", "title": "Eine alte Gesetzes-Regel", "body": "Bei männlichen Laborratten wurde Krebs festgestellt. Ein US-Gesetz (Delaney-Klausel) verbietet dann jede Zulassung. Laut FDA gibt es aber keinen Beleg für Krebs beim Menschen."},
+        {"label": "Und in der EU?", "title": "Nur noch für *Kirschen*", "body": "E127 ist in der EU nur noch in sehr wenigen Lebensmitteln erlaubt, vor allem in Cocktailkirschen und kandierten Kirschen."},
+        {"label": "Mein Senf", "senf": true, "title": "Kein Grund zur Panik", "body": "Spannend, wie unterschiedlich die Regeln sind. Bei Import-Snacks lohnt sich trotzdem ein Blick auf die Zutatenliste. Wusstet ihr das?"}
+      ],
+      "cta": "Schaust du auf die *Zutatenliste*?",
+      "caption": "Die USA verbannen einen Farbstoff, den die EU schon lange stark eingeschränkt hat 🔴\n\nSchaust du bei Süßigkeiten auf die Zutaten? 👇",
+      "hashtags": ["lebensmittel", "süßigkeiten", "usa", "zusatzstoffe", "wusstestdu", "naschpass"],
+      "sources": [
+        {"title": "FDA – FD&C Red No. 3", "url": "https://www.fda.gov/industry/color-additives/fdc-red-no-3"},
+        {"title": "Lebensmittel-Warenkunde – E127 Erythrosin", "url": "https://lebensmittel-warenkunde.de/lebensmittelzusatzstoffe/farbstoffe/e127-erythrosin.html"}
+      ]
+    },
+    {
+      "id": "05",
+      "short": "Falsche Namen",
+      "series": "#05",
+      "tag": "Europa",
+      "theme": 0,
+      "hook": "Du kennst diese Süßigkeiten unter *falschem Namen.*",
+      "sub": "Oder ist es andersrum?",
+      "slides": [
+        {"label": "Raider → Twix", "title": "Bei uns bis *1991*", "body": "In weiten Teilen Europas hieß Twix jahrelang Raider. 1991 kam der neue Name, in Skandinavien und der Türkei erst im Jahr 2000."},
+        {"label": "Marathon → Snickers", "title": "In UK bis *1990*", "body": "In Großbritannien und Irland hieß Snickers von 1968 bis 1990 Marathon. Der Grund: „Snickers“ klang dort zu sehr nach „knickers“, britisch für Unterhose."},
+        {"label": "Mikado = Pocky", "title": "Original aus *Japan*", "body": "Mikado heißt in Japan Pocky und ist dort seit 1966 auf dem Markt. In Europa wird es in Lizenz unter dem Namen Mikado verkauft."},
+        {"label": "Bonus", "title": "Snickers war ein *Pferd*", "body": "Snickers kam 1930 auf den Markt und ist nach dem Lieblingspferd der Familie Mars benannt."},
+        {"label": "Mein Senf", "senf": true, "title": "Raider bleibt Raider", "body": "Für mich wird's immer ein bisschen Raider bleiben. Welchen alten Namen vermisst ihr?"}
+      ],
+      "cta": "Welchen alten Namen *vermisst* du?",
+      "caption": "Twix, Snickers, Mikado – alle hatten mal einen anderen Namen 🍫\n\nWelchen vermisst du? 👇",
+      "hashtags": ["süßigkeiten", "nostalgie", "raider", "wusstestdu", "snackfakten", "naschpass"],
+      "sources": [
+        {"title": "Wikipedia – Twix", "url": "https://en.wikipedia.org/wiki/Twix"},
+        {"title": "Wikipedia – Snickers", "url": "https://en.wikipedia.org/wiki/Snickers"},
+        {"title": "Wikipedia – Pocky", "url": "https://en.wikipedia.org/wiki/Pocky"}
+      ]
+    },
+    {
+      "id": "06",
+      "short": "Umfrage bestes Land",
+      "series": "#06",
+      "tag": "Umfrage",
+      "theme": 1,
+      "hook": "Welches Land hat die *besten Süßigkeiten?*",
+      "sub": "Du entscheidest, was hier als Nächstes kommt.",
+      "slides": [
+        {"label": "Option A", "title": "*Japan*", "body": "KitKat in über 400 Sorten, Mochi, Hi-Chew, Pocky."},
+        {"label": "Option B", "title": "*USA*", "body": "Erdnussbutter-Cups, Twinkies, Marshmallow Fluff."},
+        {"label": "Option C", "title": "*Skandinavien*", "body": "Salzlakritz, Salmiak und schwedische Weingummis."},
+        {"label": "Option D", "title": "*Mexiko*", "body": "Süß, sauer und scharf: Tamarinde, Mango mit Chili."}
+      ],
+      "cta": "Schreib *A, B, C oder D* in die Kommentare",
+      "caption": "Abstimmung! 🗳️ Welches Land hat die besten Süßigkeiten?\n\nA Japan · B USA · C Skandinavien · D Mexiko\nDas Gewinnerland bekommt die nächste Folge 👇",
+      "hashtags": ["süßigkeiten", "umfrage", "japan", "usa", "snacks", "naschpass"],
+      "sources": []
+    },
+    {
+      "id": "07",
+      "short": "Azofarbstoffe Warnhinweis",
+      "series": "#07",
+      "tag": "USA vs. EU",
+      "theme": 3,
+      "hook": "Diese Farbstoffe brauchen bei uns einen *Warnhinweis.*",
+      "sub": "In den USA nicht.",
+      "slides": [
+        {"label": "Der Hinweis", "title": "Seit *20. Juli 2010*", "body": "In der EU muss auf Lebensmitteln mit sechs bestimmten Farbstoffen stehen: „Kann Aktivität und Aufmerksamkeit bei Kindern beeinträchtigen.“"},
+        {"label": "Die Sechs", "title": "E102, E104, E110, E122, E124, E129", "body": "Tartrazin, Chinolingelb, Gelborange, Azorubin, Cochenillerot A und Allurarot."},
+        {"label": "Der Grund", "title": "Die *Southampton*-Studie", "body": "Eine Studie von 2007 fand, dass Kinder nach diesen Farbstoffen (zusammen mit Natriumbenzoat) zappeliger wirkten. Die EFSA hielt die Studie für methodisch schwach. Der Hinweis kam trotzdem."},
+        {"label": "Und die USA?", "title": "Red 40 = *E129*", "body": "Allurarot heißt in den USA „Red 40“. Einen Pflicht-Warnhinweis wie bei uns gibt es dort nicht."},
+        {"label": "Mein Senf", "senf": true, "title": "Blasser = andere Rezeptur", "body": "Wenn eine US-Süßigkeit hier blasser aussieht als im Video aus Amerika, steckt oft eine andere Rezeptur dahinter. Ist euch das schon mal aufgefallen?"}
+      ],
+      "cta": "Schon mal den *Warnhinweis* gesehen?",
+      "caption": "Warum auf manchen bunten Süßigkeiten ein Warnhinweis steht – und in den USA nicht ⚠️🌈\n\nSchon mal drauf geachtet? 👇",
+      "hashtags": ["zusatzstoffe", "süßigkeiten", "lebensmittel", "wusstestdu", "usa", "naschpass"],
+      "sources": [
+        {"title": "Lebensmittelklarheit – Azofarbstoffe: Warnhinweis", "url": "https://www.lebensmittelklarheit.de/informationen/azofarbstoffe-warnhinweis-fuer-bunte-lebensmittel"}
+      ]
+    },
+    {
+      "id": "08",
+      "short": "Titandioxid E171",
+      "series": "#08",
+      "tag": "USA vs. EU",
+      "theme": 2,
+      "hook": "Dieser *weiße Farbstoff* ist in der EU *verboten.*",
+      "sub": "In den USA ist er erlaubt.",
+      "slides": [
+        {"label": "Was", "title": "Titandioxid, *E171*", "body": "Ein weißes Pigment, das Dragees, Glasuren und bunte Süßigkeiten strahlend weiß oder besonders knallig macht."},
+        {"label": "Seit wann", "title": "Verboten seit *2022*", "body": "Seit dem 7. Februar 2022 ist E171 in der EU als Lebensmittelzusatz verboten. Nach alten Regeln durfte noch bis 7. August 2022 produziert werden."},
+        {"label": "Warum", "title": "„Nicht mehr sicher“", "body": "Die EFSA kam 2021 zu dem Schluss, dass E171 nicht mehr als sicher gilt, weil eine erbgutschädigende Wirkung nicht ausgeschlossen werden konnte."},
+        {"label": "Und die USA?", "title": "Dort *erlaubt*", "body": "In den USA darf Titandioxid bis zu 1 % des Lebensmittelgewichts ausmachen. Ein Antrag auf Verbot liegt seit 2023 bei der FDA. Ein WHO/FAO-Gremium hält es für sicher."},
+        {"label": "Mein Senf", "senf": true, "title": "Die Experten sind sich uneinig", "body": "EU sagt nein, WHO-Gremium sagt ok, die USA prüfen noch. Genau deshalb schmecken und sehen Import-Snacks manchmal anders aus. Wem glaubt ihr?"}
+      ],
+      "cta": "EU oder USA: Wer hat *recht*?",
+      "caption": "E171 ist in der EU seit 2022 verboten – in den USA erlaubt. Wer hat recht? 🤍\n\nDeine Meinung 👇",
+      "hashtags": ["zusatzstoffe", "lebensmittel", "süßigkeiten", "usa", "wusstestdu", "naschpass"],
+      "sources": [
+        {"title": "BVL – Verbot von Titandioxid in Lebensmitteln", "url": "https://www.bvl.bund.de/SharedDocs/Pressemitteilungen/01_lebensmittel/2022/2022_PM_Titandioxid.html"},
+        {"title": "FDA – Titanium Dioxide as a Color Additive in Foods", "url": "https://www.fda.gov/industry/color-additives/titanium-dioxide-color-additive-foods"}
+      ]
+    }
+  ]
+}
