@@ -1,0 +1,27 @@
+{
+  "brand": "Naschpass",
+  "domain": "naschpass.oneflowsolution.de",
+  "tagline": "Süßigkeiten, die du so noch nie gesehen hast.",
+  "intro": "KitKat mit Wasabi, Schoko-Pilze aus Japan, Kultriegel aus den USA: Jede Woche zeigen wir dir die verrücktesten Süßigkeiten der Welt – und wo du sie in Deutschland bekommst.",
+  "socials": [
+    {"name": "Instagram", "url": "https://www.instagram.com/naschpass_de/"},
+    {"name": "TikTok", "url": "https://www.tiktok.com/@naschpass_de"},
+    {"name": "Pinterest", "url": "https://www.pinterest.de/naschpass/"}
+  ],
+  "impressum": {
+    "name": "Kevin Agaschtschuk",
+    "firma": "OneFlow Solution",
+    "strasse": "",
+    "ort": "",
+    "email": "kevin@oneflowsolution.de",
+    "telefon": ""
+  },
+  "categories": [
+    {"id": "japan", "name": "Japan", "teaser": "KitKat-Sorten, Pocky, Hi-Chew und Konbini-Klassiker."},
+    {"id": "usa", "name": "USA", "teaser": "Kultriegel, Peanut Butter und alles, was es hier kaum gibt."},
+    {"id": "verboten", "name": "Anders in der EU", "teaser": "Snacks, die es bei uns nur mit anderer Rezeptur gibt."},
+    {"id": "sauer-scharf", "name": "Sauer & scharf", "teaser": "Mexikanische Chili-Bonbons und saure Monster."},
+    {"id": "skandinavien", "name": "Skandinavien", "teaser": "Salmiak, Salzlakritz und schwedisches Pick & Mix."},
+    {"id": "boxen", "name": "Boxen & Geschenke", "teaser": "Mystery-Boxen und Sets zum Durchprobieren."}
+  ]
+}
