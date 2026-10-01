@@ -350,7 +350,7 @@ h3{font-size:17px;line-height:1.25;margin:0}
 .how{list-style:none;padding:0;margin:-6px 0 16px;display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px;font-weight:700;color:var(--mut)}
 .how a{display:flex;gap:5px;align-items:center;color:var(--mut);text-decoration:none;border-bottom:2px dotted var(--line)}
 .how a:hover{color:var(--vio);border-color:var(--vio2)}
-.how .advpill{color:#1F8A62;border-bottom-color:#9EE3C6}.how em{font-style:normal}.how span{font-size:16px}
+.how .advpill{color:#1F8A62;border-bottom-color:#9EE3C6}.how .advpill.hw{color:#D35A00;border-bottom-color:#FFC58F}.how em{font-style:normal}.how span{font-size:16px}
 .hgrid .hr{margin-top:22px}
 @media(min-width:980px){.hgrid{display:grid;grid-template-columns:1fr 470px;gap:34px;align-items:start}.hgrid .hr{margin-top:6px}
 .hgrid .spin{padding:0}.hgrid .card{width:92px;height:140px}.hgrid .card img{height:70px}.hgrid .card .svgw{height:70px}.hgrid .card .svgw svg{width:54px;height:54px}
@@ -785,11 +785,15 @@ document.querySelectorAll('.band').forEach(function(b){
 document.querySelectorAll('[data-expand]').forEach(function(b){b.addEventListener('click',function(){
  var g=document.getElementById(b.dataset.expand);g.classList.remove('clip');b.remove();
  var f=g.querySelector('[data-more]');if(f){var a=f.matches('a')?f:f.querySelector('a');if(a)a.focus({preventScroll:true})}})});
-/* Advent-Countdown (nur Text, nichts gespeichert) */
-document.querySelectorAll('[data-adv-count]').forEach(function(x){var n=new Date(),y=n.getFullYear(),m=n.getMonth(),d=n.getDate();
- if(m===11&&d<=24){x.textContent='Türchen '+d+' ist offen';return}
- if(m===11){x.textContent='Adventskalender';return}
- var t=Math.round((new Date(y,11,1)-new Date(y,m,d))/864e5);x.textContent='Advent in '+t+' Tagen'});
+/* Saison-Hinweis: im Herbst Halloween, danach Advent (nur Text, nichts gespeichert) */
+document.querySelectorAll('[data-season]').forEach(function(a){var n=new Date(),y=n.getFullYear(),m=n.getMonth(),d=n.getDate(),
+ days=function(mm,dd){return Math.round((new Date(y,mm,dd)-new Date(y,m,d))/864e5)},em=a.querySelector('em'),ic=a.querySelector('span');
+ if(m===8&&d>=15||m===9){a.href='/kategorie/halloween/';a.classList.add('hw');ic.textContent='🎃';
+  var t=days(9,31);em.textContent=t>0?'Halloween in '+t+' Tagen':'Heute ist Halloween';return}
+ a.href='/advent/';a.classList.remove('hw');ic.textContent='🎄';
+ if(m===11&&d<=24){em.textContent='Türchen '+d+' ist offen';return}
+ if(m===11){em.textContent='Adventskalender';return}
+ em.textContent='Advent in '+days(11,1)+' Tagen'});
 /* Weltkarte am Handy mittig (Europa) starten, Rest wischbar */
 document.querySelectorAll('.map').forEach(function(m){m.scrollLeft=(m.scrollWidth-m.clientWidth)*.45});
 /* Klapp-Menüs auf der Startseite */
@@ -1516,8 +1520,17 @@ def build():
             shutil.copy(x, dest / x.name)
         c = tag_color(p.get("tag", ""))
         items = [x for x in products if str(x.get("post", "")) == p["id"]]
+        # Passt zum Thema: Produkte, die Herkunft/Art/Geschmack mit dem Post teilen (automatisch, wird mit den Feeds voller)
+        pf = facets({"name": p.get("short", ""), "note": " ".join([p.get("hook", ""), p.get("sub", "")] +
+                     [x.get("title", "") + " " + x.get("body", "") for x in p.get("slides", [])]), "tags": [p.get("tag", "")]})
+        def _score(x):
+            xf = facets(x)
+            return sum((2 if g == "land" else 1) * len((pf.get(g, set()) - {"europa", "asien"}) & xf.get(g, set())) for g in pf)
+        auto = sorted([x for x in products if x not in items and _score(x) >= 2], key=lambda x: -_score(x))[:8]
+        auto_html = (f'<section><div class="head"><h2>Passt zum Thema</h2></div>{prod_grid(auto, "g-auto")}</section>') if auto else ""
         prods = (f'<section id="produkte"><div class="head"><h2>Die Süßigkeiten aus dem Post</h2>'
-                 f'{view_toggle("g-post", ["big", "small", "list"], "small")}</div>{prod_grid(items, "g-post")}</section>') if items else (
+                 f'{view_toggle("g-post", ["big", "small", "list"], "small")}</div>{prod_grid(items, "g-post")}</section>{auto_html}') if items else auto_html.replace(
+                 '<section>', '<section id="produkte">', 1) if auto else (
             '<section id="produkte"><h2>Die Süßigkeiten aus dem Post</h2><div class="empty"><strong>Kommt bald.</strong> '
             'Sobald es die Sachen aus dem Post bei einem Partner-Shop gibt, findest du sie hier.</div></section>')
         srcs = "".join(f'<li><a href="{e(s["url"])}" rel="noopener" target="_blank">{e(s["title"])}</a></li>' for s in p.get("sources", []))
@@ -1697,7 +1710,9 @@ def build():
            '<li><a href="/posts/"><span aria-hidden="true">📲</span>Fakten-Posts mit Quellen</a></li>'
            '<li><a href="/shop/"><span aria-hidden="true">🗺️</span>Nach Land & Thema</a></li>'
            '<li><a href="/shop/#alle"><span aria-hidden="true">🛒</span>Direkt zum Shop</a></li>'
-           '<li><a href="/advent/" class="advpill"><span aria-hidden="true">🎄</span><em data-adv-count>Adventskalender</em></a></li></ul>')
+           + ('<li><a href="/kategorie/halloween/" class="advpill hw" data-season><span aria-hidden="true">🎃</span><em>Halloween</em></a></li></ul>'
+              if TODAY.month in (9, 10) else
+              '<li><a href="/advent/" class="advpill" data-season><span aria-hidden="true">🎄</span><em>Adventskalender</em></a></li></ul>'))
     about_box = (f'<section><div class="aboutbox"><h2>Neu hier?</h2><p>Naschpass ist ein junges Projekt rund um Süßigkeiten aus aller Welt. '
                  f'Wie wir arbeiten und was Shops und Marken bei uns bekommen, steht auf einer Seite.</p>'
                  f'<div class="btns"><a class="btn dark" href="/ueber/">Über Naschpass</a><a class="btn" href="/ueber/#partner">Für Partner</a></div></div></section>')
