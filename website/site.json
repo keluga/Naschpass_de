@@ -2,7 +2,7 @@
   "brand": "Naschpass",
   "domain": "naschpass.oneflowsolution.de",
   "tagline": "Süßigkeiten, die du so noch nie gesehen hast.",
-  "intro": "KitKat mit Wasabi, Schoko-Pilze aus Japan, Kultriegel aus den USA: Jede Woche zeigen wir dir die verrücktesten Süßigkeiten der Welt – und wo du sie in Deutschland bekommst.",
+  "intro": "KitKat mit Wasabi, Schoko-Pilze aus Japan, Kultriegel aus den USA: Wir zeigen dir die verrücktesten Süßigkeiten der Welt – und wo du sie in Deutschland bekommst.",
   "socials": [
     {
       "name": "Instagram",
@@ -28,13 +28,19 @@
   "categories": [
     {
       "id": "japan",
-      "name": "Japan",
-      "teaser": "KitKat-Sorten, Pocky, Hi-Chew und Konbini-Klassiker."
+      "name": "Japan & Asien",
+      "teaser": "KitKat-Sorten, Pocky, Hi-Chew und Snacks aus ganz Asien.",
+      "facets": [
+        "land:asien"
+      ]
     },
     {
       "id": "usa",
       "name": "USA",
-      "teaser": "Kultriegel, Peanut Butter und alles, was es hier kaum gibt."
+      "teaser": "Kultriegel, Peanut Butter und alles, was es hier kaum gibt.",
+      "facets": [
+        "land:usa"
+      ]
     },
     {
       "id": "verboten",
@@ -44,17 +50,85 @@
     {
       "id": "sauer-scharf",
       "name": "Sauer & scharf",
-      "teaser": "Mexikanische Chili-Bonbons und saure Monster."
+      "teaser": "Mexikanische Chili-Bonbons und saure Monster.",
+      "facets": [
+        "geschmack:sauer",
+        "geschmack:scharf"
+      ]
     },
     {
       "id": "skandinavien",
       "name": "Skandinavien",
-      "teaser": "Salmiak, Salzlakritz und schwedisches Pick & Mix."
+      "teaser": "Salmiak, Salzlakritz und schwedisches Pick & Mix.",
+      "facets": [
+        "land:skandinavien"
+      ]
     },
     {
       "id": "boxen",
       "name": "Boxen & Geschenke",
-      "teaser": "Mystery-Boxen und Sets zum Durchprobieren."
+      "teaser": "Mystery-Boxen und Sets zum Durchprobieren.",
+      "facets": [
+        "art:boxen"
+      ]
+    },
+    {
+      "id": "weihnachten",
+      "name": "Weihnachten",
+      "teaser": "Adventskalender, Lebkuchen, Stollen und süße Geschenke.",
+      "season": [
+        "11-01",
+        "12-26"
+      ],
+      "keywords": [
+        "weihnacht",
+        "advent",
+        "adventskalender",
+        "lebkuchen",
+        "stollen",
+        "spekulatius",
+        "christmas",
+        "panettone",
+        "pandoro",
+        "nikolaus"
+      ]
+    },
+    {
+      "id": "italien",
+      "name": "Italien",
+      "teaser": "Panettone, Cantucci, Torrone und italienische Schokolade.",
+      "facets": [
+        "land:italien"
+      ]
+    },
+    {
+      "id": "schweiz",
+      "name": "Schweiz",
+      "teaser": "Schweizer Schokolade und Klassiker aus den Alpen.",
+      "facets": [
+        "land:schweiz"
+      ]
+    },
+    {
+      "id": "getraenke",
+      "name": "Getränke",
+      "teaser": "Limos, Sodas und Sirupe aus aller Welt.",
+      "facets": [
+        "art:getraenke"
+      ]
+    },
+    {
+      "id": "snacks",
+      "name": "Nuss- & Fruchtsnacks",
+      "teaser": "Nüsse, Riegel, Trockenfrüchte und Gefriergetrocknetes.",
+      "facets": [
+        "art:snacks"
+      ]
+    },
+    {
+      "id": "klassiker",
+      "name": "Supermarkt-Klassiker",
+      "teaser": "Die bekannten Marken, bequem online bestellt."
     }
   ],
   "partner_shops": {
@@ -205,24 +279,57 @@
           ]
         },
         {
+          "id": "italien",
+          "name": "Italien",
+          "icon": "flag",
+          "keywords": [
+            "italien",
+            "italia",
+            "italian",
+            "panettone",
+            "pandoro",
+            "torrone",
+            "cantucci",
+            "baci",
+            "venchi",
+            "amaretti",
+            "gianduja"
+          ]
+        },
+        {
+          "id": "schweiz",
+          "name": "Schweiz",
+          "icon": "flag",
+          "keywords": [
+            "schweiz",
+            "swiss",
+            "suisse",
+            "toblerone",
+            "ricola",
+            "lindt",
+            "cailler",
+            "ragusa"
+          ]
+        },
+        {
           "id": "europa",
           "name": "Europa",
           "icon": "flag",
           "keywords": [
             "europa",
-            "ital",
             "franz",
             "belgi",
             "niederl",
             "holland",
-            "schweiz",
             "österreich",
             "oesterreich"
           ],
           "includes": [
             "uk",
             "skandinavien",
-            "deutschland"
+            "deutschland",
+            "italien",
+            "schweiz"
           ]
         }
       ]
@@ -384,6 +491,18 @@
           ]
         },
         {
+          "id": "pralinen",
+          "name": "Pralinen",
+          "icon": "💝",
+          "keywords": [
+            "praline",
+            "trüffel",
+            "trueffel",
+            "konfekt",
+            "bonbonniere"
+          ]
+        },
+        {
           "id": "gummi",
           "name": "Fruchtgummi",
           "icon": "🐻",
@@ -417,7 +536,7 @@
         },
         {
           "id": "chips",
-          "name": "Chips & Snacks",
+          "name": "Chips & Knabbereien",
           "icon": "🥨",
           "keywords": [
             "chips",
@@ -426,8 +545,25 @@
             "cracker",
             "popcorn",
             "brezel",
-            "pretzel",
-            "snack"
+            "pretzel"
+          ]
+        },
+        {
+          "id": "snacks",
+          "name": "Nüsse & Fruchtsnacks",
+          "icon": "🥜",
+          "keywords": [
+            "nuss",
+            "nüsse",
+            "nuesse",
+            "trockenfrucht",
+            "getrocknet",
+            "gefriergetrocknet",
+            "freeze",
+            "riegel",
+            "snack",
+            "studentenfutter",
+            "fruchtleder"
           ]
         },
         {
@@ -487,5 +623,6 @@
         }
       ]
     }
-  ]
+  ],
+  "_categories_hinweis": "Themenwelten. Ein Produkt gehört dazu über 'category' (Hand), 'themen' (Liste, z. B. aus feeds.json), 'facets' (z. B. land:italien) oder 'keywords'. 'season' [MM-TT, MM-TT] = in diesem Zeitraum ganz vorne, sonst hinten. Leere zeigen 'Bald hier'. ids nie umbenennen."
 }

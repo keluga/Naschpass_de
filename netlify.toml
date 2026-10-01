@@ -1,5 +1,5 @@
 [build]
-  command = "python3 website/build.py"
+  command = "python3 website/import_feeds.py && python3 website/build.py"
   publish = "website/dist"
 
 # Vorschau-Links (Pull Requests) zeigen Beispielprodukte, live nie

@@ -1,2 +1,3 @@
 website/dist/
 __pycache__/
+website/feed_products.json

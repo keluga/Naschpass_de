@@ -26,6 +26,12 @@ site = json.loads((HERE / "site.json").read_text(encoding="utf-8"))
 DEMO = os.environ.get("DEMO") == "1"  # nur Netlify-Vorschau: Beispielprodukte aus website/demo/
 _pf = Path(os.environ.get("PRODUCTS_FILE") or (HERE / "demo" / "products.json" if DEMO else HERE / "products.json"))
 products = json.loads(_pf.read_text(encoding="utf-8"))["products"]
+# Produkte aus den AWIN-Feeds (von import_feeds.py im Build erzeugt, nicht im Repo). Handeinträge haben Vorrang.
+_ff = HERE / "feed_products.json"
+if _ff.exists() and not os.environ.get("PRODUCTS_FILE"):
+    _have = {re.sub(r"[^a-z0-9]+", " ", p.get("name", "").lower()).strip() for p in products}
+    products = products + [p for p in json.loads(_ff.read_text(encoding="utf-8")).get("products", [])
+                           if re.sub(r"[^a-z0-9]+", " ", p.get("name", "").lower()).strip() not in _have]
 if DEMO and not os.environ.get("PRODUCTS_FILE"):  # Vorschau: echte Produkte zuerst, dann Beispiele
     products = json.loads((HERE / "products.json").read_text(encoding="utf-8"))["products"] + products
 posts = json.loads((ROOT / "generator" / "posts.json").read_text(encoding="utf-8"))["posts"]
@@ -153,6 +159,50 @@ def facet_counts():
     return c
 
 
+import datetime as _dt
+TODAY = _dt.date.today()
+
+
+def in_season(c):
+    se = c.get("season")
+    if not se:
+        return False
+    md = TODAY.strftime("%m-%d")
+    return se[0] <= md <= se[1] if se[0] <= se[1] else (md >= se[0] or md <= se[1])
+
+
+_CAT_KW = {}
+
+
+def in_cat(p, c):
+    """Gehört ein Produkt zu einer Themenwelt? (Hand-Kategorie, themen, Facetten oder Stichwörter)"""
+    if p.get("category") == c["id"] or c["id"] in p.get("themen", []):
+        return True
+    if c.get("facets"):
+        f = facets(p)
+        if any(x.split(":")[1] in f.get(x.split(":")[0], set()) for x in c["facets"]):
+            return True
+    if c.get("keywords"):
+        if c["id"] not in _CAT_KW:
+            _CAT_KW[c["id"]] = [_kw_re(k) for k in c["keywords"]]
+        text = translit(" ".join([p.get("name", ""), p.get("note", ""), p.get("feed_category", "")]))
+        return any(r.search(text) for r in _CAT_KW[c["id"]])
+    return False
+
+
+def cat_items(c):
+    return [p for p in products if in_cat(p, c)]
+
+
+def cats_sorted():
+    """Saisonale Themenwelt in der Saison ganz vorn, außerhalb ganz hinten; sonst nach Anzahl."""
+    def key(c):
+        if c.get("season"):
+            return (0 if in_season(c) else 2, 0)
+        return (1, -len(cat_items(c)))
+    return sorted(cats, key=key)
+
+
 def host_of(url):
     return re.sub(r"^https?://(www\.)?", "", url).split("/")[0].lower()
 
@@ -248,6 +298,14 @@ STICKERS = {
 
 
 STICKERS["europa"] = STICKERS["verboten"]
+STICKERS["italien"] = ('<clipPath id="ci"><rect width="64" height="64" rx="14"/></clipPath><g clip-path="url(#ci)"><rect width="22" height="64" fill="#1F8A4C"/>'
+                       '<rect x="21" width="22" height="64" fill="#fff"/><rect x="42" width="22" height="64" fill="#D8263A"/></g>')
+STICKERS["schweiz"] = ('<rect width="64" height="64" rx="14" fill="#D8263A"/><rect x="27" y="14" width="10" height="36" fill="#fff"/>'
+                       '<rect x="14" y="27" width="36" height="10" fill="#fff"/>')
+for _k, (_bg, _em) in {"weihnachten": ("#2FAE7E", "🎄"), "getraenke": ("#9FD3FF", "🥤"), "snacks": ("#FFD966", "🥜"),
+                       "klassiker": ("#FF8FB1", "🛒")}.items():
+    STICKERS[_k] = (f'<rect width="64" height="64" rx="14" fill="{_bg}"/>'
+                    f'<text x="32" y="44" font-size="34" text-anchor="middle">{_em}</text>')
 
 
 def sticker(cid, size=56):
@@ -536,7 +594,7 @@ SPRINKLES = '<div class="spr" aria-hidden="true">' + "".join(
 AD = 'Enthält Werbelinks (*): Kaufst du darüber, bekomme ich eine kleine Provision. Dein Preis bleibt gleich.'
 
 SEARCH_DIALOG = f"""<dialog id="suche" aria-label="Suche"><div class="sbar"><label>{ICON_SEARCH}
-<input type="search" id="q" placeholder="KitKat, Japan, sauer, #08 …" autocomplete="off" enterkeyhint="search" aria-label="Suchbegriff"></label>
+<input type="search" id="q" placeholder="Süßigkeit, Land, Geschmack oder #Nummer" autocomplete="off" enterkeyhint="search" aria-label="Suchbegriff"></label>
 <button class="x" type="button" data-close>Schließen</button></div><div class="sres" id="sres" aria-live="polite"></div></dialog>"""
 
 
@@ -545,7 +603,7 @@ def socials_btns():
 
 
 def follow_box():
-    return (f'<div class="follow"><p>Jede Woche neue Süßigkeiten aus aller Welt.</p>'
+    return (f'<div class="follow"><p>Mehr Süßigkeiten-Fakten gibt es auf unseren Kanälen.</p>'
             f'<div class="btns">{socials_btns()}</div></div>')
 
 
@@ -779,7 +837,7 @@ document.addEventListener('keydown',ev=>{if(ev.key==='/'&&!dlg.open&&!/input|tex
 
 
 def cat_tile(c):
-    items = [p for p in products if p.get("category") == c["id"]]
+    items = cat_items(c)
     n = f'<span class="n">{len(items)} {"Sorte" if len(items) == 1 else "Sorten"}</span>' if items else '<span class="n soon">Bald hier</span>'
     return (f'<a class="cat" href="/kategorie/{c["id"]}/" style="--c:{cat_color[c["id"]]}">{sticker(c["id"])}'
             f'<h3>{e(c["name"])}</h3><p>{e(c["teaser"])}</p>{n}</a>')
@@ -835,7 +893,9 @@ def search_index(live):
     fac = [{"g": g["id"], "gn": g["name"], "id": o["id"], "name": o["name"],
             "kw": sorted({translit(k) for k in o.get("keywords", []) + [o["name"], o["id"]] if len(k) >= 3})}
            for g in FILTER for o in g["options"]]
-    sugg = ["salzige Chips aus Asien", "sauer", "Japan", "Schokolade", "scharf", "Lakritz"]
+    cnt = facet_counts()
+    sugg = [o["name"] for g in FILTER for o in sorted(g["options"], key=lambda o: -cnt.get((g["id"], o["id"]), 0))[:3]
+            if cnt.get((g["id"], o["id"]))]
     return {"items": items, "sugg": sugg, "facets": fac}
 
 
@@ -849,12 +909,12 @@ def build():
 
     # --- Kategorie-Seiten
     for c in cats:
-        items = [p for p in products if p.get("category") == c["id"]]
+        items = cat_items(c)
         inner = (f'<div class="tools"><span></span>{view_toggle("g-cat", ["big", "small", "list"], "small")}</div>'
                  + prod_grid(items, "g-cat")) if items else (
             '<div class="empty"><strong>Hier kommen bald die ersten Sorten rein.</strong><br>'
             'Bis dahin findest du in den Posts, was es in dieser Ecke der Welt zu naschen gibt.</div>')
-        rel = [p for p in live if any(x.get("post") == p["id"] and x.get("category") == c["id"] for x in products)]
+        rel = [p for p in live if any(x.get("post") == p["id"] and in_cat(x, c) for x in products)]
         rel_html = (f'<section><h2>Passende Posts</h2><div class="grid posts v-small">{"".join(post_card(p) for p in rel)}</div></section>'
                     if rel else "")
         others = "".join(f'<a class="sc" href="/kategorie/{o["id"]}/">{sticker(o["id"], 34)}{e(o["name"])}</a>'
@@ -916,7 +976,7 @@ def build():
                 + "".join(f'<button class="chip" data-filter="{v}" data-grid="{gid}" data-key="{key}" aria-pressed="false" '
                           f'style="--c:{col}"><i></i>{e(n)}</button>' for v, n, col in opts) + '</div>')
 
-    used = [c for c in cats if any(p.get("category") == c["id"] for p in products)]
+    used = [c for c in cats if cat_items(c)]
     prod_chips = chips_for("g-all", "cat", [(c["id"], c["name"], cat_color[c["id"]]) for c in used])
     tags_live = [t for t in _tags if any(p.get("tag") == t for p in live)]
     post_chips = chips_for("g-posts", "tag", [(tag_slug(t), t, tag_color(t)) for t in tags_live])
@@ -932,11 +992,11 @@ def build():
 
     # --- Shop-Seite: alle Länder/Themen + alle Produkte
     def _n(c):
-        return sum(1 for p in products if p.get("category") == c["id"])
+        return len(cat_items(c))
     theme_row = "".join(
         f'<a class="bc" href="/kategorie/{c["id"]}/">{sticker(c["id"], 40)}{e(c["name"])}'
         f'<small>{_n(c) or "bald"}{(" Sorte" if _n(c) == 1 else " Sorten") if _n(c) else ""}</small></a>'
-        for c in sorted(cats, key=lambda c: -_n(c)))
+        for c in cats_sorted())
     counts = facet_counts()
     fgroups = ""
     for g in FILTER:
@@ -960,7 +1020,7 @@ def build():
         "Shop – Naschpass",
         f'<section class="hero" style="padding-bottom:0">{SPRINKLES}<h1>Shop</h1>'
         f'<p class="sub">Such dir aus, worauf du Lust hast: nach Herkunft, Geschmack und Art, frei kombinierbar.</p>'
-        f'<button class="fake" type="button" data-open-search>{ICON_SEARCH}<span>z. B. „salzige Chips aus Asien“ …</span></button></section>'
+        f'<button class="fake" type="button" data-open-search>{ICON_SEARCH}<span>Snacks, Länder, Marken suchen …</span></button></section>'
         f'<nav class="themes" aria-label="Themenwelten"><h2>Themenwelten</h2><div class="trow">{theme_row}</div></nav>'
         f'<section id="alle" style="padding-top:18px">{shop_all}</section>',
         "Süßigkeiten aus aller Welt nach Herkunft, Geschmack und Art.", "/shop/"))
@@ -969,7 +1029,7 @@ def build():
     write("posts/index.html", page(
         "Alle Posts – Naschpass",
         f'<section class="hero" style="padding-bottom:0"><h1>Alle Posts</h1>'
-        f'<p class="sub">Jede Woche neue Fakten über Süßigkeiten aus aller Welt.</p></section>'
+        f'<p class="sub">Fakten, Verbote und Kuriositäten rund um Süßigkeiten aus aller Welt.</p></section>'
         f'<section style="padding-top:10px"><div class="tools">{post_chips}{view_toggle("g-posts", ["big", "small"], "small")}</div>'
         f'<div class="grid posts v-small" id="g-posts">{"".join(post_card(p) for p in newest)}</div></section>{jump}',
         "Alle Naschpass-Posts auf einen Blick.", "/posts/"))
@@ -1008,15 +1068,21 @@ def build():
         browse_html = (f'<nav class="browse" aria-label="Stöbern"><h2>Stöbern nach</h2><div class="tabs" role="tablist">{tabs}</div>{panels}'
                        f'<p style="margin:10px 0 0"><a class="more" href="/shop/#alle">Alles frei filtern</a></p></nav>')
     else:
-        ordered = sorted(cats, key=lambda c: -sum(1 for p in products if p.get("category") == c["id"]))
+        ordered = cats_sorted()
         browse_html = ('<nav class="browse" aria-label="Stöbern"><h2>Stöbern nach Land & Thema</h2><div class="bgrid">' + "".join(
             f'<a class="bc" href="/kategorie/{c["id"]}/">{sticker(c["id"], 40)}{e(c["name"])}<small>bald</small></a>' for c in ordered) + '</div></nav>')
+    season_html = "".join(
+        f'<section style="padding-top:22px"><a class="cat" style="--c:{cat_color[c["id"]]}" href="/kategorie/{c["id"]}/">{sticker(c["id"])}'
+        f'<h3>{e(c["name"])}</h3><p>{e(c["teaser"])}</p><span class="n">{len(cat_items(c))} '
+        f'{"Sorte" if len(cat_items(c)) == 1 else "Sorten"}</span></a></section>'
+        for c in cats if in_season(c) and cat_items(c))
     fan = "".join(f'<a href="/p/{p["id"]}/" tabindex="-1" aria-hidden="true">{slide_img(cover_url(p), "", 230, "230px")}</a>'
                   for p in newest[:3][::-1])
     home = (f'<section class="hero has-fan">{SPRINKLES}<div class="fan">{fan}</div><h1>Süßes aus <span class="acc">aller Welt</span></h1>'
             f'<p class="sub">{e(site["tagline"])} Und wo du es in Deutschland bekommst.</p>'
             f'<button class="fake" type="button" data-open-search>{ICON_SEARCH}<span>Snacks, Länder, Marken suchen …</span></button>'
             f'{browse_html}</section>'
+            f'{season_html}'
             f'{band(live)}'
             f'{home_prods}'
             f'<section id="posts"><div class="head"><h2>Aus unseren Posts</h2>{view_toggle("g-home-posts", ["big", "small"], "small")}</div>'
