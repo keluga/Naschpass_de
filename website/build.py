@@ -350,6 +350,17 @@ h3{font-size:17px;line-height:1.25;margin:0}
 .how{list-style:none;padding:0;margin:-6px 0 16px;display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px;font-weight:700;color:var(--mut)}
 .how li{display:flex;gap:5px;align-items:center}.how span{font-size:16px}
 .cats.clip>[data-more],.bgrid.clip>[data-more]{display:none}
+.bgrid:not(.clip)>.bmore{display:none}
+.bc.off{opacity:.45;box-shadow:none;background:rgba(255,255,255,.6);cursor:default}.bc.off:hover{outline:0}
+.bmore{border:2px dashed var(--line);background:transparent;box-shadow:none;cursor:pointer;font:inherit;color:var(--fg);font-weight:800}
+.bmore .emo{background:#fff}
+.slots{display:grid;gap:12px;grid-template-columns:1fr}
+@media(min-width:760px){.slots{grid-template-columns:2fr 1fr 1fr}}
+.slot{border:2px dashed var(--line);border-radius:18px;min-height:150px}
+.slot.main{display:flex;gap:14px;align-items:flex-start;padding:18px;background:rgba(255,255,255,.7)}
+.slot.main p{margin:4px 0 8px;color:var(--mut)}
+.slot.ghost{background:repeating-linear-gradient(135deg,transparent 0 12px,rgba(207,231,221,.5) 12px 24px)}
+@media(max-width:759px){.slot.ghost{display:none}}
 .aboutbox{background:#fff;border-radius:var(--r);padding:20px;box-shadow:var(--sh);position:relative;overflow:hidden}
 .aboutbox:after{content:"";position:absolute;right:-40px;top:-40px;width:140px;height:140px;border-radius:50%;background:var(--mint);opacity:.5}
 .aboutbox p{color:var(--mut);max-width:60ch;position:relative;z-index:1}.aboutbox .btn{border:2px solid var(--fg)}
@@ -624,7 +635,7 @@ def page(title, body, desc=None, path="/", og_img=None, script=""):
 <meta property="og:type" content="website"><meta property="og:url" content="{BASE}{path}"><meta property="og:locale" content="de_DE">
 <meta property="og:title" content="{e(title)}"><meta property="og:description" content="{e(desc)}">
 <meta property="og:image" content="{og}"><meta name="twitter:card" content="summary_large_image">
-<style>{CSS}</style></head><body>
+<style>{CSS}{SPIN_CSS}</style></head><body>
 <div class="ad">{AD}</div>{'<div class="ad" style="background:#FFB547;color:#2B2350;font-weight:700">VORSCHAU mit Beispielprodukten – nicht live</div>' if DEMO else ''}
 <header><div class="wrap"><a class="logo" href="/"><img src="/static/logo.png" alt="" width="38" height="38">NASCHPASS</a>
 <nav aria-label="Hauptmenü"><a href="/shop/">Shop</a><a href="/posts/">Posts</a><a href="/ueber/" class="hide-s">Über uns</a></nav>
@@ -841,6 +852,148 @@ document.addEventListener('keydown',ev=>{if(ev.key==='/'&&!dlg.open&&!/input|tex
 """.replace("__FUSE__", FUSE)
 
 
+# ---------- Zufalls-Rad "Was naschst du heute?" ----------
+# Farbe = Art der Süßigkeit (bzw. Thema, solange es wenige Produkte gibt). Keine erfundene Seltenheit.
+ART_COLORS = {"schokolade": "#8B5A3C", "pralinen": "#C2185B", "gummi": "#FF4D8D", "bonbons": "#FFB547", "chips": "#E8384F",
+              "kekse": "#D4A373", "snacks": "#2FAE7E", "getraenke": "#3D8BFF", "boxen": "#8B6CFF"}
+
+
+def spin_items(live):
+    items = []
+    art_name = {o["id"]: o["name"] for g in FILTER if g["id"] == "art" for o in g["options"]}
+    for p in products:
+        arts = [a for a in ART_COLORS if a in facets(p).get("art", set())]
+        a = arts[0] if arts else ""
+        i = prod_img(p, 240)
+        items.append({"t": p["name"], "u": p["url"], "k": "p", "c": ART_COLORS.get(a, "#9C94C7"), "l": art_name.get(a, "Süßigkeit"),
+                      "img": i[1] if i and i[0] == "own" else "", "ext": i[1] if i and i[0] == "ext" else "",
+                      "svg": "" if i and i[0] == "own" else sticker(p.get("category", ""), 64)})
+    if len(products) < 6:  # noch wenige Produkte: Posts und Themenwelten mit ins Rad
+        for p in live:
+            items.append({"t": f"#{p['id']} {plain(p.get('short', ''))}", "u": f"/p/{p['id']}/", "k": "post", "c": "#FF4D8D",
+                          "l": "Post", "img": cdn(cover_url(p), 240) if ON_NETLIFY else cover_url(p)})
+        for c in cats:
+            items.append({"t": c["name"], "u": f"/kategorie/{c['id']}/", "k": "cat", "c": "#3DDC97", "l": "Themenwelt",
+                          "svg": sticker(c["id"], 64)})
+    return items
+
+
+def spin_html(live):
+    items = spin_items(live)
+    if len(items) < 3:
+        return ""
+    leg, seen = [], set()
+    for i in items:
+        if i["l"] not in seen:
+            seen.add(i["l"])
+            leg.append(f'<span class="chip" style="--c:{i["c"]}"><i></i>{e(i["l"])}</span>')
+    data = json.dumps(items, ensure_ascii=False).replace("</", "<\\/")
+    return (f'<section class="spin" id="zufall"><div class="spinbox"><div class="spinhead"><h2>Was naschst du heute?</h2>'
+            f'<button class="snd" type="button" aria-pressed="true" aria-label="Ton an/aus">🔊</button></div>'
+            f'<p class="sub" style="margin:0 0 12px">Dreh das Rad und lass dich überraschen. Die Farbe verrät, was es ist.</p>'
+            f'<div class="reel"><div class="track"></div><div class="marker" aria-hidden="true"></div></div>'
+            f'<div class="legend">{"".join(leg)}</div>'
+            f'<button class="spinbtn" type="button">Drehen</button>'
+            f'<div class="result" aria-live="polite" hidden></div></div>'
+            f'<script type="application/json" id="spin-data">{data}</script></section>')
+
+
+SPIN_CSS = """
+.spin .spinbox{position:relative;background:var(--fg);color:#fff;border-radius:26px;padding:20px 16px 18px;overflow:hidden}
+.spin .spinbox:before{content:"";position:absolute;inset:-40%;background:conic-gradient(from 0deg,#FF4D8D,#FFB547,#3DDC97,#3D8BFF,#8B6CFF,#FF4D8D);
+opacity:.14;filter:blur(30px);pointer-events:none}
+.spin.go .spinbox:before{opacity:.32;animation:spinlight 2.4s linear infinite}
+@keyframes spinlight{to{transform:rotate(1turn)}}
+.spinhead{position:relative;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.spinhead h2{margin:0;color:#fff}.spin .sub{color:#CFC9E8;position:relative}
+.snd{border:0;background:rgba(255,255,255,.12);color:#fff;border-radius:12px;width:42px;height:42px;font-size:20px;cursor:pointer}
+.reel{position:relative;height:184px;border-radius:18px;background:#14092B;overflow:hidden;
+box-shadow:inset 0 0 0 2px rgba(255,255,255,.08),inset 0 0 40px rgba(0,0,0,.6)}
+.reel:after{content:"";position:absolute;inset:0;pointer-events:none;
+background:linear-gradient(90deg,#14092B 0,transparent 18%,transparent 82%,#14092B 100%)}
+.track{position:absolute;left:0;top:12px;display:flex;gap:10px;will-change:transform}
+.card{flex:none;width:130px;height:160px;border-radius:14px;background:#22144A;border-bottom:6px solid var(--c);
+display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:8px;text-align:center;
+box-shadow:0 0 0 1px rgba(255,255,255,.06),0 -24px 30px -24px var(--c) inset}
+.card img{width:100%;height:96px;object-fit:cover;border-radius:10px;background:#fff}
+.card .svgw{height:96px;display:grid;place-items:center}.card .svgw svg{width:72px;height:72px}
+.card b{font-size:12.5px;line-height:1.2;max-height:2.4em;overflow:hidden;color:#fff}
+.card.win{animation:winpulse 1s ease-in-out 3;box-shadow:0 0 0 3px var(--c),0 0 34px var(--c)}
+@keyframes winpulse{50%{transform:scale(1.07)}}
+.marker{position:absolute;left:50%;top:0;bottom:0;width:4px;margin-left:-2px;background:#FFD23F;z-index:2;
+box-shadow:0 0 10px #FFD23F,0 0 26px #FF4D8D}
+.marker:before,.marker:after{content:"";position:absolute;left:50%;margin-left:-9px;border:9px solid transparent}
+.marker:before{top:0;border-top-color:#FFD23F}.marker:after{bottom:0;border-bottom-color:#FFD23F}
+.marker.tick{box-shadow:0 0 18px #FFD23F,0 0 44px #FF4D8D}
+.legend{position:relative;display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
+.legend .chip{background:rgba(255,255,255,.1);color:#fff;box-shadow:none;font-size:13px;padding:6px 11px;cursor:default}
+.spinbtn{position:relative;width:100%;border:0;border-radius:16px;padding:16px;font:28px Anton,sans-serif;letter-spacing:1px;text-transform:uppercase;
+color:#2B2350;background:linear-gradient(90deg,#FFD23F,#FF8FB1,#8B6CFF,#3DDC97,#FFD23F);background-size:300% 100%;cursor:pointer;
+animation:btnflow 6s linear infinite;box-shadow:0 8px 26px rgba(255,77,141,.35)}
+@keyframes btnflow{to{background-position:300% 0}}
+.spinbtn:disabled{opacity:.6;cursor:wait}
+.result{position:relative;margin-top:14px;background:#fff;color:var(--fg);border-radius:18px;padding:14px;display:flex;gap:14px;align-items:center;
+border-left:8px solid var(--c)}
+.result .ri2{width:76px;height:76px;flex:none;border-radius:12px;overflow:hidden;background:var(--bg2);display:grid;place-items:center}
+.result .ri2 img{width:100%;height:100%;object-fit:cover}.result .ri2 svg{width:60px;height:60px}
+.result small{color:var(--mut);font-weight:700}.result h3{font-size:18px;margin:2px 0 8px}
+.result .acts{display:flex;gap:8px;flex-wrap:wrap}.result .btn{padding:8px 14px;font-size:14px}
+.confetti{position:absolute;width:10px;height:4px;border-radius:2px;top:50%;left:50%;pointer-events:none;z-index:3;
+animation:conf 1.1s ease-out forwards}
+@keyframes conf{to{transform:translate(var(--x),var(--y)) rotate(var(--r));opacity:0}}
+@media(prefers-reduced-motion:reduce){.spin.go .spinbox:before,.spinbtn{animation:none}}
+"""
+
+SPIN_JS = r"""<script>
+(function(){
+var root=document.getElementById('zufall');if(!root)return;
+var items=JSON.parse(document.getElementById('spin-data').textContent),track=root.querySelector('.track'),reel=root.querySelector('.reel'),
+ mk=root.querySelector('.marker'),btn=root.querySelector('.spinbtn'),res=root.querySelector('.result'),snd=root.querySelector('.snd'),
+ reduce=matchMedia('(prefers-reduced-motion: reduce)').matches,sound=true,ac=null,busy=false;
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function pic(i){var ok=window.npImgOK&&window.npImgOK(),src=i.img||(i.ext&&ok?i.ext:'');
+ return src?'<img src="'+esc(src)+'" alt="" loading="lazy">':'<span class="svgw">'+(i.svg||'')+'</span>'}
+function card(i){return '<div class="card" style="--c:'+i.c+'">'+pic(i)+'<b>'+esc(i.t)+'</b></div>'}
+function rnd(n){return Math.floor(Math.random()*n)}
+function fill(){var h='';for(var k=0;k<14;k++)h+=card(items[rnd(items.length)]);track.innerHTML=h;track.style.transform='translateX(-40px)'}
+fill();
+snd.addEventListener('click',function(){sound=!sound;snd.textContent=sound?'🔊':'🔇';snd.setAttribute('aria-pressed',sound)});
+function beep(f,d,v,type){if(!sound)return;try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();
+ var o=ac.createOscillator(),g=ac.createGain();o.type=type||'square';o.frequency.value=f;g.gain.setValueAtTime(v,ac.currentTime);
+ g.gain.exponentialRampToValueAtTime(0.0001,ac.currentTime+d);o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+d)}catch(e){}}
+function fanfare(){[660,880,1100,1320].forEach(function(f,k){setTimeout(function(){beep(f,.18,.06,'triangle')},k*90)})}
+function confetti(color){var r=reel.getBoundingClientRect(),b=root.querySelector('.spinbox').getBoundingClientRect();
+ for(var k=0;k<36;k++){var c=document.createElement('i');c.className='confetti';
+  c.style.background=['#FFD23F','#FF4D8D','#3DDC97','#3D8BFF',color][k%5];
+  c.style.left=(r.left-b.left+r.width/2)+'px';c.style.top=(r.top-b.top+r.height/2)+'px';
+  c.style.setProperty('--x',(Math.random()*360-180)+'px');c.style.setProperty('--y',(Math.random()*-200-20)+'px');
+  c.style.setProperty('--r',(Math.random()*720)+'deg');root.querySelector('.spinbox').appendChild(c);setTimeout(c.remove.bind(c),1200)}}
+function show(i){var ext=i.k==='p',lbl=i.k==='p'?'Zum Shop*':(i.k==='post'?'Zum Post':'Zur Themenwelt');
+ res.style.setProperty('--c',i.c);
+ res.innerHTML='<div class="ri2">'+pic(i)+'</div><div><small>Dein Zufalls-Vorschlag · '+esc(i.l)+'</small><h3>'+esc(i.t)+'</h3><div class="acts">'
+  +'<a class="btn dark" href="'+esc(i.u)+'"'+(ext?' rel="sponsored noopener" target="_blank"':'')+'>'+lbl+'</a>'
+  +'<button class="btn" type="button" data-again style="border:2px solid var(--fg)">Nochmal drehen</button></div>'
+  +(ext?'<small style="display:block;margin-top:6px">* Werbelink</small>':'')+'</div>';
+ res.hidden=false;res.querySelector('[data-again]').addEventListener('click',spin)}
+function spin(){if(busy)return;busy=true;btn.disabled=true;res.hidden=true;
+ var N=60,T=52,seq=[];for(var k=0;k<N;k++)seq.push(items[rnd(items.length)]);var win=seq[T];
+ track.innerHTML=seq.map(card).join('');track.style.transform='translateX(0)';
+ var c0=track.children[0],W=c0.offsetWidth+10,mid=reel.clientWidth/2,
+  end=-(T*W+c0.offsetWidth/2-mid)+(Math.random()-.5)*c0.offsetWidth*.7,dur=reduce?0:5600,t0=null,last=-1;
+ root.classList.add('go');
+ function done(){track.style.transform='translateX('+end+'px)';track.children[T].classList.add('win');root.classList.remove('go');
+  fanfare();if(!reduce)confetti(win.c);show(win);busy=false;btn.disabled=false;btn.textContent='Nochmal drehen'}
+ if(!dur){done();return}
+ function frame(ts){if(!t0)t0=ts;var p=Math.min(1,(ts-t0)/dur),e=1-Math.pow(1-p,4),x=end*e;
+  track.style.transform='translateX('+x+'px)';var idx=Math.floor((mid-x)/W);
+  if(idx!==last){last=idx;beep(1400+Math.random()*200,.03,.035);mk.classList.add('tick');setTimeout(function(){mk.classList.remove('tick')},60)}
+  if(p<1)requestAnimationFrame(frame);else done()}
+ requestAnimationFrame(frame)}
+btn.addEventListener('click',spin);
+})();
+</script>"""
+
+
 def cat_tile(c):
     items = cat_items(c)
     n = f'<span class="n">{len(items)} {"Sorte" if len(items) == 1 else "Sorten"}</span>' if items else '<span class="n soon">Produkte folgen</span>'
@@ -917,8 +1070,11 @@ def build():
         items = cat_items(c)
         inner = (f'<div class="tools"><span></span>{view_toggle("g-cat", ["big", "small", "list"], "small")}</div>'
                  + prod_grid(items, "g-cat")) if items else (
-            '<div class="empty"><strong>Produkte folgen, sobald Partner-Shops freigeschaltet sind.</strong>'
-            + (' Bis dahin findest du unten die passenden Posts.' if c.get("posts") else '') + '</div>')
+            f'<div class="slots"><div class="slot main"><span class="emo">🤝</span><div><strong>Partner-Platz frei</strong>'
+            f'<p>Hier erscheinen Produkte zum Thema {e(c["name"])}, sobald ein passender Partner-Shop freigeschaltet ist.'
+            + (' Bis dahin findest du unten die passenden Posts.' if c.get("posts") else '')
+            + '</p><a class="more" href="/ueber/#partner">Du hast einen Shop oder eine Marke? Für Partner</a></div></div>'
+            '<div class="slot ghost" aria-hidden="true"></div><div class="slot ghost" aria-hidden="true"></div></div>')
         rel = [p for p in live if p["id"] in c.get("posts", [])
                or any(x.get("post") == p["id"] and in_cat(x, c) for x in products)]
         rel_html = (f'<section><h2>Passende Posts</h2><div class="grid posts v-small">{"".join(post_card(p) for p in rel)}</div></section>'
@@ -1070,28 +1226,35 @@ def build():
         panels += (f'<div class="bgrid" data-panel="{g["id"]}"{"" if first else " hidden"}>' + "".join(
             f'<a class="bc" href="/shop/?{g["id"]}={o["id"]}#alle">{facet_icon(g["id"], o, 40)}{e(o["name"])}'
             f'<small>{counts[(g["id"], o["id"])]} {"Sorte" if counts[(g["id"], o["id"])] == 1 else "Sorten"}</small></a>' for o in opts) + '</div>')
-    # Stöbern direkt unter der Suche: Themenwelten immer, Woher/Geschmack/Art sobald genug gefüllt
-    ordered = cats_sorted()
-    def _cnt(c):
-        n = len(cat_items(c))
-        return f'{n} {"Sorte" if n == 1 else "Sorten"}' if n else "bald"
-    tcells = [f'<a class="bc"{" data-more" if i >= 9 else ""} href="/kategorie/{c["id"]}/">{sticker(c["id"], 40)}{e(c["name"])}<small>{_cnt(c)}</small></a>'
-              for i, c in enumerate(ordered)]
-    ftabs, fpanels = "", ""
-    for g in FILTER:
-        opts = sorted([o for o in g["options"] if counts.get((g["id"], o["id"]))], key=lambda o: -counts[(g["id"], o["id"])])[:6]
-        if len(opts) < 3:
-            continue
-        ftabs += f'<button type="button" role="tab" data-tab="{g["id"]}" aria-selected="false">{e(g["name"])}</button>'
-        fpanels += (f'<div class="bgrid" data-panel="{g["id"]}" hidden>' + "".join(
-            f'<a class="bc" href="/shop/?{g["id"]}={o["id"]}#alle">{facet_icon(g["id"], o, 40)}{e(o["name"])}'
-            f'<small>{counts[(g["id"], o["id"])]} {"Sorte" if counts[(g["id"], o["id"])] == 1 else "Sorten"}</small></a>' for o in opts) + '</div>')
-    browse_html = (f'<nav class="browse" aria-label="Stöbern"><h2>Stöbern</h2>'
-                   + (f'<div class="tabs" role="tablist"><button type="button" role="tab" data-tab="themen" aria-selected="true">Themenwelten</button>{ftabs}</div>' if ftabs else "")
-                   + f'<div data-panel="themen"><div class="bgrid clip" id="g-themen">{"".join(tcells)}</div>'
-                   + (f'<div class="morebar" style="margin-top:10px"><button class="morebtn" type="button" data-expand="g-themen">{len(ordered) - 9} weitere</button>'
-                      f'<a class="more" style="align-self:center" href="/shop/">Zum Shop</a></div>' if len(ordered) > 9 else "")
-                   + f'</div>{fpanels}</nav>')
+    # Stöbern direkt unter der Suche: Art | Geschmack | Woher | Themenwelten, alle Optionen sichtbar.
+    # Gefülltes ist klickbar (mit Anzahl), Leeres ausgegraut mit "bald" (kein Klick ins Leere).
+    VISIBLE = 9
+    def sorte(n):
+        return f'{n} {"Sorte" if n == 1 else "Sorten"}'
+
+    def tile_grid(gid, cells):
+        out = [c.replace('class="bc', 'data-more class="bc', 1) if i >= VISIBLE else c for i, c in enumerate(cells)]
+        more = (f'<button class="bc bmore" type="button" data-expand="{gid}"><span class="emo">＋</span>{len(cells) - VISIBLE} weitere</button>'
+                if len(cells) > VISIBLE else "")
+        return f'<div class="bgrid clip" id="{gid}">{"".join(out)}{more}</div>'
+
+    gorder = sorted(FILTER, key=lambda g: {"art": 0, "geschmack": 1, "land": 2}.get(g["id"], 9))
+    btabs, bpanels = "", ""
+    for k, g in enumerate(gorder):
+        cells = []
+        for o in sorted(g["options"], key=lambda o: -counts.get((g["id"], o["id"]), 0)):
+            n = counts.get((g["id"], o["id"]), 0)
+            icon = facet_icon(g["id"], o, 40)
+            cells.append(f'<a class="bc" href="/shop/?{g["id"]}={o["id"]}#alle">{icon}{e(o["name"])}<small>{sorte(n)}</small></a>' if n else
+                         f'<span class="bc off" aria-disabled="true">{icon}{e(o["name"])}<small>bald</small></span>')
+        btabs += f'<button type="button" role="tab" data-tab="{g["id"]}" aria-selected="{str(k == 0).lower()}">{e(g["name"])}</button>'
+        bpanels += f'<div data-panel="{g["id"]}"{"" if k == 0 else " hidden"}>{tile_grid("b-" + g["id"], cells)}</div>'
+    tcells = [f'<a class="bc" href="/kategorie/{c["id"]}/">{sticker(c["id"], 40)}{e(c["name"])}'
+              f'<small>{sorte(len(cat_items(c))) if cat_items(c) else "bald"}</small></a>' for c in cats_sorted()]
+    btabs += '<button type="button" role="tab" data-tab="themen" aria-selected="false">Themenwelten</button>'
+    bpanels += f'<div data-panel="themen" hidden>{tile_grid("b-themen", tcells)}</div>'
+    browse_html = (f'<nav class="browse" aria-label="Stöbern"><div class="tabs" role="tablist">{btabs}</div>{bpanels}'
+                   f'<p style="margin:10px 0 0"><a class="more" href="/shop/#alle">Alles im Shop frei filtern</a></p></nav>')
     season_html = "".join(
         f'<section style="padding-top:22px"><a class="cat" style="--c:{cat_color[c["id"]]}" href="/kategorie/{c["id"]}/">{sticker(c["id"])}'
         f'<h3>{e(c["name"])}</h3><p>{e(c["teaser"])}</p><span class="n">{len(cat_items(c))} '
@@ -1125,8 +1288,8 @@ def build():
     home = (f'<section class="hero has-fan">{SPRINKLES}<div class="fan">{fan}</div><h1>Süßes aus <span class="acc">aller Welt</span></h1>'
             f'<p class="lead" style="max-width:34ch">{e(site["intro"])}</p>{how}'
             f'<button class="fake" type="button" data-open-search>{ICON_SEARCH}<span>Snacks, Länder, Marken suchen …</span></button>{browse_html}</section>'
-            f'{season_html}{band_html}{home_prods}{posts_html}{about_box}{jump}')
-    write("index.html", page("Naschpass – Süßigkeiten aus aller Welt", home))
+            f'{season_html}{spin_html(live)}{band_html}{home_prods}{posts_html}{about_box}{jump}')
+    write("index.html", page("Naschpass – Süßigkeiten aus aller Welt", home, script=SPIN_JS))
 
     # --- Über Naschpass / Für Partner (ehrlich: neuer Kanal, keine Reichweitenzahlen)
     im = site["impressum"]
