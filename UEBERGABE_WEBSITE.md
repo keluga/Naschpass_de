@@ -2,6 +2,8 @@
 
 Stand: 01.10.2026. Für den Chat, der an der Website weiterarbeitet. Erst ganz lesen, dann loslegen.
 
+**Neu:** `WEBSITE_VISION.md` beschreibt Vision, Partner-Stand, Feed-Import und Reihenfolge. Danach richten.
+
 ## 1. Worum es geht
 **Naschpass** (@naschpass_de) ist Kevs Social-Media-Kanal über Süßigkeiten aus aller Welt (TikTok, Instagram, Pinterest), bestehend aus Karussell-Posts. Die Website ist der **Link in allen Bios**. Sie soll:
 1. Besucher aus einem Post direkt zu „ihrem“ Post führen (`/p/<nr>/`, in den Bios steht „Link in Bio → #09“),
