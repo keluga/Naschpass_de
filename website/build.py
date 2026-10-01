@@ -627,7 +627,7 @@ def cat_tile(c):
             f'<h3>{e(c["name"])}</h3><p>{e(c["teaser"])}</p>{n}</a>')
 
 
-def band(live, title_prod="Meine ganz persönlichen Empfehlungen", title_post="Neu auf Naschpass"):
+def band(live, title_prod="Unsere Empfehlungen", title_post="Neu auf Naschpass"):
     """Laufband: empfohlene Produkte (featured), sonst die neuesten Produkte, sonst die neuesten Posts."""
     feat = [p for p in products if p.get("featured")] or products[:12]
     if feat:
