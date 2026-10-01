@@ -641,7 +641,7 @@ def follow_box():
             f'<div class="btns">{socials_btns()}</div></div>')
 
 
-def page(title, body, desc=None, path="/", og_img=None, script=""):
+def page(title, body, desc=None, path="/", og_img=None, script="", stamp=""):
     desc = desc or site["intro"]
     og = og_img or f"{BASE}/static/logo.png"
     return f"""<!doctype html><html lang="de"><head><meta charset="utf-8">
@@ -653,7 +653,7 @@ def page(title, body, desc=None, path="/", og_img=None, script=""):
 <meta property="og:type" content="website"><meta property="og:url" content="{BASE}{path}"><meta property="og:locale" content="de_DE">
 <meta property="og:title" content="{e(title)}"><meta property="og:description" content="{e(desc)}">
 <meta property="og:image" content="{og}"><meta name="twitter:card" content="summary_large_image">
-<style>{CSS}{SPIN_CSS}</style></head><body>
+<style>{CSS}{SPIN_CSS}{EXTRA_CSS}</style></head><body{stamp_attr(stamp)}>
 <div class="ad">{AD}</div>{'<div class="ad" style="background:#FFB547;color:#2B2350;font-weight:700">VORSCHAU mit Beispielprodukten – nicht live</div>' if DEMO else ''}
 <header><div class="wrap"><a class="logo" href="/"><img src="/static/logo.png" alt="" width="38" height="38">NASCHPASS</a>
 <nav aria-label="Hauptmenü"><a href="/shop/">Shop</a><a href="/posts/">Posts</a><a href="/ueber/" class="hide-s">Über uns</a></nav>
@@ -721,6 +721,23 @@ def write(rel, content):
 
 
 COMMON_JS = r"""
+(function(){
+/* Naschpass-Stempel: nur nach "Pass starten", nur im Browser */
+var PK='np_pass';function pget(){try{return JSON.parse(localStorage.getItem(PK)||'null')}catch(e){return null}}
+function pset(v){try{if(v)localStorage.setItem(PK,JSON.stringify(v));else localStorage.removeItem(PK)}catch(e){}}
+var b=document.body,pass=pget();
+if(b.dataset.stamp&&pass&&pass.s.indexOf(b.dataset.stamp)<0){pass.s.push(b.dataset.stamp);pset(pass);
+ var t=document.createElement('div');t.className='toast';t.setAttribute('role','status');
+ var slot=document.querySelector('#pass [data-s="'+b.dataset.stamp+'"] svg');
+ t.innerHTML='🛂 Stempel: '+b.dataset.stampName+' ('+pass.s.length+'/'+b.dataset.stampTotal+')';document.body.appendChild(t);
+ setTimeout(function(){t.classList.add('on')},300);setTimeout(function(){t.classList.remove('on')},3600)}
+var pb=document.getElementById('pass');
+if(pb){var slots=pb.querySelectorAll('[data-s]'),cnt=pb.querySelector('.pcount'),st=pb.querySelector('[data-pass=start]'),rs=pb.querySelector('[data-pass=reset]');
+ function draw(){pass=pget();slots.forEach(function(x){x.classList.toggle('got',!!pass&&pass.s.indexOf(x.dataset.s)>=0)});
+  cnt.textContent=pass?(pass.s.length+'/'+slots.length):'';st.hidden=!!pass;rs.hidden=!pass}
+ st.addEventListener('click',function(){pset({s:[]});draw()});
+ rs.addEventListener('click',function(){pset(null);draw()});draw()}
+})();
 (function(){
 /* Produktfotos von Shop-Servern: erst nach Einwilligung laden. Die Wahl liegt nur im Browser (localStorage). */
 var K='np_fotos',bar=document.getElementById('imgbar'),pref=document.querySelector('[data-imgpref]');
@@ -1014,7 +1031,12 @@ function show(i){var ext=i.k==='p',lbl=i.k==='p'?'Zum Shop*':(i.k==='post'?'Zum 
  res.style.setProperty('--c',i.c);res.classList.add('has');
  res.innerHTML='<div class="ri2">'+pic(i)+'</div><div><small>Dein Zufalls-Vorschlag · '+esc(i.l)+'</small><h3>'+esc(i.t)+'</h3><div class="acts">'
   +'<a class="btn dark" href="'+esc(i.u)+'"'+(ext?' rel="sponsored noopener" target="_blank"':'')+'>'+lbl+'</a>'
-  +(ext?'<small style="align-self:center">* Werbelink</small>':'')+'</div></div>'}
+  +'<button class="btn" type="button" data-share style="border:2px solid var(--fg)">Teilen</button>'
+  +(ext?'<small style="align-self:center">* Werbelink</small>':'')+'</div></div>';
+ res.querySelector('[data-share]').addEventListener('click',function(ev){var b=ev.currentTarget,
+  d={title:'Naschpass',text:'Mein Naschpass-Rad sagt: '+i.t+' 🍬 Was zeigt es dir?',url:location.origin+'/#zufall'};
+  if(navigator.share){navigator.share(d).catch(function(){})}
+  else{try{navigator.clipboard.writeText(d.text+' '+d.url);b.textContent='Kopiert!'}catch(e){}}})}
 /* Ablauf wie beim Case-Opening: kurz ausholen, schnell los, lange sanft auslaufen,
    knapp an der Kante liegen bleiben, kurze Pause, dann in die Mitte rutschen und aufdecken */
 function spin(){if(busy)return;busy=true;btn.disabled=true;btn.textContent='…';res.classList.add('dim');
@@ -1041,6 +1063,100 @@ function spin(){if(busy)return;busy=true;btn.disabled=true;btn.textContent='…'
   if(t<260+dur)requestAnimationFrame(frame);else settle()}
  requestAnimationFrame(frame)}
 btn.addEventListener('click',function(){btn.blur();spin()});
+})();
+</script>"""
+
+
+# ---------- Naschpass mit Stempeln ----------
+# Ein Stempel pro Länder-Themenwelt. Gesammelt wird erst nach "Pass starten" und nur im Browser (localStorage).
+STAMPS = [c for c in cats if any(f.startswith("land:") for f in c.get("facets", []))]
+STAMP_IDS = {c["id"] for c in STAMPS}
+TAG_STAMP = {"japan": "japan", "usa": "usa", "usa vs. eu": "usa", "mexiko": "mexiko", "italien": "italien",
+             "schweiz": "schweiz", "skandinavien": "skandinavien"}
+
+
+def stamp_attr(sid):
+    if not sid or sid not in STAMP_IDS:
+        return ""
+    c = cat_by_id[sid]
+    return f' data-stamp="{sid}" data-stamp-name="{e(c["name"])}" data-stamp-total="{len(STAMPS)}"'
+
+
+def pass_html():
+    slots = "".join(f'<a class="stamp-slot" href="/kategorie/{c["id"]}/" data-s="{c["id"]}" title="{e(c["name"])}">'
+                    f'{sticker(c["id"], 46)}<small>{e(c["name"])}</small></a>' for c in STAMPS)
+    return (f'<section id="pass"><div class="passbook"><div class="passhead"><div><h2>Dein Naschpass</h2>'
+            f'<p class="sub" style="margin:0">Sammle Länder-Stempel: Jede Länder-Themenwelt, die du besuchst, stempelt deinen Pass.</p></div>'
+            f'<b class="pcount" aria-live="polite"></b></div><div class="stamps">{slots}</div>'
+            f'<div class="pactions"><button class="btn dark" type="button" data-pass="start">Pass starten</button>'
+            f'<button class="linkbtn" type="button" data-pass="reset" hidden>Pass zurücksetzen</button></div>'
+            f'<p class="wl">Dein Pass liegt nur in deinem Browser und wird nie an uns gesendet.</p></div></section>')
+
+
+# ---------- Adventskalender ----------
+def advent_page(live):
+    pool = []
+    for p in reversed(live):
+        pool.append({"t": plain(p["hook"]), "s": f"Post #{p['id']}", "u": f"/p/{p['id']}/",
+                     "img": cdn(cover_url(p), 240) if ON_NETLIFY else cover_url(p)})
+    for c in cats_sorted():
+        pool.append({"t": c["name"], "s": c.get("teaser", ""), "u": f"/kategorie/{c['id']}/", "svg": sticker(c["id"], 64)})
+    if not pool:
+        return ""
+    order = [7, 19, 3, 12, 24, 9, 1, 15, 21, 5, 17, 11, 2, 23, 8, 14, 20, 4, 18, 10, 6, 13, 22, 16]
+    doors = "".join(f'<button class="door" type="button" data-day="{d}" style="--c:{CAT_COLORS[d % len(CAT_COLORS)]}"><span>{d}</span></button>'
+                    for d in order)
+    content = json.dumps({str(d): pool[(d - 1) % len(pool)] for d in range(1, 25)}, ensure_ascii=False).replace("</", "<\\/")
+    return f"""<section class="hero" style="padding-bottom:0">{SPRINKLES}<h1>Naschpass-<span class="acc">Adventskalender</span></h1>
+<p class="lead">Vom 1. bis 24. Dezember öffnet sich jeden Tag ein Türchen mit einem Süßigkeiten-Fakt oder einer Themenwelt zum Stöbern.</p>
+<p class="amsg" aria-live="polite"></p></section>
+<section style="padding-top:10px"><div class="doors">{doors}</div><div class="result adv" aria-live="polite" hidden></div></section>
+<script type="application/json" id="adv-data">{content}</script>"""
+
+
+EXTRA_CSS = """
+.passbook{background:#FFF7EC;border-radius:var(--r);padding:20px;box-shadow:var(--sh);border:2px solid #E9DCC6;position:relative}
+.passbook:before{content:"";position:absolute;left:14px;top:14px;bottom:14px;width:6px;border-radius:3px;background:repeating-linear-gradient(#E9DCC6 0 8px,transparent 8px 14px)}
+.passhead{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;padding-left:12px}
+.passhead h2{margin:0 0 4px}.pcount{font:28px Anton,sans-serif;color:var(--vio);white-space:nowrap}
+.stamps{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0 12px;padding-left:12px}
+@media(min-width:700px){.stamps{grid-template-columns:repeat(6,1fr)}}
+.stamp-slot{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 6px;border:2px dashed #E0D2B8;border-radius:16px;text-decoration:none;
+color:var(--mut);font-weight:700;text-align:center}
+.stamp-slot .stk{filter:grayscale(1);opacity:.35;transition:all .3s}
+.stamp-slot small{font-size:11.5px;line-height:1.2}
+.stamp-slot.got{border-style:solid;border-color:var(--vio2);color:var(--fg);background:#fff}
+.stamp-slot.got .stk{filter:none;opacity:1;transform:rotate(-8deg)}
+.pactions{display:flex;gap:14px;align-items:center;padding-left:12px}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%) translateY(120%);background:var(--fg);color:#fff;border-radius:16px;padding:12px 16px;
+font-weight:800;z-index:60;display:flex;gap:10px;align-items:center;box-shadow:0 12px 30px rgba(43,35,80,.35);transition:transform .35s cubic-bezier(.2,1.4,.4,1)}
+.toast.on{transform:translateX(-50%) translateY(0)}.toast .stk{width:34px;height:34px;transform:rotate(-8deg)}
+.doors{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media(min-width:700px){.doors{grid-template-columns:repeat(6,1fr)}}
+.door{aspect-ratio:1;border:0;border-radius:16px;background:var(--c);color:#fff;font:34px Anton,sans-serif;cursor:pointer;position:relative;
+box-shadow:inset 0 0 0 4px rgba(255,255,255,.35),var(--sh);text-shadow:0 2px 0 rgba(43,35,80,.25)}
+.door[disabled]{filter:grayscale(.6) brightness(.95);opacity:.55;cursor:default}
+.door.open{background:#fff;color:var(--c);box-shadow:inset 0 0 0 3px var(--c)}
+.door:not([disabled]):hover{transform:translateY(-2px)}
+.amsg{font-weight:800;color:var(--vio)}
+.result.adv{margin-top:16px;background:#fff;border-left:8px solid var(--c)}
+.advteaser{display:flex;gap:14px;align-items:center;background:linear-gradient(135deg,#2FAE7E,#1F8A62);color:#fff;border-radius:var(--r);padding:18px;text-decoration:none}
+.advteaser h2{color:#fff;margin:0}.advteaser p{margin:4px 0 0;color:#E6FFF4}.advteaser .stk{flex:none}
+"""
+
+ADVENT_JS = r"""<script>
+(function(){
+var data=JSON.parse(document.getElementById('adv-data').textContent),now=new Date(),dec=now.getMonth()===11,today=now.getDate(),
+ msg=document.querySelector('.amsg'),res=document.querySelector('.result.adv');
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+msg.textContent=dec?(today<=24?'Heute ist Türchen '+today+' dran.':'Alle Türchen sind offen. Frohe Weihnachten!'):'Der Kalender startet am 1. Dezember. Bis dahin sind alle Türchen zu.';
+document.querySelectorAll('.door').forEach(function(d){var n=+d.dataset.day,ok=dec&&n<=today;d.disabled=!ok;
+ if(!ok)d.setAttribute('aria-label','Türchen '+n+', noch zu');
+ d.addEventListener('click',function(){var i=data[n];if(!i)return;d.classList.add('open');
+  res.style.setProperty('--c',getComputedStyle(d).getPropertyValue('--c'));res.hidden=false;res.classList.add('has');
+  var pic=i.img?'<img src="'+esc(i.img)+'" alt="">':(i.svg||'');
+  res.innerHTML='<div class="ri2">'+pic+'</div><div><small>Türchen '+n+' · '+esc(i.s)+'</small><h3>'+esc(i.t)+'</h3><div class="acts"><a class="btn dark" href="'+esc(i.u)+'">Ansehen</a></div></div>';
+  res.scrollIntoView({behavior:'smooth',block:'nearest'})})});
 })();
 </script>"""
 
@@ -1137,8 +1253,10 @@ def build():
             f'<a class="back" href="/shop/">← Zum Shop</a>'
             f'<section style="padding-top:14px"><div style="display:flex;align-items:center;gap:14px;margin-bottom:6px">{sticker(c["id"], 64)}'
             f'<h1 style="margin:0">{e(c["name"])}</h1></div><p class="lead">{e(c.get("text") or c["teaser"])}</p>{inner}</section>{rel_html}'
-            f'<section><h2>Mehr entdecken</h2><div class="stickers">{others}</div></section>',
-            c["teaser"], f"/kategorie/{c['id']}/"))
+            f'<section><h2>Mehr entdecken</h2><div class="stickers">{others}</div></section>'
+            + ('<section><a class="advteaser" href="/advent/">' + sticker("weihnachten", 56) + '<div><h2>Adventskalender</h2>'
+               '<p>Vom 1. bis 24. Dezember jeden Tag ein Türchen.</p></div></a></section>' if c["id"] == "weihnachten" else ""),
+            c["teaser"], f"/kategorie/{c['id']}/", stamp=c["id"]))
 
     # --- Post-Seiten
     for k, p in enumerate(live):
@@ -1176,7 +1294,8 @@ def build():
                 f'<section><h2>Länder & Themen</h2><div class="stickers">{stick}</div></section>'
                 + (f'<section><h2>Quellen</h2><ul class="src">{srcs}</ul></section>' if srcs else "") + nav)
         write(f"p/{p['id']}/index.html", page(f"#{p['id']} {plain(p['hook'])} – Naschpass", body, plain(p.get("sub", "")),
-                                              f"/p/{p['id']}/", f"{BASE}/p/{p['id']}/01.jpg"))
+                                              f"/p/{p['id']}/", f"{BASE}/p/{p['id']}/01.jpg",
+                                              stamp=TAG_STAMP.get(p.get("tag", "").lower(), "")))
 
     # --- Gemeinsame Bausteine
     newest = list(reversed(live))
@@ -1335,11 +1454,15 @@ def build():
                  f'<div class="btns"><a class="btn dark" href="/ueber/">Über Naschpass</a><a class="btn" href="/ueber/#partner">Für Partner</a></div></div></section>')
     fan = "".join(f'<a href="/p/{p["id"]}/" tabindex="-1" aria-hidden="true">{slide_img(cover_url(p), "", 230, "230px")}</a>'
                   for p in newest[:3][::-1])
+    md = TODAY.strftime("%m-%d")
+    advent_teaser = ('<section style="padding-top:22px"><a class="advteaser" href="/advent/">' + sticker("weihnachten", 56)
+                     + '<div><h2>Naschpass-Adventskalender</h2><p>' + ("Heute wartet ein neues Türchen." if md >= "12-01" else "Ab 1. Dezember jeden Tag ein Türchen.")
+                     + '</p></div></a></section>') if "11-15" <= md <= "12-24" else ""
     home = (f'<section class="hero hgrid">{SPRINKLES}<div class="hl"><h1>Süßes aus <span class="acc">aller Welt</span></h1>'
             f'<p class="lead" style="max-width:36ch">{e(site["intro"])}</p>{how}'
             f'<button class="fake" type="button" data-open-search>{ICON_SEARCH}<span>Snacks, Länder, Marken suchen …</span></button>{browse_html}</div>'
             f'<div class="hr">{spin_html(live)}</div></section>'
-            f'{season_html}{home_prods}{band_html}{posts_html}{about_box}{jump}')
+            f'{season_html}{advent_teaser}{home_prods}{pass_html()}{band_html}{posts_html}{about_box}{jump}')
     write("index.html", page("Naschpass – Süßigkeiten aus aller Welt", home, script=SPIN_JS))
 
     # --- Über Naschpass / Für Partner (ehrlich: neuer Kanal, keine Reichweitenzahlen)
@@ -1371,6 +1494,16 @@ Vollständige Angaben im <a href="/impressum/">Impressum</a>.</p></section>"""
                                    "Was Naschpass ist, wie wir arbeiten und was Partner-Shops bei uns bekommen.", "/ueber/"))
 
     write("search.json", json.dumps(search_index(live), ensure_ascii=False, separators=(",", ":")))
+    adv = advent_page(live)
+    if adv:
+        write("advent/index.html", page("Adventskalender – Naschpass", adv, "Vom 1. bis 24. Dezember jeden Tag ein Türchen.", "/advent/",
+                                        script=ADVENT_JS))
+    # Kurzlinks: /9 und /09 führen zu Post #09 (Netlify-Weiterleitungen, kostenlos)
+    red = []
+    for p in live:
+        n = str(int(p["id"]))
+        red += [f"/{n} /p/{p['id']}/ 301", f"/{p['id']} /p/{p['id']}/ 301"] if n != p["id"] else [f"/{n} /p/{p['id']}/ 301"]
+    (DIST / "_redirects").write_text("\n".join(dict.fromkeys(red)) + "\n", encoding="utf-8")
     write("404.html", page("Seite nicht gefunden – Naschpass",
                            '<section class="hero"><h1>Diese Seite gibt es <span class="acc">nicht</span></h1>'
                            '<p class="sub">Vielleicht hat sich ein Tippfehler eingeschlichen. Probier die Suche oder geh zur Startseite.</p>'
@@ -1395,6 +1528,7 @@ Vollständige Angaben im <a href="/impressum/">Impressum</a>.</p></section>"""
 <h2>3. Hosting</h2><p>Die Website wird bei Netlify, Inc., 101 2nd Street, San Francisco, CA 94105, USA gehostet. Beim Aufruf verarbeitet Netlify technisch notwendige Daten (z. B. IP-Adresse, Datum und Uhrzeit, aufgerufene Seite, Browser) in Server-Logfiles, um die Seite auszuliefern und die Sicherheit zu gewährleisten. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einem sicheren und stabilen Betrieb). Dabei können Daten in die USA übermittelt werden; die Übermittlung erfolgt auf Grundlage der EU-Standardvertragsklauseln bzw. des EU-US Data Privacy Framework, soweit der Anbieter dort zertifiziert ist. Mit Netlify besteht ein Vertrag zur Auftragsverarbeitung. Details: <a href="https://www.netlify.com/privacy/" rel="noopener" target="_blank">netlify.com/privacy</a></p>
 <h2>4. Werbelinks (Affiliate)</h2><p>Einige Links führen zu Online-Shops und sind mit einer Partnerkennung versehen (z. B. über das Netzwerk Awin). Erst wenn du einen solchen Link anklickst, verlässt du diese Website; der Shop bzw. das Partnernetzwerk kann dann auf seiner eigenen Seite Cookies setzen, um den Kauf zuzuordnen. Dafür ist der jeweilige Anbieter verantwortlich. Auf dieser Website selbst wird dabei nichts gespeichert. Produktbilder aus den Datenfeeds der Partner-Shops werden über unseren Hoster Netlify ausgeliefert; dein Browser baut dabei keine Verbindung zu den Shops auf. Ausnahme: Abschnitt 4b.</p>
 {fotos_html()}
+<h2>4c. Dein Naschpass (Stempel)</h2><p>Wenn du auf der Startseite „Pass starten“ drückst, speichern wir im lokalen Speicher deines Browsers, welche Länder-Themenwelten du besucht hast. Das passiert nur auf deinen Wunsch (§ 25 Abs. 2 Nr. 2 TDDDG), wird nie an uns übertragen und lässt sich mit „Pass zurücksetzen“ jederzeit löschen.</p>
 <h2>4a. Suche</h2><p>Die Suche läuft komplett in deinem Browser. Deine Suchbegriffe werden nicht übertragen und nicht gespeichert.</p>
 <h2>5. Social-Media-Links</h2><p>Links zu Instagram, TikTok und Pinterest sind einfache Verlinkungen, keine eingebetteten Inhalte. Daten werden erst übertragen, wenn du den Link anklickst und die jeweilige Plattform besuchst; dort gelten deren Datenschutzbestimmungen.</p>
 <h2>6. Kontakt per E-Mail</h2><p>Schreibst du uns eine E-Mail, verarbeiten wir deine Angaben nur, um deine Anfrage zu beantworten (Art. 6 Abs. 1 lit. b bzw. f DSGVO), und löschen sie, wenn sie nicht mehr benötigt werden.</p>
