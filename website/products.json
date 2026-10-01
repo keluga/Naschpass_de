@@ -1,4 +1,4 @@
 {
-  "_hinweis": "Produkte erst eintragen, wenn der Partner-Shop (AWIN) freigeschaltet hat. url = Affiliate-Link, image = nur Bild-URL aus dem Partner-Feed. post = Nummer des passenden Posts (optional).",
+  "_hinweis": "Produkte erst eintragen, wenn der Partner-Shop (AWIN) freigeschaltet hat. url = Affiliate-Link, image = nur Bild-URL aus dem Partner-Feed (der Bild-Server muss in netlify.toml unter [images] remote_images stehen, sonst wird das Bild weggelassen). post = Nummer des passenden Posts (optional). Optional: featured = true -> erscheint im Laufband 'Unsere Empfehlungen'; tags = Liste zusätzlicher Suchwörter.",
   "products": []
 }

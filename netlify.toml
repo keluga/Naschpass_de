@@ -1,3 +1,8 @@
 [build]
   command = "python3 website/build.py"
   publish = "website/dist"
+
+# Produktbilder aus dem AWIN-Feed: Netlify holt sie serverseitig und liefert sie über die eigene Domain aus
+# (kein Kontakt der Besucher zum Shop -> kein Cookie-Banner nötig). Bild-Server hier freigeben, Beispiel:
+# [images]
+#   remote_images = ['https://images2\.productserve\.com/.*']

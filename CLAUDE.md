@@ -33,4 +33,6 @@ Content-Repo für den Kanal **@naschpass_de** (TikTok, Instagram, Pinterest): Ka
 - Quelle: `website/` (`site.json` = Texte, Socials, Impressum; `products.json` = Produkte mit Affiliate-Links; `build.py` baut nach `website/dist/`).
 - Netlify-Projekt `naschpass` (Site-ID `8c5b425f-4aa1-493b-929e-d394728481dc`) baut automatisch bei jedem Push auf `main` (`netlify.toml`). Ziel-Domain: `naschpass.oneflowsolution.de`.
 - Jeder Post bekommt automatisch eine Seite `/p/<id>/`. Produkte zu einem Post: in `products.json` mit `"post": "<id>"` und `"category"` eintragen – nur echte Affiliate-Links aus freigeschalteten Programmen, Bilder nur aus dem Partner-Feed.
-- Keine Cookies, kein Tracking, keine externen Einbettungen (sonst Datenschutzerklärung anpassen).
+- Keine Cookies, kein Tracking, keine externen Einbettungen (sonst Datenschutzerklärung anpassen). Fremde Produktbilder nur über das Netlify Image CDN (`remote_images` in `netlify.toml`), nie direkt einbinden.
+- **Netlify Free = 300 Credits/Monat, jeder Produktions-Deploy (Push auf `main`) kostet 15.** Änderungen bündeln, nicht für jede Kleinigkeit pushen. Zum Testen einen Branch + Pull Request nutzen: Deploy-Previews sind kostenlos.
+- Suche: `website/dist/search.json` + selbst gehostetes Fuse.js (`website/static/vendor/`). Vorschau mit Beispielprodukten: `PRODUCTS_FILE=<datei> python3 website/build.py`.
