@@ -1,0 +1,137 @@
+{
+  "_hinweis": "AWIN-Advertiser mit Produktfeed. Bei einer Zusage active=true setzen. 'only' = Regex auf Shop-Kategorie/Produktname (Pflicht bei großen Feeds), 'themen' = Themenwelten aus site.json, 'max' = höchstens so viele Produkte dieses Shops (Standard 120). Der Feed-Link mit API-Schlüssel steht NUR in Netlify (Umgebungsvariable AWIN_FEED_URL), nie hier.",
+  "max_total": 1200,
+  "advertisers": [
+    {
+      "id": 112586,
+      "shop": "World of Sweets",
+      "active": false
+    },
+    {
+      "id": 11652,
+      "shop": "REWE",
+      "active": false,
+      "only": "Süßwaren|Suesswaren|Schokolade|Fruchtgummi|Kekse|Gebäck|Chips|Knabber|Getränke|Getraenke|Limonade|Bonbon",
+      "themen": [
+        "klassiker"
+      ]
+    },
+    {
+      "id": 13812,
+      "shop": "Netto Marken-Discount",
+      "active": false,
+      "only": "Süßwaren|Suesswaren|Schokolade|Snacks|Knabber|Fruchtgummi|Kekse",
+      "themen": [
+        "klassiker"
+      ]
+    },
+    {
+      "id": 14396,
+      "shop": "Zotter",
+      "active": false
+    },
+    {
+      "id": 14610,
+      "shop": "Confiserie Lauenstein",
+      "active": false
+    },
+    {
+      "id": 11832,
+      "shop": "Dallmayr",
+      "active": false,
+      "only": "Pralinen|Schokolade|Süß|Suess|Gebäck|Präsent|Praesent"
+    },
+    {
+      "id": 14403,
+      "shop": "GOURVITA",
+      "active": false,
+      "only": "Süß|Suess|Schokolade|Pralinen|Gebäck|Geschenk"
+    },
+    {
+      "id": 100069,
+      "shop": "Venchi",
+      "active": false
+    },
+    {
+      "id": 117407,
+      "shop": "Swiss Finest",
+      "active": false
+    },
+    {
+      "id": 11419,
+      "shop": "Gustini",
+      "active": false,
+      "only": "Süß|Suess|Dolci|Schokolade|Gebäck|Kekse|Panettone|Torrone|Cantucci"
+    },
+    {
+      "id": 128981,
+      "shop": "italienisch-einkaufen",
+      "active": false,
+      "only": "Süß|Suess|Dolci|Schokolade|Gebäck|Kekse|Panettone|Torrone|Cantucci"
+    },
+    {
+      "id": 104845,
+      "shop": "Mexhaus",
+      "active": false,
+      "only": "Süß|Suess|Snacks|Chips|Dulces|Getränke|Getraenke|Salsa|Chili"
+    },
+    {
+      "id": 129605,
+      "shop": "Nordland.Shop",
+      "active": false,
+      "only": "Süß|Suess|Lakritz|Schokolade|Kekse|Snacks|Getränke|Getraenke"
+    },
+    {
+      "id": 127807,
+      "shop": "SugarGang",
+      "active": false
+    },
+    {
+      "id": 129755,
+      "shop": "Kultsnack",
+      "active": false
+    },
+    {
+      "id": 129753,
+      "shop": "Sultan's Palace",
+      "active": false
+    },
+    {
+      "id": 19712,
+      "shop": "BOS FOOD",
+      "active": false,
+      "only": "Süß|Suess|Schokolade|Pralinen|Gebäck|Kekse|Snacks|Konfekt"
+    },
+    {
+      "id": 79456,
+      "shop": "Piccantino",
+      "active": false,
+      "only": "Schokolade|Süß|Suess|Snacks|Chips|Bonbon"
+    },
+    {
+      "id": 15953,
+      "shop": "Velivery",
+      "active": false,
+      "only": "Süß|Suess|Schokolade|Fruchtgummi|Snacks|Kekse|Riegel"
+    },
+    {
+      "id": 42806,
+      "shop": "Sodapop",
+      "active": false,
+      "themen": [
+        "getraenke"
+      ]
+    },
+    {
+      "id": 11746,
+      "shop": "Pati-Versand",
+      "active": false,
+      "only": "Pralinen|Schokolade|Süß|Suess|Weihnacht|Gebäck"
+    },
+    {
+      "id": 115505,
+      "shop": "Burghardt Delicious",
+      "active": false
+    }
+  ]
+}
