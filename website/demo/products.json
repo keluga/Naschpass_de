@@ -1,0 +1,95 @@
+{
+ "_hinweis": "NUR VORSCHAU: Beispielprodukte für Netlify-Deploy-Previews (DEMO=1). Links führen ins Leere. Wird live nie benutzt.",
+ "products": [
+  {
+   "name": "KitKat Matcha",
+   "category": "japan",
+   "url": "https://example.com/werbelink",
+   "image": "/static/demo/d0.png",
+   "note": "Grüntee-Schokolade, mild und cremig.",
+   "shop": "World of Sweets",
+   "post": "02",
+   "featured": true
+  },
+  {
+   "name": "Kinoko no Yama",
+   "category": "japan",
+   "url": "https://example.com/werbelink",
+   "image": "/static/demo/d1.png",
+   "note": "Die Pilze aus dem Schoko-Krieg.",
+   "shop": "Japan Snacks",
+   "post": "03",
+   "featured": true
+  },
+  {
+   "name": "Hi-Chew Mix",
+   "category": "japan",
+   "url": "https://example.com/werbelink",
+   "image": "/static/demo/d2.png",
+   "note": "Kaubonbons in Fruchtsorten.",
+   "shop": "World of Sweets"
+  },
+  {
+   "name": "Reese's Cups",
+   "category": "usa",
+   "url": "https://example.com/werbelink",
+   "image": "/static/demo/d3.png",
+   "note": "Erdnussbutter trifft Schokolade.",
+   "shop": "Candy Store",
+   "featured": true
+  },
+  {
+   "name": "Twinkies",
+   "category": "usa",
+   "url": "https://example.com/werbelink",
+   "image": "/static/demo/d4.png",
+   "note": "Der Kuchen-Klassiker aus den USA.",
+   "shop": "Candy Store"
+  },
+  {
+   "name": "Kinder Joy",
+   "category": "verboten",
+   "url": "https://example.com/werbelink",
+   "image": "/static/demo/d5.png",
+   "note": "Die US-Lösung fürs Überraschungsei.",
+   "shop": "World of Sweets",
+   "post": "01",
+   "featured": true
+  },
+  {
+   "name": "Takis Fuego",
+   "category": "sauer-scharf",
+   "url": "https://example.com/werbelink",
+   "image": "/static/demo/d6.png",
+   "note": "Scharfe Maischips mit Limette.",
+   "shop": "Snack Planet",
+   "featured": true
+  },
+  {
+   "name": "Warheads",
+   "category": "sauer-scharf",
+   "url": "https://example.com/werbelink",
+   "image": "/static/demo/d7.png",
+   "note": "Extrem saure Bonbons.",
+   "shop": "Snack Planet"
+  },
+  {
+   "name": "Salmiakki",
+   "category": "skandinavien",
+   "url": "https://example.com/werbelink",
+   "image": "/static/demo/d8.png",
+   "note": "Finnisches Salzlakritz.",
+   "shop": "Nordic Candy",
+   "featured": true
+  },
+  {
+   "name": "Mystery-Box Japan",
+   "category": "boxen",
+   "url": "https://example.com/werbelink",
+   "image": "/static/demo/d9.png",
+   "note": "20 Überraschungs-Snacks.",
+   "shop": "World of Sweets",
+   "featured": true
+  }
+ ]
+}

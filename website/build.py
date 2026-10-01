@@ -23,7 +23,8 @@ ROOT = HERE.parent
 DIST = HERE / "dist"
 
 site = json.loads((HERE / "site.json").read_text(encoding="utf-8"))
-_pf = Path(os.environ.get("PRODUCTS_FILE") or HERE / "products.json")
+DEMO = os.environ.get("DEMO") == "1"  # nur Netlify-Vorschau: Beispielprodukte aus website/demo/
+_pf = Path(os.environ.get("PRODUCTS_FILE") or (HERE / "demo" / "products.json" if DEMO else HERE / "products.json"))
 products = json.loads(_pf.read_text(encoding="utf-8"))["products"]
 posts = json.loads((ROOT / "generator" / "posts.json").read_text(encoding="utf-8"))["posts"]
 
@@ -392,7 +393,7 @@ def page(title, body, desc=None, path="/", og_img=None, script=""):
 <meta property="og:title" content="{e(title)}"><meta property="og:description" content="{e(desc)}">
 <meta property="og:image" content="{og}"><meta name="twitter:card" content="summary_large_image">
 <style>{CSS}</style></head><body>
-<div class="ad">{AD}</div>
+<div class="ad">{AD}</div>{'<div class="ad" style="background:#FFB547;color:#2B2350;font-weight:700">VORSCHAU mit Beispielprodukten – nicht live</div>' if DEMO else ''}
 <header><div class="wrap"><a class="logo" href="/"><img src="/static/logo.png" alt="" width="38" height="38">NASCHPASS</a>
 <nav aria-label="Hauptmenü"><a href="/shop/">Shop</a><a href="/posts/">Posts</a></nav>
 <button class="sbtn" type="button" data-open-search aria-label="Suche öffnen">{ICON_SEARCH}</button></div></header>
@@ -410,8 +411,10 @@ def prod_card(p):
     cid = p.get("category", "")
     cname = cat_by_id.get(cid, {}).get("name", "")
     src = prod_src(p, 480)
+    raw = p.get("image") or ""
+    fb = f"this.src=\'{e(raw)}\'" if raw.startswith("/") else "this.replaceWith(document.createTextNode(\'\'))"
     pic = (f'<img src="{e(src)}" alt="{e(p["name"])}" loading="lazy" decoding="async" '
-           f'onerror="this.onerror=null;this.replaceWith(document.createTextNode(\'\'))">' if src else sticker(cid))
+           f'onerror="this.onerror=null;{fb}">' if src else sticker(cid))
     shop = p.get("shop", "")
     btn = f"Bei {e(shop)} ansehen*" if shop else "Zum Shop*"
     return (f'<a class="prod" href="{e(p["url"])}" rel="sponsored noopener" target="_blank" data-cat="{e(cid)}" style="--c:{cat_color.get(cid, "#CFE7DD")}">'
@@ -581,6 +584,8 @@ def build():
     if DIST.exists():
         shutil.rmtree(DIST)
     shutil.copytree(HERE / "static", DIST / "static")
+    if DEMO:
+        shutil.copytree(HERE / "demo", DIST / "static" / "demo")
     live = [p for p in posts if (ROOT / "fertige_posts" / post_folder(p)).exists()]
 
     # --- Kategorie-Seiten
