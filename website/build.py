@@ -82,19 +82,66 @@ def slide_img(src, alt, w, sizes, cls="", eager=False):
             f'{c}{lazy} onerror="this.onerror=null;this.removeAttribute(\'srcset\');this.src=\'{src}\'">')
 
 
-def prod_src(p, w):
-    """Bild-URL für ein Produkt, oder None. Fremde Bilder nie direkt einbinden (Datenschutz)."""
+PARTNERS = site.get("partner_shops", {})  # Bild-Server -> Betreiber (steht in der Datenschutzerklärung)
+EXT_USED = set()
+
+
+def fotos_html():
+    if not PARTNERS:
+        return ""
+    lst = "".join(f"<li>{e(h)}: {e(v)}</li>" for h, v in sorted(PARTNERS.items()))
+    return ('<h2 id="fotos">4b. Produktfotos direkt von Shops</h2><p>Für manche Produkte zeigen wir Fotos, die direkt vom Server des '
+            'jeweiligen Shops geladen werden. Das passiert nur, wenn du auf „Fotos anzeigen“ tippst. Dabei werden deine IP-Adresse und '
+            'technische Angaben deines Browsers (z. B. Browsertyp, angefragte Bilddatei) an den Shop übertragen. Was der Shop damit macht, '
+            f'regelt dessen eigene Datenschutzerklärung. Betroffene Shops:</p><ul>{lst}</ul>'
+            '<p>Rechtsgrundlage ist deine Einwilligung (Art. 6 Abs. 1 lit. a DSGVO, § 25 Abs. 1 TDDDG). Deine Entscheidung speichern wir '
+            'nur im lokalen Speicher deines Browsers (kein Cookie, wird nicht an uns übertragen), damit wir nicht bei jedem Besuch neu fragen '
+            'müssen (§ 25 Abs. 2 Nr. 2 TDDDG). Du kannst die Einwilligung jederzeit über „Foto-Einstellung“ unten auf den Seiten mit '
+            'Produktfotos widerrufen. Ohne Einwilligung siehst du statt der Fotos Platzhalter.</p>')
+
+
+def host_of(url):
+    return re.sub(r"^https?://(www\.)?", "", url).split("/")[0].lower()
+
+
+def prod_img(p, w):
+    """(art, url) für ein Produktbild.
+    art = "own": über die eigene Domain (lokal oder Netlify Image CDN, ohne Einwilligung)
+    art = "ext": direkt vom Shop-Server, wird erst nach Einwilligung des Besuchers geladen
+    None = kein Bild."""
     src = p.get("image") or ""
     if not src:
         return None
     if src.startswith("/"):
-        return cdn(src, w) if ON_NETLIFY else src
-    if not ON_NETLIFY:
-        return src  # nur lokale Vorschau
-    if any(r.match(src) for r in REMOTE_OK):
-        return cdn(src, w)
-    WARN.append(f"Bild-Server nicht in netlify.toml freigegeben, Bild ausgelassen: {src[:80]}")
-    return None
+        return ("own", cdn(src, w) if ON_NETLIFY else src)
+    if ON_NETLIFY and any(r.match(src) for r in REMOTE_OK):
+        return ("own", cdn(src, w))
+    h = host_of(src)
+    if h not in PARTNERS:
+        WARN.append(f"Bild-Server {h} fehlt in site.json -> partner_shops (Datenschutz!), Bild ausgelassen")
+        return None
+    EXT_USED.add(h)
+    return ("ext", src)
+
+
+def prod_src(p, w):
+    """Nur Bilder, die ohne Einwilligung geladen werden dürfen (eigene Domain)."""
+    i = prod_img(p, w)
+    return i[1] if i and i[0] == "own" else None
+
+
+def pic_html(p, w, alt, cid):
+    """Bild-Markup: eigenes Bild direkt, Shop-Bild als Platzhalter bis zur Einwilligung."""
+    i = prod_img(p, w)
+    if not i:
+        return sticker(cid)
+    kind, src = i
+    if kind == "own":
+        raw = p.get("image") or ""
+        fb = f"this.src=\'{e(raw)}\'" if raw.startswith("/") else "this.replaceWith(document.createTextNode(\'\'))"
+        return (f'<img src="{e(src)}" alt="{e(alt)}" loading="lazy" decoding="async" '
+                f'onerror="this.onerror=null;{fb}">')
+    return (f'<span class="xi">{sticker(cid)}<img data-ext="{e(src)}" alt="{e(alt)}" decoding="async" hidden></span>')
 
 
 # ---------- Farben, Sticker ----------
@@ -280,6 +327,14 @@ section{padding:34px 0 6px}
 .v-list .prod .note{display:none}
 .v-list .prod .cta span{display:inline-block;padding:7px 12px;font-size:13.5px}
 .wl{font-size:13px;color:var(--mut);margin:10px 0 0}
+.xi{display:contents}.xi.ok .stk{display:none}
+.imgbar{position:fixed;left:12px;right:12px;bottom:12px;z-index:40;max-width:560px;margin:0 auto;background:var(--fg);color:#fff;border-radius:18px;
+padding:14px 14px 12px;box-shadow:0 12px 40px rgba(43,35,80,.35);font-size:14.5px;line-height:1.4}
+.imgbar p{margin:0 0 10px}.imgbar a{color:var(--mint)}
+.imgbar .row{display:flex;gap:8px;flex-wrap:wrap}
+.imgbar button{border:0;border-radius:12px;font-weight:800;font-size:15px;padding:10px 16px;cursor:pointer}
+.imgbar .yes{background:var(--mint);color:var(--fg)}.imgbar .no{background:transparent;color:#fff;border:2px solid rgba(255,255,255,.4)}
+.linkbtn{border:0;background:none;color:var(--mut);text-decoration:underline;cursor:pointer;font-size:14px;padding:0}
 .clip>[data-more]{display:none}
 .morebar{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
 .morebtn{border:2px solid var(--fg);background:none;color:var(--fg);font-weight:800;font-size:15px;border-radius:999px;padding:9px 16px;cursor:pointer}
@@ -417,7 +472,10 @@ def page(title, body, desc=None, path="/", og_img=None, script=""):
 {follow_box()}
 </main>
 <footer><div class="wrap"><a href="/impressum/">Impressum</a><a href="/datenschutz/">Datenschutz</a>
+<button class="linkbtn" type="button" data-imgpref hidden>Foto-Einstellung</button>
 <span>Keine Cookies, kein Tracking.</span></div></footer>
+<div class="imgbar" id="imgbar" role="region" aria-label="Produktfotos" hidden><p>Einige Produktfotos kommen direkt vom Shop. Dabei bekommt der Shop deine IP-Adresse. <a href="/datenschutz/#fotos">Mehr</a></p>
+<div class="row"><button class="yes" type="button" data-img="1">Fotos anzeigen</button><button class="no" type="button" data-img="0">Nein danke</button></div></div>
 {SEARCH_DIALOG}
 <script>{COMMON_JS}</script><script type="module">{SEARCH_JS}</script>{script}</body></html>"""
 
@@ -425,11 +483,7 @@ def page(title, body, desc=None, path="/", og_img=None, script=""):
 def prod_card(p):
     cid = p.get("category", "")
     cname = cat_by_id.get(cid, {}).get("name", "")
-    src = prod_src(p, 480)
-    raw = p.get("image") or ""
-    fb = f"this.src=\'{e(raw)}\'" if raw.startswith("/") else "this.replaceWith(document.createTextNode(\'\'))"
-    pic = (f'<img src="{e(src)}" alt="{e(p["name"])}" loading="lazy" decoding="async" '
-           f'onerror="this.onerror=null;{fb}">' if src else sticker(cid))
+    pic = pic_html(p, 480, p["name"], cid)
     shop = p.get("shop", "")
     btn = f"Bei {e(shop)} ansehen*" if shop else "Zum Shop*"
     return (f'<a class="prod" href="{e(p["url"])}" rel="sponsored noopener" target="_blank" data-cat="{e(cid)}" style="--c:{cat_color.get(cid, "#CFE7DD")}">'
@@ -464,6 +518,22 @@ def write(rel, content):
 
 
 COMMON_JS = r"""
+(function(){
+/* Produktfotos von Shop-Servern: erst nach Einwilligung laden. Die Wahl liegt nur im Browser (localStorage). */
+var K='np_fotos',bar=document.getElementById('imgbar'),pref=document.querySelector('[data-imgpref]');
+function get(){try{return localStorage.getItem(K)}catch(e){return null}}
+function set(v){try{localStorage.setItem(K,v)}catch(e){}}
+window.npImgOK=function(){return get()==='1'};
+var ext=document.querySelectorAll('img[data-ext]');
+function show(){ext.forEach(function(i){if(i.src)return;i.onload=function(){i.hidden=false;i.parentNode.classList.add('ok')};
+ i.onerror=function(){i.remove()};i.src=i.dataset.ext})}
+if(ext.length){if(pref)pref.hidden=false;
+ if(get()==='1')show();else if(get()!=='0')bar.hidden=false}
+document.querySelectorAll('[data-img]').forEach(function(b){b.addEventListener('click',function(){
+ var was=[].some.call(ext,function(i){return i.src});set(b.dataset.img);bar.hidden=true;
+ if(b.dataset.img==='1')show();else if(was)location.reload()})});
+if(pref)pref.addEventListener('click',function(){bar.hidden=false;bar.querySelector('.yes').focus()});
+})();
 (function(){
 /* Ansicht umschalten (nur für diesen Besuch, es wird nichts gespeichert) */
 document.querySelectorAll('[data-view]').forEach(function(b){b.addEventListener('click',function(){
@@ -523,7 +593,8 @@ async function load(){if(data)return;
  data=r;fuse=new m.default(r.items,{keys:[{name:'title',weight:3},{name:'alt',weight:2},{name:'tags',weight:2},{name:'text',weight:1}],
   threshold:.36,ignoreLocation:true,ignoreDiacritics:true,minMatchCharLength:2});}
 function hit(i){
- const th=i.img?`<img src="${esc(i.img)}" alt="" loading="lazy"${i.type==='product'?' class="ct"':''}>`:(i.svg||'');
+ const im=i.img||(i.ext&&window.npImgOK&&window.npImgOK()?i.ext:'');
+ const th=im?`<img src="${esc(im)}" alt="" loading="lazy"${i.type==='product'?' class="ct"':''}>`:(i.svg||'');
  const ext=i.type==='product'?' rel="sponsored noopener" target="_blank"':'';
  return `<a class="hit" href="${esc(i.url)}"${ext}><span class="th">${th}</span><span><b>${esc(i.title)}${i.type==='product'?'*':''}</b><span>${esc(i.sub||'')}</span></span></a>`}
 function group(t,arr){return arr.length?`<h4>${t}</h4>`+arr.map(hit).join(''):''}
@@ -562,8 +633,7 @@ def band(live, title_prod="Meine ganz persönlichen Empfehlungen", title_post="N
     if feat:
         cells = []
         for p in feat:
-            src = prod_src(p, 340)
-            pic = f'<img src="{e(src)}" alt="" loading="lazy" decoding="async">' if src else sticker(p.get("category", ""))
+            pic = pic_html(p, 340, "", p.get("category", ""))
             cells.append(f'<a class="ri" href="{e(p["url"])}" rel="sponsored noopener" target="_blank"><div class="im">{pic}</div>'
                          f'<div class="tx"><b>{e(p["name"])}*</b><span>{e(p.get("shop", ""))}</span></div></a>')
         title, foot = title_prod, '<p class="wl" style="margin-top:0">* Werbelink</p>'
@@ -586,8 +656,10 @@ def search_index(live):
     for p in products:
         cid = p.get("category", "")
         cname = cat_by_id.get(cid, {}).get("name", "")
-        items.append({"type": "product", "title": p["name"], "url": p["url"], "img": prod_src(p, 120) or "",
-                      "svg": "" if prod_src(p, 120) else sticker(cid, 52),
+        ii = prod_img(p, 120)
+        items.append({"type": "product", "title": p["name"], "url": p["url"],
+                      "img": ii[1] if ii and ii[0] == "own" else "", "ext": ii[1] if ii and ii[0] == "ext" else "",
+                      "svg": "" if ii and ii[0] == "own" else sticker(cid, 52),
                       "sub": " · ".join(x for x in (p.get("shop", ""), cname) if x),
                       "alt": translit(p["name"]), "tags": " ".join([cname, cid] + p.get("tags", [])),
                       "text": p.get("note", "")})
@@ -775,9 +847,10 @@ def build():
 
     write("datenschutz/index.html", page("Datenschutz – Naschpass", f"""<section class="legal"><h1>Datenschutz&shy;erklärung</h1>
 <h2>1. Verantwortlicher</h2><p>{e(im["name"])}, {e(im["firma"])}, Anschrift siehe <a href="/impressum/">Impressum</a>, E-Mail: {e(im["email"])}</p>
-<h2>2. Kurz gesagt</h2><p>Diese Website setzt keine Cookies, nutzt keine Analyse- oder Tracking-Tools und lädt keine Inhalte von Drittanbietern. Schriften und Bilder liegen auf unserem eigenen Server.</p>
+<h2>2. Kurz gesagt</h2><p>Diese Website setzt keine Cookies, nutzt keine Analyse- oder Tracking-Tools und lädt Inhalte von Drittanbietern nur, wenn du es ausdrücklich erlaubst (Produktfotos, siehe Abschnitt 4b). Schriften und unsere eigenen Bilder liegen auf unserem eigenen Server.</p>
 <h2>3. Hosting</h2><p>Die Website wird bei Netlify, Inc., 101 2nd Street, San Francisco, CA 94105, USA gehostet. Beim Aufruf verarbeitet Netlify technisch notwendige Daten (z. B. IP-Adresse, Datum und Uhrzeit, aufgerufene Seite, Browser) in Server-Logfiles, um die Seite auszuliefern und die Sicherheit zu gewährleisten. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einem sicheren und stabilen Betrieb). Dabei können Daten in die USA übermittelt werden; die Übermittlung erfolgt auf Grundlage der EU-Standardvertragsklauseln bzw. des EU-US Data Privacy Framework, soweit der Anbieter dort zertifiziert ist. Mit Netlify besteht ein Vertrag zur Auftragsverarbeitung. Details: <a href="https://www.netlify.com/privacy/" rel="noopener" target="_blank">netlify.com/privacy</a></p>
-<h2>4. Werbelinks (Affiliate)</h2><p>Einige Links führen zu Online-Shops und sind mit einer Partnerkennung versehen (z. B. über das Netzwerk Awin). Erst wenn du einen solchen Link anklickst, verlässt du diese Website; der Shop bzw. das Partnernetzwerk kann dann auf seiner eigenen Seite Cookies setzen, um den Kauf zuzuordnen. Dafür ist der jeweilige Anbieter verantwortlich. Auf dieser Website selbst wird dabei nichts gespeichert. Produktbilder stammen aus den Datenfeeds der Partner-Shops; sie werden über unseren Hoster Netlify ausgeliefert, dein Browser baut dabei keine Verbindung zu den Shops auf.</p>
+<h2>4. Werbelinks (Affiliate)</h2><p>Einige Links führen zu Online-Shops und sind mit einer Partnerkennung versehen (z. B. über das Netzwerk Awin). Erst wenn du einen solchen Link anklickst, verlässt du diese Website; der Shop bzw. das Partnernetzwerk kann dann auf seiner eigenen Seite Cookies setzen, um den Kauf zuzuordnen. Dafür ist der jeweilige Anbieter verantwortlich. Auf dieser Website selbst wird dabei nichts gespeichert. Produktbilder aus den Datenfeeds der Partner-Shops werden über unseren Hoster Netlify ausgeliefert; dein Browser baut dabei keine Verbindung zu den Shops auf. Ausnahme: Abschnitt 4b.</p>
+{fotos_html()}
 <h2>4a. Suche</h2><p>Die Suche läuft komplett in deinem Browser. Deine Suchbegriffe werden nicht übertragen und nicht gespeichert.</p>
 <h2>5. Social-Media-Links</h2><p>Links zu Instagram, TikTok und Pinterest sind einfache Verlinkungen, keine eingebetteten Inhalte. Daten werden erst übertragen, wenn du den Link anklickst und die jeweilige Plattform besuchst; dort gelten deren Datenschutzbestimmungen.</p>
 <h2>6. Kontakt per E-Mail</h2><p>Schreibst du uns eine E-Mail, verarbeiten wir deine Angaben nur, um deine Anfrage zu beantworten (Art. 6 Abs. 1 lit. b bzw. f DSGVO), und löschen sie, wenn sie nicht mehr benötigt werden.</p>
