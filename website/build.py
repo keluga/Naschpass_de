@@ -352,6 +352,8 @@ h3{font-size:17px;line-height:1.25;margin:0}
 .how a:hover{color:var(--vio);border-color:var(--vio2)}
 .how .advpill{color:#1F8A62;border-bottom-color:#9EE3C6}.how .advpill.hw{color:#D35A00;border-bottom-color:#FFC58F}.how em{font-style:normal}.how span{font-size:16px}
 .hgrid .hr{margin-top:22px}
+.hero.hgrid{position:relative;z-index:6}
+.ddp{max-height:min(62vh,460px);overflow-y:auto;overscroll-behavior:contain}
 @media(min-width:980px){.hgrid{display:grid;grid-template-columns:1fr 470px;gap:34px;align-items:start}.hgrid .hr{margin-top:6px}
 .hgrid .spin{padding:0}.hgrid .card{width:92px;height:140px}.hgrid .card img{height:70px}.hgrid .card .svgw{height:70px}.hgrid .card .svgw svg{width:54px;height:54px}
 .hgrid .card b{font-size:11px}.hgrid .reel{height:164px}}
@@ -1808,6 +1810,20 @@ Vollständige Angaben im <a href="/impressum/">Impressum</a>.</p></section>"""
     (DIST / "sitemap.xml").write_text('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
                                       + "".join(f"<url><loc>{BASE}{u}</loc></url>\n" for u in urls) + "</urlset>\n", encoding="utf-8")
     (DIST / "robots.txt").write_text(f"User-agent: *\nAllow: /\nSitemap: {BASE}/sitemap.xml\n", encoding="utf-8")
+    # Sicherheits-Header: Seite darf nur Dinge von der eigenen Domain laden (plus freigegebene Partner-Bildserver nach Einwilligung)
+    img_hosts = " ".join(f"https://{h}" for h in sorted(PARTNERS))
+    csp = ("default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; "
+           f"img-src 'self' data: blob: {img_hosts}; font-src 'self'; connect-src 'self'; media-src 'none'; object-src 'none'; "
+           "base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests")
+    (DIST / "_headers").write_text(
+        "/*\n"
+        f"  Content-Security-Policy: {csp}\n"
+        "  X-Content-Type-Options: nosniff\n"
+        "  X-Frame-Options: DENY\n"
+        "  Referrer-Policy: strict-origin-when-cross-origin\n"
+        "  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()\n"
+        "  Strict-Transport-Security: max-age=31536000\n"
+        "  Cross-Origin-Opener-Policy: same-origin\n", encoding="utf-8")
     for w in WARN:
         print("WARNUNG:", w)
     print("fertig:", DIST, "| Impressum-Adresse fehlt!" if missing else "")
