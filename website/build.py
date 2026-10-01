@@ -348,9 +348,15 @@ h3{font-size:17px;line-height:1.25;margin:0}
 .sub{color:var(--mut);max-width:60ch;margin:0 0 1em}
 .lead{font-size:18px;line-height:1.6;max-width:62ch;margin:6px 0 18px}
 .how{list-style:none;padding:0;margin:-6px 0 16px;display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px;font-weight:700;color:var(--mut)}
-.how li{display:flex;gap:5px;align-items:center}.how span{font-size:16px}
+.how a{display:flex;gap:5px;align-items:center;color:var(--mut);text-decoration:none;border-bottom:2px dotted var(--line)}
+.how a:hover{color:var(--vio);border-color:var(--vio2)}.how span{font-size:16px}
+.hgrid .hr{margin-top:22px}
+@media(min-width:980px){.hgrid{display:grid;grid-template-columns:1fr 470px;gap:34px;align-items:start}.hgrid .hr{margin-top:6px}
+.hgrid .spin{padding:0}.hgrid .card{width:112px;height:150px}.hgrid .card img{height:84px}.hgrid .reel{height:174px}}
+.hgrid .spin{padding-top:0}
 .cats.clip>[data-more],.bgrid.clip>[data-more]{display:none}
 .bgrid:not(.clip)>.bmore{display:none}
+.chip.off{opacity:.45;cursor:default}.ddp a.chip{text-decoration:none}
 .bc.off{opacity:.45;box-shadow:none;background:rgba(255,255,255,.6);cursor:default}.bc.off:hover{outline:0}
 .bmore{border:2px dashed var(--line);background:transparent;box-shadow:none;cursor:pointer;font:inherit;color:var(--fg);font-weight:800}
 .bmore .emo{background:#fff}
@@ -737,6 +743,12 @@ document.querySelectorAll('.band').forEach(function(b){
 document.querySelectorAll('[data-expand]').forEach(function(b){b.addEventListener('click',function(){
  var g=document.getElementById(b.dataset.expand);g.classList.remove('clip');b.remove();
  var f=g.querySelector('[data-more]');if(f){var a=f.matches('a')?f:f.querySelector('a');if(a)a.focus({preventScroll:true})}})});
+/* Klapp-Menüs auf der Startseite */
+document.querySelectorAll('.ddnav').forEach(function(nv){
+ function close(x){nv.querySelectorAll('.dd.open').forEach(function(d){if(d!==x){d.classList.remove('open');d.querySelector('.ddb').setAttribute('aria-expanded','false')}})}
+ nv.querySelectorAll('.ddb').forEach(function(t){t.addEventListener('click',function(){var d=t.parentNode,o=!d.classList.contains('open');close(d);d.classList.toggle('open',o);t.setAttribute('aria-expanded',o)})});
+ document.addEventListener('click',function(ev){if(!nv.contains(ev.target))close()});
+ document.addEventListener('keydown',function(ev){if(ev.key==='Escape')close()})});
 /* Stöbern-Tabs */
 document.querySelectorAll('[role=tab]').forEach(function(t){t.addEventListener('click',function(){
  var n=t.closest('nav');n.querySelectorAll('[role=tab]').forEach(function(x){x.setAttribute('aria-selected',x===t)});
@@ -894,7 +906,7 @@ def spin_html(live):
             f'<div class="reel"><div class="track"></div><div class="marker" aria-hidden="true"></div></div>'
             f'<div class="legend">{"".join(leg)}</div>'
             f'<button class="spinbtn" type="button">Drehen</button>'
-            f'<div class="result" aria-live="polite" hidden></div></div>'
+            f'<div class="result" aria-live="polite"></div></div>'
             f'<script type="application/json" id="spin-data">{data}</script></section>')
 
 
@@ -932,6 +944,10 @@ color:#2B2350;background:linear-gradient(90deg,#FFD23F,#FF8FB1,#8B6CFF,#3DDC97,#
 animation:btnflow 6s linear infinite;box-shadow:0 8px 26px rgba(255,77,141,.35)}
 @keyframes btnflow{to{background-position:300% 0}}
 .spinbtn:disabled{opacity:.6;cursor:wait}
+.result{min-height:112px;transition:opacity .25s}.result.dim{opacity:.35}
+.result:not(.has){justify-content:center;color:var(--mut);border-left-color:transparent}
+.card{transition:transform .12s,filter .12s;filter:saturate(.75) brightness(.85)}
+.card.hot{transform:scale(1.06);filter:none}.card.win{filter:none}
 .result{position:relative;margin-top:14px;background:#fff;color:var(--fg);border-radius:18px;padding:14px;display:flex;gap:14px;align-items:center;
 border-left:8px solid var(--c)}
 .result .ri2{width:76px;height:76px;flex:none;border-radius:12px;overflow:hidden;background:var(--bg2);display:grid;place-items:center}
@@ -949,47 +965,56 @@ SPIN_JS = r"""<script>
 var root=document.getElementById('zufall');if(!root)return;
 var items=JSON.parse(document.getElementById('spin-data').textContent),track=root.querySelector('.track'),reel=root.querySelector('.reel'),
  mk=root.querySelector('.marker'),btn=root.querySelector('.spinbtn'),res=root.querySelector('.result'),snd=root.querySelector('.snd'),
- reduce=matchMedia('(prefers-reduced-motion: reduce)').matches,sound=true,ac=null,busy=false;
+ box=root.querySelector('.spinbox'),reduce=matchMedia('(prefers-reduced-motion: reduce)').matches,sound=true,ac=null,busy=false;
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 function pic(i){var ok=window.npImgOK&&window.npImgOK(),src=i.img||(i.ext&&ok?i.ext:'');
  return src?'<img src="'+esc(src)+'" alt="" loading="lazy">':'<span class="svgw">'+(i.svg||'')+'</span>'}
 function card(i){return '<div class="card" style="--c:'+i.c+'">'+pic(i)+'<b>'+esc(i.t)+'</b></div>'}
 function rnd(n){return Math.floor(Math.random()*n)}
-function fill(){var h='';for(var k=0;k<14;k++)h+=card(items[rnd(items.length)]);track.innerHTML=h;track.style.transform='translateX(-40px)'}
-fill();
+function setX(x){track.style.transform='translateX('+x+'px)'}
+(function(){var h='';for(var k=0;k<14;k++)h+=card(items[rnd(items.length)]);track.innerHTML=h;setX(-40)})();
+res.innerHTML='<small>Tippe auf „Drehen“ und lass dich überraschen.</small>';
 snd.addEventListener('click',function(){sound=!sound;snd.textContent=sound?'🔊':'🔇';snd.setAttribute('aria-pressed',sound)});
 function beep(f,d,v,type){if(!sound)return;try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();
  var o=ac.createOscillator(),g=ac.createGain();o.type=type||'square';o.frequency.value=f;g.gain.setValueAtTime(v,ac.currentTime);
  g.gain.exponentialRampToValueAtTime(0.0001,ac.currentTime+d);o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+d)}catch(e){}}
-function fanfare(){[660,880,1100,1320].forEach(function(f,k){setTimeout(function(){beep(f,.18,.06,'triangle')},k*90)})}
-function confetti(color){var r=reel.getBoundingClientRect(),b=root.querySelector('.spinbox').getBoundingClientRect();
- for(var k=0;k<36;k++){var c=document.createElement('i');c.className='confetti';
+function fanfare(){[523,659,784,1047,1319].forEach(function(f,k){setTimeout(function(){beep(f,.22,.07,'triangle')},k*95)})}
+function confetti(color){var r=reel.getBoundingClientRect(),b=box.getBoundingClientRect();
+ for(var k=0;k<44;k++){var c=document.createElement('i');c.className='confetti';
   c.style.background=['#FFD23F','#FF4D8D','#3DDC97','#3D8BFF',color][k%5];
   c.style.left=(r.left-b.left+r.width/2)+'px';c.style.top=(r.top-b.top+r.height/2)+'px';
-  c.style.setProperty('--x',(Math.random()*360-180)+'px');c.style.setProperty('--y',(Math.random()*-200-20)+'px');
-  c.style.setProperty('--r',(Math.random()*720)+'deg');root.querySelector('.spinbox').appendChild(c);setTimeout(c.remove.bind(c),1200)}}
+  c.style.setProperty('--x',(Math.random()*420-210)+'px');c.style.setProperty('--y',(Math.random()*-220-20)+'px');
+  c.style.setProperty('--r',(Math.random()*720)+'deg');box.appendChild(c);setTimeout(c.remove.bind(c),1300)}}
 function show(i){var ext=i.k==='p',lbl=i.k==='p'?'Zum Shop*':(i.k==='post'?'Zum Post':'Zur Themenwelt');
- res.style.setProperty('--c',i.c);
+ res.style.setProperty('--c',i.c);res.classList.add('has');
  res.innerHTML='<div class="ri2">'+pic(i)+'</div><div><small>Dein Zufalls-Vorschlag · '+esc(i.l)+'</small><h3>'+esc(i.t)+'</h3><div class="acts">'
   +'<a class="btn dark" href="'+esc(i.u)+'"'+(ext?' rel="sponsored noopener" target="_blank"':'')+'>'+lbl+'</a>'
-  +'<button class="btn" type="button" data-again style="border:2px solid var(--fg)">Nochmal drehen</button></div>'
-  +(ext?'<small style="display:block;margin-top:6px">* Werbelink</small>':'')+'</div>';
- res.hidden=false;res.querySelector('[data-again]').addEventListener('click',spin)}
-function spin(){if(busy)return;busy=true;btn.disabled=true;res.hidden=true;
- var N=60,T=52,seq=[];for(var k=0;k<N;k++)seq.push(items[rnd(items.length)]);var win=seq[T];
- track.innerHTML=seq.map(card).join('');track.style.transform='translateX(0)';
- var c0=track.children[0],W=c0.offsetWidth+10,mid=reel.clientWidth/2,
-  end=-(T*W+c0.offsetWidth/2-mid)+(Math.random()-.5)*c0.offsetWidth*.7,dur=reduce?0:5600,t0=null,last=-1;
+  +(ext?'<small style="align-self:center">* Werbelink</small>':'')+'</div></div>'}
+/* Ablauf wie beim Case-Opening: kurz ausholen, schnell los, lange sanft auslaufen,
+   knapp an der Kante liegen bleiben, kurze Pause, dann in die Mitte rutschen und aufdecken */
+function spin(){if(busy)return;busy=true;btn.disabled=true;btn.textContent='…';res.classList.add('dim');
+ var N=48,T=41,seq=[];for(var k=0;k<N;k++)seq.push(items[rnd(items.length)]);var win=seq[T];
+ track.innerHTML=seq.map(card).join('');setX(0);
+ var cw=track.children[0].offsetWidth,W=cw+10,mid=reel.clientWidth/2,center=-(T*W+cw/2-mid),
+  edge=(Math.random()<.5?-1:1)*cw*(.28+Math.random()*.17),end=center+edge,
+  dur=reduce?0:8200,t0=null,last=-1,hot=null;
  root.classList.add('go');
- function done(){track.style.transform='translateX('+end+'px)';track.children[T].classList.add('win');root.classList.remove('go');
-  fanfare();if(!reduce)confetti(win.c);show(win);busy=false;btn.disabled=false;btn.textContent='Nochmal drehen'}
- if(!dur){done();return}
- function frame(ts){if(!t0)t0=ts;var p=Math.min(1,(ts-t0)/dur),e=1-Math.pow(1-p,4),x=end*e;
-  track.style.transform='translateX('+x+'px)';var idx=Math.floor((mid-x)/W);
-  if(idx!==last){last=idx;beep(1400+Math.random()*200,.03,.035);mk.classList.add('tick');setTimeout(function(){mk.classList.remove('tick')},60)}
-  if(p<1)requestAnimationFrame(frame);else done()}
+ function hi(idx){if(hot)hot.classList.remove('hot');hot=track.children[idx];if(hot)hot.classList.add('hot')}
+ function reveal(){if(hot)hot.classList.remove('hot');track.children[T].classList.add('win');root.classList.remove('go');
+  fanfare();if(!reduce)confetti(win.c);show(win);res.classList.remove('dim');busy=false;btn.disabled=false;btn.textContent='Nochmal drehen'}
+ if(!dur){setX(center);reveal();return}
+ function settle(){var s0=null,from=end;
+  function f(ts){if(!s0)s0=ts;var p=Math.min(1,(ts-s0)/550),e=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;setX(from+(center-from)*e);
+   if(p<1)requestAnimationFrame(f);else reveal()}
+  setTimeout(function(){requestAnimationFrame(f)},450)}
+ function frame(ts){if(!t0)t0=ts;var t=ts-t0,x;
+  if(t<260){x=26*Math.sin(t/260*Math.PI/2)}                 /* ausholen */
+  else{var p=Math.min(1,(t-260)/dur),e=1-Math.pow(1-p,3.4);x=26+(end-26)*e}
+  setX(x);var idx=Math.floor((mid-x)/W);
+  if(idx!==last&&idx>=0){last=idx;hi(idx);beep(1250+Math.random()*250,.035,.04);mk.classList.add('tick');setTimeout(function(){mk.classList.remove('tick')},70)}
+  if(t<260+dur)requestAnimationFrame(frame);else settle()}
  requestAnimationFrame(frame)}
-btn.addEventListener('click',spin);
+btn.addEventListener('click',function(){btn.blur();spin()});
 })();
 </script>"""
 
@@ -1226,35 +1251,25 @@ def build():
         panels += (f'<div class="bgrid" data-panel="{g["id"]}"{"" if first else " hidden"}>' + "".join(
             f'<a class="bc" href="/shop/?{g["id"]}={o["id"]}#alle">{facet_icon(g["id"], o, 40)}{e(o["name"])}'
             f'<small>{counts[(g["id"], o["id"])]} {"Sorte" if counts[(g["id"], o["id"])] == 1 else "Sorten"}</small></a>' for o in opts) + '</div>')
-    # Stöbern direkt unter der Suche: Art | Geschmack | Woher | Themenwelten, alle Optionen sichtbar.
-    # Gefülltes ist klickbar (mit Anzahl), Leeres ausgegraut mit "bald" (kein Klick ins Leere).
-    VISIBLE = 9
+    # Stöbern als Klapp-Menüs direkt unter der Suche (Hover am PC, Tippen am Handy)
     def sorte(n):
         return f'{n} {"Sorte" if n == 1 else "Sorten"}'
-
-    def tile_grid(gid, cells):
-        out = [c.replace('class="bc', 'data-more class="bc', 1) if i >= VISIBLE else c for i, c in enumerate(cells)]
-        more = (f'<button class="bc bmore" type="button" data-expand="{gid}"><span class="emo">＋</span>{len(cells) - VISIBLE} weitere</button>'
-                if len(cells) > VISIBLE else "")
-        return f'<div class="bgrid clip" id="{gid}">{"".join(out)}{more}</div>'
-
     gorder = sorted(FILTER, key=lambda g: {"art": 0, "geschmack": 1, "land": 2}.get(g["id"], 9))
-    btabs, bpanels = "", ""
-    for k, g in enumerate(gorder):
-        cells = []
+    dds = ""
+    for g in gorder:
+        chips = ""
         for o in sorted(g["options"], key=lambda o: -counts.get((g["id"], o["id"]), 0)):
             n = counts.get((g["id"], o["id"]), 0)
-            icon = facet_icon(g["id"], o, 40)
-            cells.append(f'<a class="bc" href="/shop/?{g["id"]}={o["id"]}#alle">{icon}{e(o["name"])}<small>{sorte(n)}</small></a>' if n else
-                         f'<span class="bc off" aria-disabled="true">{icon}{e(o["name"])}<small>bald</small></span>')
-        btabs += f'<button type="button" role="tab" data-tab="{g["id"]}" aria-selected="{str(k == 0).lower()}">{e(g["name"])}</button>'
-        bpanels += f'<div data-panel="{g["id"]}"{"" if k == 0 else " hidden"}>{tile_grid("b-" + g["id"], cells)}</div>'
-    tcells = [f'<a class="bc" href="/kategorie/{c["id"]}/">{sticker(c["id"], 40)}{e(c["name"])}'
-              f'<small>{sorte(len(cat_items(c))) if cat_items(c) else "bald"}</small></a>' for c in cats_sorted()]
-    btabs += '<button type="button" role="tab" data-tab="themen" aria-selected="false">Themenwelten</button>'
-    bpanels += f'<div data-panel="themen" hidden>{tile_grid("b-themen", tcells)}</div>'
-    browse_html = (f'<nav class="browse" aria-label="Stöbern"><div class="tabs" role="tablist">{btabs}</div>{bpanels}'
-                   f'<p style="margin:10px 0 0"><a class="more" href="/shop/#alle">Alles im Shop frei filtern</a></p></nav>')
+            icon = facet_icon(g["id"], o)
+            chips += (f'<a class="chip" href="/shop/?{g["id"]}={o["id"]}#alle">{icon}{e(o["name"])} <small>{n}</small></a>' if n else
+                      f'<span class="chip off">{icon}{e(o["name"])} <small>bald</small></span>')
+        dds += (f'<div class="dd"><button class="ddb" type="button" aria-expanded="false">{e(g["name"])} <span class="car" aria-hidden="true">▾</span></button>'
+                f'<div class="ddp"><div class="chips">{chips}</div><a class="more" style="display:block;margin-top:10px" href="/shop/#alle">Im Shop frei kombinieren</a></div></div>')
+    tchips = "".join(f'<a class="chip" href="/kategorie/{c["id"]}/">{sticker(c["id"], 24)}{e(c["name"])}'
+                     f' <small>{len(cat_items(c)) or "bald"}</small></a>' for c in cats_sorted())
+    dds += (f'<div class="dd"><button class="ddb" type="button" aria-expanded="false">Themenwelten <span class="car" aria-hidden="true">▾</span></button>'
+            f'<div class="ddp"><div class="chips">{tchips}</div></div></div>')
+    browse_html = f'<nav class="fbtns ddnav" aria-label="Stöbern" style="margin-top:14px">{dds}</nav>'
     season_html = "".join(
         f'<section style="padding-top:22px"><a class="cat" style="--c:{cat_color[c["id"]]}" href="/kategorie/{c["id"]}/">{sticker(c["id"])}'
         f'<h3>{e(c["name"])}</h3><p>{e(c["teaser"])}</p><span class="n">{len(cat_items(c))} '
@@ -1277,18 +1292,19 @@ def build():
         f'{clip_grid([post_card(p) for p in home_posts], "g-home-posts", "posts")}'
         f'{more_bar("g-home-posts", len(home_posts), len(live), "/posts/", f"Alle {len(live)} Posts")}</section>')
     how = ('<ul class="how">'
-           '<li><span aria-hidden="true">📲</span>Fakten-Posts mit Quellen</li>'
-           '<li><span aria-hidden="true">🗺️</span>Nach Land & Thema</li>'
-           '<li><span aria-hidden="true">🛒</span>Direkt zum Shop</li></ul>')
+           '<li><a href="/posts/"><span aria-hidden="true">📲</span>Fakten-Posts mit Quellen</a></li>'
+           '<li><a href="/shop/"><span aria-hidden="true">🗺️</span>Nach Land & Thema</a></li>'
+           '<li><a href="/shop/#alle"><span aria-hidden="true">🛒</span>Direkt zum Shop</a></li></ul>')
     about_box = (f'<section><div class="aboutbox"><h2>Neu hier?</h2><p>Naschpass ist ein junges Projekt rund um Süßigkeiten aus aller Welt. '
                  f'Wie wir arbeiten und was Shops und Marken bei uns bekommen, steht auf einer Seite.</p>'
                  f'<div class="btns"><a class="btn dark" href="/ueber/">Über Naschpass</a><a class="btn" href="/ueber/#partner">Für Partner</a></div></div></section>')
     fan = "".join(f'<a href="/p/{p["id"]}/" tabindex="-1" aria-hidden="true">{slide_img(cover_url(p), "", 230, "230px")}</a>'
                   for p in newest[:3][::-1])
-    home = (f'<section class="hero has-fan">{SPRINKLES}<div class="fan">{fan}</div><h1>Süßes aus <span class="acc">aller Welt</span></h1>'
-            f'<p class="lead" style="max-width:34ch">{e(site["intro"])}</p>{how}'
-            f'<button class="fake" type="button" data-open-search>{ICON_SEARCH}<span>Snacks, Länder, Marken suchen …</span></button>{browse_html}</section>'
-            f'{season_html}{spin_html(live)}{band_html}{home_prods}{posts_html}{about_box}{jump}')
+    home = (f'<section class="hero hgrid">{SPRINKLES}<div class="hl"><h1>Süßes aus <span class="acc">aller Welt</span></h1>'
+            f'<p class="lead" style="max-width:36ch">{e(site["intro"])}</p>{how}'
+            f'<button class="fake" type="button" data-open-search>{ICON_SEARCH}<span>Snacks, Länder, Marken suchen …</span></button>{browse_html}</div>'
+            f'<div class="hr">{spin_html(live)}</div></section>'
+            f'{season_html}{home_prods}{band_html}{posts_html}{about_box}{jump}')
     write("index.html", page("Naschpass – Süßigkeiten aus aller Welt", home, script=SPIN_JS))
 
     # --- Über Naschpass / Für Partner (ehrlich: neuer Kanal, keine Reichweitenzahlen)
