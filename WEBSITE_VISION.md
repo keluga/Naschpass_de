@@ -2,6 +2,23 @@
 
 Stand: 01.10.2026. Ergänzt `UEBERGABE_WEBSITE.md`, dessen Regeln weiter gelten (Recht, Datenschutz, Datenquellen). Geschrieben nach Durchsicht von Branch `design-c` / Deploy-Preview 1. Was dort schon gebaut ist (Shop mit Filtern Woher/Geschmack/Art, Suche, Netlify Image CDN, Einwilligungs-Leiste für Shop-Fotos, Demo-Produkte nur in Previews), bleibt die Grundlage. Dieses Dokument sagt, wohin es geht.
 
+## 0. Sofort: Seite muss für AWIN-Prüfer überzeugen
+Am 01.10. haben Zotter und Mexhaus Kevs Bewerbung abgelehnt, beide mit dem Grund „URL ist für die Advertiser-Marke nicht relevant“. Weitere 26 Bewerbungen sind offen. Die Prüfer schauen sich die Live-Seite an, und dort läuft noch das alte Design: 2 Produkte, überall „Bald hier“. Deshalb hat das Vorrang vor allem anderen:
+
+1. **`design-c` nach `main` mergen** und live nehmen. Vorher prüfen:
+   - keine Demo-Produkte oder Beispiel-Shops auf `main`
+   - Frequenz-Texte aus Abschnitt 2 korrigiert
+   - HTTPS funktioniert (Stand 01.10. ok)
+2. **Themenwelten für die offenen Bewerbungen sichtbar machen** (Abschnitt 4): Schokolade & Pralinen, Weihnachten & Geschenke, Mexiko, Italien, Schweiz, Getränke, Snacks. Jede bekommt 2–3 Sätze echten redaktionellen Text, worum es geht: Herkunft, Besonderheiten, verlinkte Posts, falls vorhanden. Keine erfundenen Produkte, keine erfundenen Zahlen. Solange keine Produkte da sind: Text plus „Produkte folgen, sobald Partner-Shops freigeschaltet sind“.
+3. **Seite „Über Naschpass“ / „Für Partner“** (verlinkt in Footer und Startseite):
+   - **Konzept:** Karussell-Posts über Süßigkeiten aus aller Welt mit Quellen, für Erwachsene.
+   - **Kanäle:** Instagram, TikTok, Pinterest, Website.
+   - **Was Partner bekommen:** Produkte in passenden Themenwelten und auf Post-Seiten, als Werbung gekennzeichnet, keine Gutscheinseite, keine bezahlten Anzeigen.
+   - **Kontakt:** E-Mail aus dem Impressum.
+   - Ehrlich: Kanal ist neu, keine Reichweitenzahlen erfinden.
+4. **Startseite:** Ein Prüfer muss in 5 Sekunden sehen, worum es geht. Die Posts zeigen, dazu die Themenwelten Schokolade, Länder und Weihnachten weit oben.
+5. **Danach** meldet Kev sich im anderen Chat. Dort wird die Seite aus Prüfer-Sicht gecheckt, und Kev bewirbt sich bei Zotter und Mexhaus neu.
+
 ## 1. Vision
 Auf naschpass.oneflowsolution.de findet jeder eine passende Süßigkeit. Das kann die exotische aus dem Post sein oder der Supermarkt-Klassiker, sortiert nach Herkunft, Geschmack, Art und Anlass. Jede Süßigkeit hat einen Link zu einem Shop, der nach Deutschland liefert. Die Produkte kommen automatisch aus den AWIN-Feeds, Kev pflegt nur Ausnahmen per Hand.
 
