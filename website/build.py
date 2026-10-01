@@ -335,11 +335,23 @@ font-weight:700;font-size:13.5px;line-height:1.2;text-align:center;box-shadow:va
 .themes h2{font:800 15px Inter,sans-serif;text-transform:none;letter-spacing:0;margin:0 0 10px;color:var(--mut)}
 .trow{display:flex;gap:10px;overflow-x:auto;padding:2px 16px 8px;margin:0 -16px;scrollbar-width:none}
 .trow::-webkit-scrollbar{display:none}.trow .bc{flex:none;width:118px}
-.filters{display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
-.fg{display:flex;align-items:center;gap:10px}
-.fg .fl{flex:none;width:86px;font-weight:800;font-size:13.5px;color:var(--mut)}
-@media(max-width:600px){.fg{flex-direction:column;align-items:stretch;gap:6px}.fg .fl{width:auto}}
-@media(min-width:900px){.filters .chips{flex-wrap:wrap}}
+.filters{margin-bottom:8px}
+.fbtns{position:relative;display:flex;gap:8px;flex-wrap:wrap}
+.ddb{display:inline-flex;align-items:center;gap:7px;border:0;background:#fff;box-shadow:var(--sh);border-radius:999px;padding:10px 15px;
+font-weight:800;font-size:15px;cursor:pointer;color:var(--fg)}
+.ddb .car{font-size:12px;transition:transform .15s}
+.dd.open .ddb{background:var(--fg);color:#fff}.dd.open .car{transform:rotate(180deg)}
+.badge{background:var(--vio);color:#fff;border-radius:999px;font-size:12px;min-width:20px;height:20px;display:inline-grid;place-items:center;padding:0 6px}
+.ddp{display:none;position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:25;background:#fff;border-radius:18px;padding:12px;
+box-shadow:0 14px 40px rgba(43,35,80,.2)}
+.ddp .chips{flex-wrap:wrap;overflow:visible}.ddp .chip{box-shadow:none;background:var(--bg)}
+.ddp .chip[aria-pressed=true]{background:var(--fg)}
+.dd.open .ddp{display:block}
+@media(hover:hover) and (pointer:fine){.dd{position:relative}.ddp{right:auto;width:440px;top:100%;margin-top:0}
+.dd:hover .ddp{display:block}.dd:hover .ddb{background:var(--fg);color:#fff}
+.ddp:before{content:"";position:absolute;left:0;right:0;top:-8px;height:8px}}
+.active{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.active:empty{display:none}
+.active button{border:0;background:var(--vio);color:#fff;font-weight:700;font-size:13.5px;border-radius:999px;padding:6px 12px;cursor:pointer}
 .fbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:4px 0 12px}
 .fbar b{font-size:15px}
 .sres .hint{background:#fff;border-radius:14px;padding:12px;margin:12px 0 4px;font-size:14.5px}
@@ -665,15 +677,24 @@ if(fl){var grid=document.getElementById(fl.dataset.grid),cards=[].slice.call(gri
   return sel[k].some(function(v){return h.indexOf(' '+v+' ')>=0})})}
  function apply(){var n=0;cards.forEach(function(c){var m=ok(c);if(m)n++;c.hidden=!m||n>shown});
   fl.querySelectorAll('[data-g]').forEach(function(b){b.setAttribute('aria-pressed',sel[b.dataset.g].indexOf(b.dataset.v)>=0)});
+  fl.querySelectorAll('[data-badge]').forEach(function(x){var k=sel[x.dataset.badge].length;x.textContent=k;x.hidden=!k});
+  var act=[];fl.querySelectorAll('[data-g][aria-pressed=true]').forEach(function(b){act.push('<button type="button" data-rm="'+b.dataset.g+':'+b.dataset.v+'" aria-label="'+b.dataset.n+' entfernen">'+b.dataset.n+' ×</button>')});
+  document.getElementById('factive').innerHTML=act.join('');
   cnt.textContent=n+' Treffer';more.hidden=n<=shown;more.textContent='Mehr zeigen ('+(n-shown)+')';emp.hidden=n>0;
   var any=Object.keys(sel).some(function(k){return sel[k].length});rst.hidden=!any;
   var q=Object.keys(sel).filter(function(k){return sel[k].length}).map(function(k){return k+'='+sel[k].join(',')}).join('&');
   history.replaceState(null,'',location.pathname+(q?'?'+q:'')+location.hash)}
- fl.addEventListener('click',function(ev){var b=ev.target.closest('[data-g]');if(!b)return;var a=sel[b.dataset.g],i=a.indexOf(b.dataset.v);
+ function closeAll(x){fl.querySelectorAll('.dd.open').forEach(function(d){if(d!==x){d.classList.remove('open');d.querySelector('.ddb').setAttribute('aria-expanded','false')}})}
+ fl.querySelectorAll('.ddb').forEach(function(t){t.addEventListener('click',function(){var d=t.parentNode,o=!d.classList.contains('open');
+  closeAll(d);d.classList.toggle('open',o);t.setAttribute('aria-expanded',o)})});
+ document.addEventListener('click',function(ev){if(!ev.target.closest('.dd'))closeAll()});
+ document.addEventListener('keydown',function(ev){if(ev.key==='Escape')closeAll()});
+ fl.addEventListener('click',function(ev){var r=ev.target.closest('[data-rm]');if(r){var kv=r.dataset.rm.split(':'),a2=sel[kv[0]];a2.splice(a2.indexOf(kv[1]),1);shown=PAGE;apply();return}
+  var b=ev.target.closest('[data-g]');if(!b)return;var a=sel[b.dataset.g],i=a.indexOf(b.dataset.v);
   if(i>=0)a.splice(i,1);else a.push(b.dataset.v);shown=PAGE;apply()});
  rst.addEventListener('click',function(){Object.keys(sel).forEach(function(k){sel[k]=[]});shown=PAGE;apply()});
  more.addEventListener('click',function(){shown+=PAGE;apply()});
- apply();fl.querySelectorAll('[aria-pressed=true]').forEach(function(b){var r=b.parentNode;r.scrollLeft=b.offsetLeft-r.offsetLeft-16})}
+ apply()}
 /* Folien-Galerie */
 var s=document.querySelector('.slides');
 if(s){var im=s.querySelectorAll('img'),d=document.querySelectorAll('.dots b');
@@ -922,11 +943,13 @@ def build():
         opts = [o for o in g["options"] if counts.get((g["id"], o["id"]))]
         if not opts:
             continue
-        fgroups += (f'<div class="fg"><span class="fl">{e(g["name"])}</span><div class="chips">'
-                    + "".join(f'<button class="chip" type="button" data-g="{g["id"]}" data-v="{o["id"]}" aria-pressed="false">'
+        fgroups += (f'<div class="dd"><button class="ddb" type="button" aria-expanded="false" aria-controls="dd-{g["id"]}">'
+                    f'{e(g["name"])} <span class="badge" data-badge="{g["id"]}" hidden></span><span class="car" aria-hidden="true">▾</span></button>'
+                    f'<div class="ddp" id="dd-{g["id"]}"><div class="chips">'
+                    + "".join(f'<button class="chip" type="button" data-g="{g["id"]}" data-v="{o["id"]}" data-n="{e(o["name"])}" aria-pressed="false">'
                               f'{facet_icon(g["id"], o)}{e(o["name"])} <small>{counts[(g["id"], o["id"])]}</small></button>' for o in opts)
-                    + '</div></div>')
-    shop_all = (f'<div class="filters" id="flt" data-grid="g-all">{fgroups}</div>'
+                    + '</div></div></div>')
+    shop_all = (f'<div class="filters" id="flt" data-grid="g-all"><div class="fbtns">{fgroups}</div><div class="active" id="factive"></div></div>'
                 f'<div class="fbar"><b id="fcount" aria-live="polite"></b><button class="linkbtn" type="button" id="freset" hidden>Filter zurücksetzen</button>'
                 f'<span style="margin-left:auto">{view_toggle("g-all", ["big", "small", "list"], "small")}</span></div>'
                 f'<div class="grid prods v-small" id="g-all">{"".join(prod_card(p) for p in reversed(products))}</div>'
