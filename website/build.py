@@ -352,11 +352,23 @@ h3{font-size:17px;line-height:1.25;margin:0}
 .how a:hover{color:var(--vio);border-color:var(--vio2)}.how span{font-size:16px}
 .hgrid .hr{margin-top:22px}
 @media(min-width:980px){.hgrid{display:grid;grid-template-columns:1fr 470px;gap:34px;align-items:start}.hgrid .hr{margin-top:6px}
-.hgrid .spin{padding:0}.hgrid .card{width:112px;height:150px}.hgrid .card img{height:84px}.hgrid .reel{height:174px}}
+.hgrid .spin{padding:0}.hgrid .card{width:92px;height:140px}.hgrid .card img{height:70px}.hgrid .card .svgw{height:70px}.hgrid .card .svgw svg{width:54px;height:54px}
+.hgrid .card b{font-size:11px}.hgrid .reel{height:164px}}
 .hgrid .spin{padding-top:0}
 .cats.clip>[data-more],.bgrid.clip>[data-more]{display:none}
 .bgrid:not(.clip)>.bmore{display:none}
-.chip.off{opacity:.45;cursor:default}.ddp a.chip{text-decoration:none}
+.chip.off{opacity:.45;cursor:default}
+.mrow{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.mini{display:flex;flex-direction:column;gap:6px;background:#fff;border-radius:14px;padding:8px;text-decoration:none;color:var(--fg);box-shadow:var(--sh)}
+.mini .mp{aspect-ratio:1;border-radius:10px;background:var(--bg2);display:grid;place-items:center;overflow:hidden}
+.mini .mp img{width:100%;height:100%;object-fit:cover}.mini .mp .stk{width:60%;height:auto}
+.mini b{font-size:12.5px;line-height:1.25;max-height:2.5em;overflow:hidden}
+.mini.slot,.prod.pslot{background:transparent;border:2px dashed var(--vio2);box-shadow:none}
+.mini.slot .mp,.prod.pslot .pi{background:rgba(139,108,255,.08)}
+.mini.slot b{color:var(--vio)}.prod.pslot h3{color:var(--vio)}
+.prod.pslot .cta span{background:transparent;color:var(--vio);border:2px solid var(--vio2)}
+.mini.slot:hover,.prod.pslot:hover{border-style:solid}
+@media(max-width:520px){.mrow{grid-template-columns:repeat(4,minmax(72px,1fr));overflow-x:auto}}.ddp a.chip{text-decoration:none}
 .bc.off{opacity:.45;box-shadow:none;background:rgba(255,255,255,.6);cursor:default}.bc.off:hover{outline:0}
 .bmore{border:2px dashed var(--line);background:transparent;box-shadow:none;cursor:pointer;font:inherit;color:var(--fg);font-weight:800}
 .bmore .emo{background:#fff}
@@ -673,6 +685,18 @@ def prod_card(p):
             + f'<div class="cta"><span><em class="l">{btn}</em><em class="s">Zum Shop*</em></span></div></div></a>')
 
 
+def partner_card():
+    """Platzhalter für Partner, solange es wenige Produkte gibt. Kein Werbelink, führt zur Partner-Seite."""
+    return ('<a class="prod pslot" href="/ueber/#partner"><div class="pi"><span class="emo">🤝</span></div>'
+            '<div class="pb"><h3>Hier könnte dein Produkt stehen</h3><span class="shop">Platz für Partner-Shops</span>'
+            '<div class="cta"><span><em class="l">Für Partner</em><em class="s">Für Partner</em></span></div></div></a>')
+
+
+def fill_slots(cards, target):
+    """Füllt bis 'target' Kacheln mit Partner-Plätzen auf (nur solange es wenige Produkte gibt)."""
+    return cards + [partner_card() for _ in range(max(0, target - len(cards)))]
+
+
 def prod_grid(items, gid, default="small"):
     return (f'<div class="grid prods v-{default}" id="{gid}">{"".join(prod_card(p) for p in items)}</div>'
             f'<p class="wl">* Werbelink</p>')
@@ -919,17 +943,17 @@ opacity:.14;filter:blur(30px);pointer-events:none}
 .spinhead{position:relative;display:flex;align-items:center;justify-content:space-between;gap:10px}
 .spinhead h2{margin:0;color:#fff}.spin .sub{color:#CFC9E8;position:relative}
 .snd{border:0;background:rgba(255,255,255,.12);color:#fff;border-radius:12px;width:42px;height:42px;font-size:20px;cursor:pointer}
-.reel{position:relative;height:184px;border-radius:18px;background:#14092B;overflow:hidden;
+.reel{position:relative;height:170px;border-radius:18px;background:#14092B;overflow:hidden;
 box-shadow:inset 0 0 0 2px rgba(255,255,255,.08),inset 0 0 40px rgba(0,0,0,.6)}
 .reel:after{content:"";position:absolute;inset:0;pointer-events:none;
 background:linear-gradient(90deg,#14092B 0,transparent 18%,transparent 82%,#14092B 100%)}
 .track{position:absolute;left:0;top:12px;display:flex;gap:10px;will-change:transform}
-.card{flex:none;width:130px;height:160px;border-radius:14px;background:#22144A;border-bottom:6px solid var(--c);
+.card{flex:none;width:100px;height:146px;border-radius:14px;background:#22144A;border-bottom:6px solid var(--c);
 display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:8px;text-align:center;
 box-shadow:0 0 0 1px rgba(255,255,255,.06),0 -24px 30px -24px var(--c) inset}
-.card img{width:100%;height:96px;object-fit:cover;border-radius:10px;background:#fff}
-.card .svgw{height:96px;display:grid;place-items:center}.card .svgw svg{width:72px;height:72px}
-.card b{font-size:12.5px;line-height:1.2;max-height:2.4em;overflow:hidden;color:#fff}
+.card img{width:100%;height:76px;object-fit:cover;border-radius:10px;background:#fff}
+.card .svgw{height:76px;display:grid;place-items:center}.card .svgw svg{width:58px;height:58px}
+.card b{font-size:11.5px;line-height:1.2;max-height:2.4em;overflow:hidden;color:#fff}
 .card.win{animation:winpulse 1s ease-in-out 3;box-shadow:0 0 0 3px var(--c),0 0 34px var(--c)}
 @keyframes winpulse{50%{transform:scale(1.07)}}
 .marker{position:absolute;left:50%;top:0;bottom:0;width:4px;margin-left:-2px;background:#FFD23F;z-index:2;
@@ -947,6 +971,7 @@ animation:btnflow 6s linear infinite;box-shadow:0 8px 26px rgba(255,77,141,.35)}
 .result{min-height:112px;transition:opacity .25s}.result.dim{opacity:.35}
 .result:not(.has){justify-content:center;color:var(--mut);border-left-color:transparent}
 .card{transition:transform .12s,filter .12s;filter:saturate(.75) brightness(.85)}
+.card.ps{background:transparent;border:2px dashed rgba(139,108,255,.7);border-bottom-width:2px}.card.ps b{color:#CFC9E8}
 .card.hot{transform:scale(1.06);filter:none}.card.win{filter:none}
 .result{position:relative;margin-top:14px;background:#fff;color:var(--fg);border-radius:18px;padding:14px;display:flex;gap:14px;align-items:center;
 border-left:8px solid var(--c)}
@@ -994,7 +1019,8 @@ function show(i){var ext=i.k==='p',lbl=i.k==='p'?'Zum Shop*':(i.k==='post'?'Zum 
    knapp an der Kante liegen bleiben, kurze Pause, dann in die Mitte rutschen und aufdecken */
 function spin(){if(busy)return;busy=true;btn.disabled=true;btn.textContent='…';res.classList.add('dim');
  var N=48,T=41,seq=[];for(var k=0;k<N;k++)seq.push(items[rnd(items.length)]);var win=seq[T];
- track.innerHTML=seq.map(card).join('');setX(0);
+ var PS='<div class="card ps"><span class="svgw"><span style="font-size:34px">🤝</span></span><b>Hier könnte dein Produkt stehen</b></div>';
+ track.innerHTML=seq.map(function(i,k){return (k!==T&&items.length<20&&Math.random()<.18)?PS:card(i)}).join('');setX(0);
  var cw=track.children[0].offsetWidth,W=cw+10,mid=reel.clientWidth/2,center=-(T*W+cw/2-mid),
   edge=(Math.random()<.5?-1:1)*cw*(.28+Math.random()*.17),end=center+edge,
   dur=reduce?0:8200,t0=null,last=-1,hot=null;
@@ -1199,7 +1225,7 @@ def build():
     shop_all = (f'<div class="filters" id="flt" data-grid="g-all"><div class="fbtns">{fgroups}</div><div class="active" id="factive"></div></div>'
                 f'<div class="fbar"><b id="fcount" aria-live="polite"></b><button class="linkbtn" type="button" id="freset" hidden>Filter zurücksetzen</button>'
                 f'<span style="margin-left:auto">{view_toggle("g-all", ["big", "small", "list"], "small")}</span></div>'
-                f'<div class="grid prods v-small" id="g-all">{"".join(prod_card(p) for p in reversed(products))}</div>'
+                f'<div class="grid prods v-small" id="g-all">{"".join(fill_slots([prod_card(p) for p in reversed(products)], 8 if len(products) < 8 else 0))}</div>'
                 f'<div class="empty" id="fempty" hidden><strong>Keine Treffer mit dieser Kombination.</strong> Nimm einen Filter raus oder probier die Suche.</div>'
                 f'<div class="morebar"><button class="morebtn" type="button" id="fmore" hidden>Mehr zeigen</button></div>'
                 f'<p class="wl">* Werbelink</p>') if products else empty_shop
@@ -1235,7 +1261,7 @@ def build():
 
     new_prods = list(reversed(products))[:LIMIT]
     home_prods = (f'<section id="neu"><div class="head"><h2>Neu im Shop</h2>{view_toggle("g-new", ["big", "small", "list"], "small")}</div>'
-                  f'{clip_grid([prod_card(p) for p in new_prods], "g-new", "prods")}<p class="wl">* Werbelink</p>'
+                  f'{clip_grid(fill_slots([prod_card(p) for p in new_prods], 4), "g-new", "prods")}<p class="wl">* Werbelink</p>'
                   f'{more_bar("g-new", len(new_prods), len(products), "/shop/", f"Alle {len(products)} im Shop")}</section>'
                   ) if products else ""
     home_posts = newest[:LIMIT]
@@ -1270,6 +1296,15 @@ def build():
     dds += (f'<div class="dd"><button class="ddb" type="button" aria-expanded="false">Themenwelten <span class="car" aria-hidden="true">▾</span></button>'
             f'<div class="ddp"><div class="chips">{tchips}</div></div></div>')
     browse_html = f'<nav class="fbtns ddnav" aria-label="Stöbern" style="margin-top:14px">{dds}</nav>'
+    minis = []
+    for p in list(reversed(products))[:6]:
+        minis.append(f'<a class="mini" href="{e(p["url"])}" rel="sponsored noopener" target="_blank" style="--c:{cat_color.get(p.get("category", ""), "#CFE7DD")}">'
+                     f'<span class="mp">{pic_html(p, 200, p["name"], p.get("category", ""))}</span><b>{e(p["name"])}*</b></a>')
+    while len(minis) < 4:
+        minis.append('<a class="mini slot" href="/ueber/#partner"><span class="mp"><span class="emo">🤝</span></span><b>Hier könnte dein Produkt stehen</b></a>')
+    browse_html += (f'<div class="minis"><div class="head" style="margin:18px 0 8px"><h2 style="font:800 15px Inter,sans-serif;text-transform:none;'
+                    f'letter-spacing:0;color:var(--mut);margin:0">Gerade im Shop</h2><a class="more" href="/shop/#alle">Alle ansehen</a></div>'
+                    f'<div class="mrow">{"".join(minis)}</div>' + ('<p class="wl" style="margin-top:6px">* Werbelink</p>' if products else '') + '</div>')
     season_html = "".join(
         f'<section style="padding-top:22px"><a class="cat" style="--c:{cat_color[c["id"]]}" href="/kategorie/{c["id"]}/">{sticker(c["id"])}'
         f'<h3>{e(c["name"])}</h3><p>{e(c["teaser"])}</p><span class="n">{len(cat_items(c))} '
