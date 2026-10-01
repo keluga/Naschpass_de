@@ -349,7 +349,8 @@ h3{font-size:17px;line-height:1.25;margin:0}
 .lead{font-size:18px;line-height:1.6;max-width:62ch;margin:6px 0 18px}
 .how{list-style:none;padding:0;margin:-6px 0 16px;display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px;font-weight:700;color:var(--mut)}
 .how a{display:flex;gap:5px;align-items:center;color:var(--mut);text-decoration:none;border-bottom:2px dotted var(--line)}
-.how a:hover{color:var(--vio);border-color:var(--vio2)}.how span{font-size:16px}
+.how a:hover{color:var(--vio);border-color:var(--vio2)}
+.how .advpill{color:#1F8A62;border-bottom-color:#9EE3C6}.how em{font-style:normal}.how span{font-size:16px}
 .hgrid .hr{margin-top:22px}
 @media(min-width:980px){.hgrid{display:grid;grid-template-columns:1fr 470px;gap:34px;align-items:start}.hgrid .hr{margin-top:6px}
 .hgrid .spin{padding:0}.hgrid .card{width:92px;height:140px}.hgrid .card img{height:70px}.hgrid .card .svgw{height:70px}.hgrid .card .svgw svg{width:54px;height:54px}
@@ -662,7 +663,7 @@ def page(title, body, desc=None, path="/", og_img=None, script="", stamp=""):
 {body}
 {follow_box()}
 </main>
-<footer><div class="wrap"><a href="/ueber/">Über Naschpass</a><a href="/ueber/#partner">Für Partner</a><a href="/impressum/">Impressum</a><a href="/datenschutz/">Datenschutz</a>
+<footer><div class="wrap"><a href="/advent/">Adventskalender</a><a href="/ueber/">Über Naschpass</a><a href="/ueber/#partner">Für Partner</a><a href="/impressum/">Impressum</a><a href="/datenschutz/">Datenschutz</a>
 <button class="linkbtn" type="button" data-imgpref hidden>Foto-Einstellung</button>
 <span>Keine Cookies, kein Tracking.</span></div></footer>
 <div class="imgbar" id="imgbar" role="region" aria-label="Produktfotos" hidden><p>Einige Produktfotos kommen direkt vom Shop. Dabei bekommt der Shop deine IP-Adresse. <a href="/datenschutz/#fotos">Mehr</a></p>
@@ -784,6 +785,11 @@ document.querySelectorAll('.band').forEach(function(b){
 document.querySelectorAll('[data-expand]').forEach(function(b){b.addEventListener('click',function(){
  var g=document.getElementById(b.dataset.expand);g.classList.remove('clip');b.remove();
  var f=g.querySelector('[data-more]');if(f){var a=f.matches('a')?f:f.querySelector('a');if(a)a.focus({preventScroll:true})}})});
+/* Advent-Countdown (nur Text, nichts gespeichert) */
+document.querySelectorAll('[data-adv-count]').forEach(function(x){var n=new Date(),y=n.getFullYear(),m=n.getMonth(),d=n.getDate();
+ if(m===11&&d<=24){x.textContent='Türchen '+d+' ist offen';return}
+ if(m===11){x.textContent='Adventskalender';return}
+ var t=Math.round((new Date(y,11,1)-new Date(y,m,d))/864e5);x.textContent='Advent in '+t+' Tagen'});
 /* Klapp-Menüs auf der Startseite */
 document.querySelectorAll('.ddnav').forEach(function(nv){
  function close(x){nv.querySelectorAll('.dd.open').forEach(function(d){if(d!==x){d.classList.remove('open');d.querySelector('.ddb').setAttribute('aria-expanded','false')}})}
@@ -1104,12 +1110,15 @@ def advent_page(live):
     if not pool:
         return ""
     order = [7, 19, 3, 12, 24, 9, 1, 15, 21, 5, 17, 11, 2, 23, 8, 14, 20, 4, 18, 10, 6, 13, 22, 16]
-    doors = "".join(f'<button class="door" type="button" data-day="{d}" style="--c:{CAT_COLORS[d % len(CAT_COLORS)]}"><span>{d}</span></button>'
-                    for d in order)
+    pal = ["#FF4D8D", "#8B6CFF", "#2FAE7E", "#FFB547", "#3D8BFF", "#E8384F"]
+    doors = "".join(f'<button class="door{" big" if d == 24 else ""}" type="button" data-day="{d}" style="--c:{pal[d % len(pal)]}">'
+                    f'<span class="num">{d}</span><i class="lock" aria-hidden="true">🔒</i></button>' for d in order)
     content = json.dumps({str(d): pool[(d - 1) % len(pool)] for d in range(1, 25)}, ensure_ascii=False).replace("</", "<\\/")
     return f"""<section class="hero" style="padding-bottom:0">{SPRINKLES}<h1>Naschpass-<span class="acc">Adventskalender</span></h1>
 <p class="lead">Vom 1. bis 24. Dezember öffnet sich jeden Tag ein Türchen mit einem Süßigkeiten-Fakt oder einer Themenwelt zum Stöbern.</p>
-<p class="amsg" aria-live="polite"></p></section>
+<div class="countdown" aria-live="polite"><div><b data-cd="d">–</b><small>Tage</small></div><div><b data-cd="h">–</b><small>Std</small></div>
+<div><b data-cd="m">–</b><small>Min</small></div><div><b data-cd="s">–</b><small>Sek</small></div></div>
+<p class="amsg" aria-live="polite"></p></section><div class="fall" aria-hidden="true"></div>
 <section style="padding-top:10px"><div class="doors">{doors}</div><div class="result adv" aria-live="polite" hidden></div></section>
 <script type="application/json" id="adv-data">{content}</script>"""
 
@@ -1133,11 +1142,27 @@ font-weight:800;z-index:60;display:flex;gap:10px;align-items:center;box-shadow:0
 .toast.on{transform:translateX(-50%) translateY(0)}.toast .stk{width:34px;height:34px;transform:rotate(-8deg)}
 .doors{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
 @media(min-width:700px){.doors{grid-template-columns:repeat(6,1fr)}}
-.door{aspect-ratio:1;border:0;border-radius:16px;background:var(--c);color:#fff;font:34px Anton,sans-serif;cursor:pointer;position:relative;
-box-shadow:inset 0 0 0 4px rgba(255,255,255,.35),var(--sh);text-shadow:0 2px 0 rgba(43,35,80,.25)}
-.door[disabled]{filter:grayscale(.6) brightness(.95);opacity:.55;cursor:default}
-.door.open{background:#fff;color:var(--c);box-shadow:inset 0 0 0 3px var(--c)}
-.door:not([disabled]):hover{transform:translateY(-2px)}
+.doors{perspective:900px}
+.door{aspect-ratio:1;border:0;border-radius:16px;background:var(--c);color:#fff;font:34px Anton,sans-serif;cursor:pointer;position:relative;overflow:hidden;
+box-shadow:inset 0 0 0 4px rgba(255,255,255,.35),var(--sh);text-shadow:0 2px 0 rgba(43,35,80,.25);transition:transform .5s cubic-bezier(.2,1.2,.4,1)}
+.door:before,.door:after{content:"";position:absolute;background:rgba(255,255,255,.55)}
+.door:before{left:50%;top:0;bottom:0;width:8px;margin-left:-4px}.door:after{top:50%;left:0;right:0;height:8px;margin-top:-4px}
+.door .num{position:relative;z-index:1;background:var(--c);padding:0 6px;border-radius:8px}
+.door .lock{position:absolute;right:6px;bottom:4px;font-size:13px;font-style:normal;z-index:1;display:none}
+.door.big{grid-column:span 2;aspect-ratio:auto;font-size:44px}
+.door[disabled]{filter:saturate(.45);opacity:.6;cursor:default}.door[disabled] .lock{display:block}
+.door.today{animation:todayglow 1.6s ease-in-out infinite}
+@keyframes todayglow{50%{box-shadow:inset 0 0 0 4px #fff,0 0 0 4px var(--c),0 0 26px var(--c)}}
+.door.open{background:#fff;color:var(--c);box-shadow:inset 0 0 0 3px var(--c);transform:rotateY(-18deg)}
+.door.open:before,.door.open:after{background:transparent}.door.open .num{background:#fff}
+.door:not([disabled]):hover{transform:translateY(-3px) rotate(-2deg)}
+.countdown{display:flex;gap:10px;margin:4px 0 6px}
+.countdown div{background:#fff;border-radius:14px;padding:8px 12px;text-align:center;min-width:64px;box-shadow:var(--sh)}
+.countdown b{display:block;font:30px/1 Anton,sans-serif;color:var(--vio)}.countdown small{font-weight:700;color:var(--mut);font-size:12px}
+.fall{position:fixed;inset:0;pointer-events:none;z-index:-1;overflow:hidden;opacity:.6}
+.fall i{position:absolute;top:-20px;width:22px;height:7px;border-radius:4px;opacity:.75;animation:fall linear infinite}
+@keyframes fall{to{transform:translateY(110vh) rotate(540deg)}}
+@media(prefers-reduced-motion:reduce){.fall{display:none}.door.today{animation:none}}
 .amsg{font-weight:800;color:var(--vio)}
 .result.adv{margin-top:16px;background:#fff;border-left:8px solid var(--c)}
 .advteaser{display:flex;gap:14px;align-items:center;background:linear-gradient(135deg,#2FAE7E,#1F8A62);color:#fff;border-radius:var(--r);padding:18px;text-decoration:none}
@@ -1149,8 +1174,18 @@ ADVENT_JS = r"""<script>
 var data=JSON.parse(document.getElementById('adv-data').textContent),now=new Date(),dec=now.getMonth()===11,today=now.getDate(),
  msg=document.querySelector('.amsg'),res=document.querySelector('.result.adv');
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+var cdEl=document.querySelector('.countdown');
+function tickCd(){var n=new Date(),y=n.getMonth()===11?n.getFullYear()+1:n.getFullYear(),diff=new Date(y,11,1)-n;
+ if(dec&&today<=24){cdEl.hidden=true;return}
+ var q=function(k,v){cdEl.querySelector('[data-cd='+k+']').textContent=v};
+ q('d',Math.floor(diff/864e5));q('h',Math.floor(diff/36e5)%24);q('m',Math.floor(diff/6e4)%60);q('s',Math.floor(diff/1e3)%60)}
+tickCd();setInterval(tickCd,1000);
+if(!matchMedia('(prefers-reduced-motion: reduce)').matches){var fl=document.querySelector('.fall'),cols=['#FF4D8D','#FFB547','#3DDC97','#8B6CFF','#3D8BFF'];
+ for(var k=0;k<18;k++){var f=document.createElement('i');f.style.left=Math.random()*100+'%';f.style.background=cols[k%5];
+  f.style.animationDuration=(9+Math.random()*9)+'s';f.style.animationDelay=(-Math.random()*15)+'s';fl.appendChild(f)}}
 msg.textContent=dec?(today<=24?'Heute ist Türchen '+today+' dran.':'Alle Türchen sind offen. Frohe Weihnachten!'):'Der Kalender startet am 1. Dezember. Bis dahin sind alle Türchen zu.';
 document.querySelectorAll('.door').forEach(function(d){var n=+d.dataset.day,ok=dec&&n<=today;d.disabled=!ok;
+ if(dec&&n===today)d.classList.add('today');
  if(!ok)d.setAttribute('aria-label','Türchen '+n+', noch zu');
  d.addEventListener('click',function(){var i=data[n];if(!i)return;d.classList.add('open');
   res.style.setProperty('--c',getComputedStyle(d).getPropertyValue('--c'));res.hidden=false;res.classList.add('has');
@@ -1448,7 +1483,8 @@ def build():
     how = ('<ul class="how">'
            '<li><a href="/posts/"><span aria-hidden="true">📲</span>Fakten-Posts mit Quellen</a></li>'
            '<li><a href="/shop/"><span aria-hidden="true">🗺️</span>Nach Land & Thema</a></li>'
-           '<li><a href="/shop/#alle"><span aria-hidden="true">🛒</span>Direkt zum Shop</a></li></ul>')
+           '<li><a href="/shop/#alle"><span aria-hidden="true">🛒</span>Direkt zum Shop</a></li>'
+           '<li><a href="/advent/" class="advpill"><span aria-hidden="true">🎄</span><em data-adv-count>Adventskalender</em></a></li></ul>')
     about_box = (f'<section><div class="aboutbox"><h2>Neu hier?</h2><p>Naschpass ist ein junges Projekt rund um Süßigkeiten aus aller Welt. '
                  f'Wie wir arbeiten und was Shops und Marken bei uns bekommen, steht auf einer Seite.</p>'
                  f'<div class="btns"><a class="btn dark" href="/ueber/">Über Naschpass</a><a class="btn" href="/ueber/#partner">Für Partner</a></div></div></section>')
