@@ -331,6 +331,10 @@ font-weight:700;font-size:13.5px;line-height:1.2;text-align:center;box-shadow:va
 .tabs{display:flex;gap:6px;margin:0 0 10px;background:#fff;border-radius:14px;padding:4px;box-shadow:var(--sh);width:max-content;max-width:100%}
 .tabs button{border:0;background:none;font-weight:800;font-size:14.5px;padding:8px 14px;border-radius:10px;cursor:pointer;color:var(--mut)}
 .tabs button[aria-selected=true]{background:var(--fg);color:#fff}
+.themes{margin-top:20px}
+.themes h2{font:800 15px Inter,sans-serif;text-transform:none;letter-spacing:0;margin:0 0 10px;color:var(--mut)}
+.trow{display:flex;gap:10px;overflow-x:auto;padding:2px 16px 8px;margin:0 -16px;scrollbar-width:none}
+.trow::-webkit-scrollbar{display:none}.trow .bc{flex:none;width:118px}
 .filters{display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
 .fg{display:flex;align-items:center;gap:10px}
 .fg .fl{flex:none;width:86px;font-weight:800;font-size:13.5px;color:var(--mut)}
@@ -906,6 +910,12 @@ def build():
                   'Wir suchen gerade Shops aus, bei denen du die Sachen aus den Posts in Deutschland bekommst.</div>')
 
     # --- Shop-Seite: alle Länder/Themen + alle Produkte
+    def _n(c):
+        return sum(1 for p in products if p.get("category") == c["id"])
+    theme_row = "".join(
+        f'<a class="bc" href="/kategorie/{c["id"]}/">{sticker(c["id"], 40)}{e(c["name"])}'
+        f'<small>{_n(c) or "bald"}{(" Sorte" if _n(c) == 1 else " Sorten") if _n(c) else ""}</small></a>'
+        for c in sorted(cats, key=lambda c: -_n(c)))
     counts = facet_counts()
     fgroups = ""
     for g in FILTER:
@@ -928,8 +938,8 @@ def build():
         f'<section class="hero" style="padding-bottom:0">{SPRINKLES}<h1>Shop</h1>'
         f'<p class="sub">Such dir aus, worauf du Lust hast: nach Herkunft, Geschmack und Art, frei kombinierbar.</p>'
         f'<button class="fake" type="button" data-open-search>{ICON_SEARCH}<span>z. B. „salzige Chips aus Asien“ …</span></button></section>'
-        f'<section id="alle" style="padding-top:22px">{shop_all}</section>'
-        f'<section><div class="head"><h2>Themenwelten</h2></div>{tiles}</section>',
+        f'<nav class="themes" aria-label="Themenwelten"><h2>Themenwelten</h2><div class="trow">{theme_row}</div></nav>'
+        f'<section id="alle" style="padding-top:18px">{shop_all}</section>',
         "Süßigkeiten aus aller Welt nach Herkunft, Geschmack und Art.", "/shop/"))
 
     # --- Posts-Seite: alle Posts mit Filter, Nummernsuche unten
