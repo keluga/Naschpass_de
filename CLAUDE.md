@@ -4,6 +4,7 @@ Content-Repo für den Kanal **@naschpass_de** (TikTok, Instagram, Pinterest): Ka
 
 ## Harte Regeln
 - **Kein Geld und keine Credits ausgeben** (vidIQ, Higgsfield, bezahlte APIs, Metricool-Upgrade), ohne vorher Kevs OK.
+- **Nie selbst nach `main` mergen oder pushen** (jeder Produktions-Deploy kostet 15 Netlify-Credits). Nur wenn Kev ausdrücklich „live“ schreibt. „Mach“, „do it“, „passt“ o. Ä. reichen nicht. Änderungen immer über Branch + Pull Request (kostenlose Vorschau).
 - **Fakten nur mit Beleg:** Jede Zahl und jedes Datum auf einer geöffneten Webseite prüfen, Quelle in `sources`. Unsicheres weglassen.
 - **Recht:** keine Gesundheitsversprechen (HCVO), nichts Abwertendes über Marken (§ 4 UWG), keine Kaufappelle und keine Ansprache von Kindern (UWG Anh. Nr. 28). Enthält ein Post Affiliate-Links oder Produkte eines Partner-Shops: „Anzeige“ auf Folie 1 und in der Caption.
 - **Keine fremden Bilder** außer CC0/CC BY mit Quellenangabe. Keine Emojis auf Folien, nur in Captions.

@@ -332,8 +332,8 @@ def view_toggle(target, views, default):
 
 
 CSS = """
-@font-face{font-family:Anton;src:url(/static/Anton-Regular.ttf) format("truetype");font-display:swap}
-@font-face{font-family:Inter;src:url(/static/Inter.ttf) format("truetype");font-weight:100 900;font-display:swap}
+@font-face{font-family:Anton;src:url(/static/fonts/anton-latin.woff2) format("woff2");font-display:swap}
+@font-face{font-family:Inter;src:url(/static/fonts/inter-latin.woff2) format("woff2");font-weight:100 900;font-display:swap}
 :root{--bg:#EAF6F1;--bg2:#DDF0E8;--card:#fff;--fg:#2B2350;--mut:#5F5A85;--line:#CFE7DD;
 --vio:#6248E8;--vio2:#8B6CFF;--pink:#FF8FB1;--ora:#FFB547;--mint:#9EE3C6;--r:20px;--sh:0 1px 0 #CFE7DD,0 6px 18px rgba(43,35,80,.07)}
 *{box-sizing:border-box}html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;scroll-padding-top:70px}
@@ -644,19 +644,19 @@ def follow_box():
 
 def page(title, body, desc=None, path="/", og_img=None, script="", stamp=""):
     desc = desc or site["intro"]
-    og = og_img or f"{BASE}/static/logo.png"
+    og = og_img or f"{BASE}/static/og.jpg"
     return f"""<!doctype html><html lang="de"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>{e(title)}</title><meta name="description" content="{e(desc)}">
 <meta name="theme-color" content="#EAF6F1"><link rel="canonical" href="{BASE}{path}">
 <link rel="icon" href="/static/favicon.png"><link rel="apple-touch-icon" href="/static/logo.png">
-<link rel="preload" href="/static/Anton-Regular.ttf" as="font" type="font/ttf" crossorigin>
+<link rel="preload" href="/static/fonts/anton-latin.woff2" as="font" type="font/woff2" crossorigin>
 <meta property="og:type" content="website"><meta property="og:url" content="{BASE}{path}"><meta property="og:locale" content="de_DE">
 <meta property="og:title" content="{e(title)}"><meta property="og:description" content="{e(desc)}">
 <meta property="og:image" content="{og}"><meta name="twitter:card" content="summary_large_image">
 <style>{CSS}{SPIN_CSS}{EXTRA_CSS}{EXTRA_CSS2}</style></head><body{stamp_attr(stamp)}>
 <div class="ad">{AD}</div>{'<div class="ad" style="background:#FFB547;color:#2B2350;font-weight:700">VORSCHAU mit Beispielprodukten – nicht live</div>' if DEMO else ''}
-<header><div class="wrap"><a class="logo" href="/"><img src="/static/logo.png" alt="" width="38" height="38">NASCHPASS</a>
+<header><div class="wrap"><a class="logo" href="/"><img src="/static/logo-96.png" alt="" width="38" height="38">NASCHPASS</a>
 <nav aria-label="Hauptmenü"><a href="/shop/">Shop</a><a href="/posts/">Posts</a><a href="/ueber/" class="hide-s">Über uns</a></nav>
 <button class="sbtn" type="button" data-open-search aria-label="Suche öffnen">{ICON_SEARCH}</button></div></header>
 <main class="wrap">
@@ -666,7 +666,7 @@ def page(title, body, desc=None, path="/", og_img=None, script="", stamp=""):
 <footer><div class="wrap"><a href="/advent/">Adventskalender</a><a href="/geschenk/">Geschenk-Finder</a><a href="/quiz/">Snack-Typ-Quiz</a><a href="/ueber/">Über Naschpass</a><a href="/ueber/#partner">Für Partner</a><a href="/impressum/">Impressum</a><a href="/datenschutz/">Datenschutz</a>
 <button class="linkbtn" type="button" data-imgpref hidden>Foto-Einstellung</button>
 <span>Keine Cookies, kein Tracking.</span></div></footer>
-<div class="imgbar" id="imgbar" role="region" aria-label="Produktfotos" hidden><p>Einige Produktfotos kommen direkt vom Shop. Dabei bekommt der Shop deine IP-Adresse. <a href="/datenschutz/#fotos">Mehr</a></p>
+<div class="imgbar" id="imgbar" role="region" aria-label="Produktfotos" hidden><p>Einige Produktfotos kommen direkt vom Shop. Dabei bekommt der Shop deine IP-Adresse. <a href="/datenschutz/#fotos">Mehr zum Datenschutz</a></p>
 <div class="row"><button class="yes" type="button" data-img="1">Fotos anzeigen</button><button class="no" type="button" data-img="0">Nein danke</button></div></div>
 {SEARCH_DIALOG}
 <script>{COMMON_JS}</script><script type="module">{SEARCH_JS}</script>{script}</body></html>"""
@@ -1789,7 +1789,10 @@ Vollständige Angaben im <a href="/impressum/">Impressum</a>.</p></section>"""
 <p style="color:var(--mut);font-size:14px">Stand: Oktober 2026</p></section>""", "Datenschutz"))
 
 
-    (DIST / "robots.txt").write_text("User-agent: *\nAllow: /\n", encoding="utf-8")
+    urls = sorted({"/" + str(f.relative_to(DIST)).replace("index.html", "") for f in DIST.rglob("index.html")})
+    (DIST / "sitemap.xml").write_text('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+                                      + "".join(f"<url><loc>{BASE}{u}</loc></url>\n" for u in urls) + "</urlset>\n", encoding="utf-8")
+    (DIST / "robots.txt").write_text(f"User-agent: *\nAllow: /\nSitemap: {BASE}/sitemap.xml\n", encoding="utf-8")
     for w in WARN:
         print("WARNUNG:", w)
     print("fertig:", DIST, "| Impressum-Adresse fehlt!" if missing else "")

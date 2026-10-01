@@ -9,3 +9,10 @@
 # (kein Kontakt der Besucher zum Shop -> kein Cookie-Banner nötig). Neue Bild-Server hier ergänzen.
 [images]
   remote_images = ['https://images2\.productserve\.com/.*']
+
+# Caching: Dateien in /static/ dürfen 30 Tage im Browser bleiben (spart Ladezeit und Netlify-Bandbreite).
+# Wer eine Datei dort ändert, gibt ihr einen neuen Namen (z. B. og-2.jpg), sonst sehen Besucher bis zu 30 Tage die alte.
+[[headers]]
+  for = "/static/*"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000"
