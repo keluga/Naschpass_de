@@ -298,7 +298,7 @@ STICKERS["italien"] = ('<clipPath id="ci"><rect width="64" height="64" rx="14"/>
                        '<rect x="21" width="22" height="64" fill="#fff"/><rect x="42" width="22" height="64" fill="#D8263A"/></g>')
 STICKERS["schweiz"] = ('<rect width="64" height="64" rx="14" fill="#D8263A"/><rect x="27" y="14" width="10" height="36" fill="#fff"/>'
                        '<rect x="14" y="27" width="36" height="10" fill="#fff"/>')
-for _k, (_bg, _em) in {"weihnachten": ("#2FAE7E", "🎄"), "schokolade": ("#B07A55", "🍫"), "getraenke": ("#9FD3FF", "🥤"), "snacks": ("#FFD966", "🥜"),
+for _k, (_bg, _em) in {"halloween": ("#FF8A3D", "🎃"), "weihnachten": ("#2FAE7E", "🎄"), "schokolade": ("#B07A55", "🍫"), "getraenke": ("#9FD3FF", "🥤"), "snacks": ("#FFD966", "🥜"),
                        "klassiker": ("#FF8FB1", "🛒")}.items():
     STICKERS[_k] = (f'<rect width="64" height="64" rx="14" fill="{_bg}"/>'
                     f'<text x="32" y="44" font-size="34" text-anchor="middle">{_em}</text>')
@@ -654,7 +654,7 @@ def page(title, body, desc=None, path="/", og_img=None, script="", stamp=""):
 <meta property="og:type" content="website"><meta property="og:url" content="{BASE}{path}"><meta property="og:locale" content="de_DE">
 <meta property="og:title" content="{e(title)}"><meta property="og:description" content="{e(desc)}">
 <meta property="og:image" content="{og}"><meta name="twitter:card" content="summary_large_image">
-<style>{CSS}{SPIN_CSS}{EXTRA_CSS}</style></head><body{stamp_attr(stamp)}>
+<style>{CSS}{SPIN_CSS}{EXTRA_CSS}{EXTRA_CSS2}</style></head><body{stamp_attr(stamp)}>
 <div class="ad">{AD}</div>{'<div class="ad" style="background:#FFB547;color:#2B2350;font-weight:700">VORSCHAU mit Beispielprodukten – nicht live</div>' if DEMO else ''}
 <header><div class="wrap"><a class="logo" href="/"><img src="/static/logo.png" alt="" width="38" height="38">NASCHPASS</a>
 <nav aria-label="Hauptmenü"><a href="/shop/">Shop</a><a href="/posts/">Posts</a><a href="/ueber/" class="hide-s">Über uns</a></nav>
@@ -663,7 +663,7 @@ def page(title, body, desc=None, path="/", og_img=None, script="", stamp=""):
 {body}
 {follow_box()}
 </main>
-<footer><div class="wrap"><a href="/advent/">Adventskalender</a><a href="/ueber/">Über Naschpass</a><a href="/ueber/#partner">Für Partner</a><a href="/impressum/">Impressum</a><a href="/datenschutz/">Datenschutz</a>
+<footer><div class="wrap"><a href="/advent/">Adventskalender</a><a href="/geschenk/">Geschenk-Finder</a><a href="/quiz/">Snack-Typ-Quiz</a><a href="/ueber/">Über Naschpass</a><a href="/ueber/#partner">Für Partner</a><a href="/impressum/">Impressum</a><a href="/datenschutz/">Datenschutz</a>
 <button class="linkbtn" type="button" data-imgpref hidden>Foto-Einstellung</button>
 <span>Keine Cookies, kein Tracking.</span></div></footer>
 <div class="imgbar" id="imgbar" role="region" aria-label="Produktfotos" hidden><p>Einige Produktfotos kommen direkt vom Shop. Dabei bekommt der Shop deine IP-Adresse. <a href="/datenschutz/#fotos">Mehr</a></p>
@@ -790,6 +790,8 @@ document.querySelectorAll('[data-adv-count]').forEach(function(x){var n=new Date
  if(m===11&&d<=24){x.textContent='Türchen '+d+' ist offen';return}
  if(m===11){x.textContent='Adventskalender';return}
  var t=Math.round((new Date(y,11,1)-new Date(y,m,d))/864e5);x.textContent='Advent in '+t+' Tagen'});
+/* Weltkarte am Handy mittig (Europa) starten, Rest wischbar */
+document.querySelectorAll('.map').forEach(function(m){m.scrollLeft=(m.scrollWidth-m.clientWidth)*.45});
 /* Klapp-Menüs auf der Startseite */
 document.querySelectorAll('.ddnav').forEach(function(nv){
  function close(x){nv.querySelectorAll('.dd.open').forEach(function(d){if(d!==x){d.classList.remove('open');d.querySelector('.ddb').setAttribute('aria-expanded','false')}})}
@@ -1196,6 +1198,215 @@ document.querySelectorAll('.door').forEach(function(d){var n=+d.dataset.day,ok=d
 </script>"""
 
 
+# ---------- Weltkarte, Geschenk-Finder, Snack-Typ-Quiz, Teilen-Bilder ----------
+# Karte: Punkte-Weltkarte aus Natural-Earth-Daten (gemeinfrei, via world-atlas, ISC), liegt als static/worldmap.svg.
+# (Länge, Breite, Seite des Namensschilds: b=unten, t=oben, l=links, r=rechts)
+MAP_PINS = {"japan": (138, 37, "r"), "usa": (-100, 41, "t"), "mexiko": (-102, 21, "b"), "italien": (15, 40, "r"),
+            "schweiz": (3, 49, "l"), "skandinavien": (16, 63, "t")}
+
+
+def map_html():
+    pins = ""
+    for cid, pos in MAP_PINS.items():
+        if not pos or cid not in cat_by_id:
+            continue
+        c = cat_by_id[cid]
+        n = len(cat_items(c))
+        x, y = (pos[0] + 180) / 360 * 100, (82 - pos[1]) / 138 * 100
+        pins += (f'<a class="pin s-{pos[2]}" href="/kategorie/{cid}/" style="left:{x:.1f}%;top:{y:.1f}%;--c:{cat_color[cid]}">{sticker(cid, 34)}'
+                 f'<span class="pl">{e(c["name"])}<small>{f"{n} Sorten" if n > 1 else ("1 Sorte" if n else "bald")}</small></span></a>')
+    return (f'<section id="karte"><div class="head"><h2>Süßigkeiten-Weltkarte</h2><a class="more" href="/shop/">Alle Themenwelten</a></div>'
+            f'<div class="map"><div class="mapin"><img src="/static/worldmap.svg" alt="" width="1000" height="440" loading="lazy">{pins}</div></div>'
+            f'<p class="wl">Tippe auf ein Land, um seine Themenwelt zu öffnen. Am Handy kannst du die Karte wischen. Kartendaten: Natural Earth.</p></section>')
+
+
+def explore_html():
+    items = [("🎡", "Zufalls-Rad", "/#zufall"), ("🎁", "Geschenk-Finder", "/geschenk/"), ("🧠", "Snack-Typ-Quiz", "/quiz/"),
+             ("🗺️", "Weltkarte", "/#karte"), ("🛂", "Dein Naschpass", "/#pass"), ("🎄", "Adventskalender", "/advent/")]
+    return ('<nav class="explore" aria-label="Entdecken">' + "".join(
+        f'<a href="{u}"><span aria-hidden="true">{i}</span>{t}</a>' for i, t, u in items) + '</nav>')
+
+
+def _opt_btn(q, v, label, icon):
+    return f'<button class="qopt" type="button" data-q="{q}" data-v="{v}">{icon}<span>{e(label)}</span></button>'
+
+
+def finder_page():
+    land_opts = [("asien", "Japan & Asien", "japan"), ("usa", "USA", "usa"), ("italien", "Italien", "italien"),
+                 ("schweiz", "Schweiz", "schweiz"), ("mexiko", "Mexiko", "mexiko"), ("skandinavien", "Skandinavien", "skandinavien")]
+    q1 = "".join(_opt_btn("anlass", v, l, f'<span class="emo">{i}</span>') for v, l, i in
+                 [("weihnachten", "Zu Weihnachten", "🎄"), ("mitbringsel", "Mitbringsel & Geburtstag", "🎁"), ("ich", "Für mich selbst", "😋")])
+    q2 = "".join(_opt_btn("geschmack", v, l, f'<span class="emo">{i}</span>') for v, l, i in
+                 [("schoko", "Schokoladig", "🍫"), ("sauer", "Sauer", "🍋"), ("scharf", "Scharf", "🌶️"), ("salzig", "Salzig", "🧂"),
+                  ("fruchtig", "Fruchtig", "🍓"), ("", "Egal, Hauptsache lecker", "🤷")])
+    q3 = "".join(_opt_btn("land", v, l, sticker(s, 40)) for v, l, s in land_opts) + _opt_btn("land", "", "Egal, überrasch mich", '<span class="emo">🌍</span>')
+    return f"""<section class="hero" style="padding-bottom:0">{SPRINKLES}<h1>Geschenk-<span class="acc">Finder</span></h1>
+<p class="lead">Drei Fragen, dann zeigen wir dir passende Süßigkeiten und Themenwelten. Es wird nichts gespeichert.</p></section>
+<section class="quiz" id="finder" style="padding-top:12px">
+<div class="qstep" data-step="1"><h2>1. Wofür suchst du?</h2><div class="qgrid">{q1}</div></div>
+<div class="qstep" data-step="2" hidden><h2>2. Welcher Geschmack?</h2><div class="qgrid">{q2}</div></div>
+<div class="qstep" data-step="3" hidden><h2>3. Woher darf es sein?</h2><div class="qgrid">{q3}</div></div>
+<div class="qres" hidden></div></section>"""
+
+
+QUIZ_TYPES = {
+    "schoko": ("Schoko-Genießer", "🍫", "#8B5A3C", "Du nimmst lieber ein richtig gutes Stück Schokolade als eine ganze Tüte irgendwas. Pralinen, Tafeln aus der Schweiz und Italien sind deine Welt.", "/kategorie/schokolade/"),
+    "sauer": ("Sauer-Abenteurer", "🍋", "#E6B800", "Je saurer, desto besser. Extrem saure Bonbons sind für dich kein Risiko, sondern eine Einladung.", "/shop/?geschmack=sauer#alle"),
+    "scharf": ("Chili-Held", "🌶️", "#E8384F", "Süß allein ist dir zu langweilig. Chili, Limette und Tamarinde wie in Mexiko machen dich glücklich.", "/kategorie/mexiko/"),
+    "exot": ("Weltreisender", "🌏", "#3D8BFF", "Du willst probieren, was es hier nicht gibt: limitierte Sorten aus Japan, Snacks aus Korea und alles, was ungewöhnlich klingt.", "/kategorie/japan/"),
+    "frucht": ("Fruchtgummi-Fan", "🐻", "#FF4D8D", "Bunt, fruchtig, zum Teilen (oder auch nicht): Fruchtgummi aus Skandinavien und dem Rest der Welt ist dein Ding.", "/shop/?art=gummi#alle"),
+    "salzig": ("Salzig-Snacker", "🥨", "#2FAE7E", "Knuspern muss es: Chips, Brezeln und Salzlakritz schlagen bei dir jede Schokolade.", "/shop/?geschmack=salzig#alle"),
+}
+QUIZ_QS = [
+    ("Filmabend: Wonach greifst du?", [("Schokolade", "🍫", {"schoko": 2}), ("Chips", "🥨", {"salzig": 2}),
+                                       ("Fruchtgummi", "🐻", {"frucht": 2}), ("Etwas, das ich noch nie probiert habe", "❓", {"exot": 2})]),
+    ("Wie scharf darf es sein?", [("Gar nicht", "🙅", {"schoko": 1, "frucht": 1}), ("Ein bisschen", "🙂", {"salzig": 1, "exot": 1}),
+                                  ("So scharf es geht", "🔥", {"scharf": 3})]),
+    ("Saure Bonbons?", [("Je saurer, desto besser", "🍋", {"sauer": 3}), ("Geht so", "😐", {"frucht": 1}), ("Nein danke", "🙈", {"schoko": 1, "salzig": 1})]),
+    ("Spontanreise: Wohin?", [("Tokio", "🗼", {"exot": 2}), ("Mexiko-Stadt", "🌮", {"scharf": 2}), ("Rom", "🍝", {"schoko": 1, "frucht": 1}),
+                              ("Stockholm", "🛶", {"salzig": 1, "sauer": 1, "frucht": 1})]),
+    ("Dein Snack-Motto?", [("Genuss statt Masse", "✨", {"schoko": 2}), ("Hauptsache Abenteuer", "🧭", {"exot": 1, "scharf": 1, "sauer": 1}),
+                           ("Knuspern muss es", "😋", {"salzig": 2}), ("Bunt und fruchtig", "🌈", {"frucht": 2})]),
+]
+
+
+def quiz_page():
+    steps = ""
+    for k, (q, opts) in enumerate(QUIZ_QS):
+        btns = "".join(f'<button class="qopt" type="button" data-pts=\'{json.dumps(pts)}\'><span class="emo">{ic}</span><span>{e(t)}</span></button>'
+                       for t, ic, pts in opts)
+        steps += f'<div class="qstep" data-step="{k + 1}"{"" if k == 0 else " hidden"}><h2>{k + 1}. {e(q)}</h2><div class="qgrid">{btns}</div></div>'
+    types = json.dumps({k: {"n": v[0], "i": v[1], "c": v[2], "t": v[3], "u": v[4]} for k, v in QUIZ_TYPES.items()}, ensure_ascii=False)
+    return f"""<section class="hero" style="padding-bottom:0">{SPRINKLES}<h1>Welcher <span class="acc">Snack-Typ</span> bist du?</h1>
+<p class="lead">Fünf Fragen, ein Ergebnis, passende Süßigkeiten dazu. Nur zum Spaß, es wird nichts gespeichert.</p>
+<div class="qbar"><i></i></div></section>
+<section class="quiz" id="quiz" style="padding-top:12px">{steps}<div class="qres" hidden></div></section>
+<script type="application/json" id="quiz-types">{types}</script>"""
+
+
+EXTRA_CSS2 = """
+.explore{display:flex;gap:8px;overflow-x:auto;padding:4px 16px 6px;margin:18px -16px 0;scrollbar-width:none}
+.explore::-webkit-scrollbar{display:none}
+.explore a{flex:none;display:flex;align-items:center;gap:7px;background:#fff;border-radius:999px;padding:9px 14px;font-weight:800;font-size:14px;
+color:var(--fg);text-decoration:none;box-shadow:var(--sh)}.explore a:hover{outline:2px solid var(--vio2)}.explore span{font-size:18px}
+.map{background:#fff;border-radius:var(--r);padding:12px;box-shadow:var(--sh);overflow-x:auto;scrollbar-width:thin}
+.mapin{position:relative;min-width:680px}.map img{width:100%;height:auto;display:block}
+.pin{position:absolute;transform:translate(-50%,-50%);display:block;text-decoration:none;color:var(--fg);z-index:1}
+.pin .pl{position:absolute;left:50%;top:100%;transform:translateX(-50%)}
+.pin.s-t .pl{top:auto;bottom:100%;margin:0 0 3px}.pin.s-l .pl{left:auto;right:100%;top:50%;transform:translateY(-50%);margin:0 4px 0 0}
+.pin.s-r .pl{left:100%;top:50%;transform:translateY(-50%);margin:0 0 0 4px}
+.pin .stk{width:30px;height:30px;filter:drop-shadow(0 3px 4px rgba(43,35,80,.3));transition:transform .2s}
+.pin:hover .stk,.pin:focus .stk{transform:scale(1.25) rotate(-8deg)}
+.pin .pl{margin-top:3px;background:#fff;border-radius:8px;padding:2px 6px;font-size:11px;font-weight:800;white-space:nowrap;box-shadow:var(--sh);text-align:center;line-height:1.2}
+.pin .pl small{display:block;font-weight:600;color:var(--mut);font-size:10px}
+@media(max-width:600px){.pin .pl small{display:none}.pin .stk{width:26px;height:26px}}
+.pin:hover{z-index:2}
+.qstep h2{font-size:clamp(24px,5.5vw,34px)}
+.qgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+@media(min-width:760px){.qgrid{grid-template-columns:repeat(3,1fr)}}
+.qopt{display:flex;flex-direction:column;align-items:center;gap:8px;border:0;background:#fff;border-radius:18px;padding:16px 10px;font:inherit;
+font-weight:800;color:var(--fg);cursor:pointer;box-shadow:var(--sh);transition:transform .15s}
+.qopt:hover{transform:translateY(-2px);outline:2px solid var(--vio2)}.qopt .stk{width:40px;height:40px}
+.qopt.sel{background:var(--fg);color:#fff}
+.qbar{height:8px;background:#fff;border-radius:4px;max-width:520px;overflow:hidden}.qbar i{display:block;height:100%;width:0;background:var(--vio);transition:width .3s}
+.qres{animation:pop .4s cubic-bezier(.2,1.5,.4,1)}
+@keyframes pop{from{transform:scale(.9);opacity:0}}
+.qtype{background:var(--c);color:#fff;border-radius:var(--r);padding:22px;text-align:center;margin-bottom:16px}
+.qtype .big{font-size:72px;line-height:1}.qtype h2{color:#fff;margin:6px 0}.qtype p{max-width:52ch;margin:0 auto 14px;color:#fff}
+.qtype .btns{justify-content:center}.qtype .btn{background:#fff;color:var(--fg)}
+.badge-cta{display:flex;flex-wrap:wrap;gap:10px;align-items:center;background:linear-gradient(135deg,#8B6CFF,#FF4D8D);color:#fff;border-radius:16px;padding:14px;margin:0 0 12px 12px}
+.badge-cta b{font-size:17px}.badge-cta .btn{background:#fff;color:var(--fg)}
+"""
+
+SHARE_JS = r"""<script>
+/* Teilen-Bild im Browser malen (nichts wird hochgeladen) */
+window.npCard=async function(o){
+ try{await document.fonts.load('80px Anton')}catch(e){}
+ var c=document.createElement('canvas');c.width=1080;c.height=1350;var x=c.getContext('2d');
+ var g=x.createLinearGradient(0,0,1080,1350);g.addColorStop(0,'#2B2350');g.addColorStop(1,o.color||'#6248E8');x.fillStyle=g;x.fillRect(0,0,1080,1350);
+ var cols=['#FF4D8D','#FFB547','#3DDC97','#8B6CFF','#FFF7EC'];for(var k=0;k<40;k++){x.save();x.translate(Math.random()*1080,Math.random()*1350);
+  x.rotate(Math.random()*6);x.fillStyle=cols[k%5];x.globalAlpha=.55;x.beginPath();x.roundRect?x.roundRect(-22,-7,44,14,7):x.rect(-22,-7,44,14);x.fill();x.restore()}
+ x.textAlign='center';x.fillStyle='#FFF7EC';x.font='54px Anton, Impact, sans-serif';x.fillText((o.kicker||'').toUpperCase(),540,190);
+ if(o.imgs&&o.imgs.length){var n=o.imgs.length,cols2=Math.min(3,n),sz=200,gap=40,rows=Math.ceil(n/cols2);
+  for(var i=0;i<n;i++){var r=Math.floor(i/cols2),cc=i%cols2,inRow=Math.min(cols2,n-r*cols2),w=inRow*sz+(inRow-1)*gap;
+   var im=await new Promise(function(res){var m=new Image();m.onload=function(){res(m)};m.onerror=function(){res(null)};m.src=o.imgs[i]});
+   if(im){x.save();x.translate(540-w/2+cc*(sz+gap)+sz/2,330+r*(sz+gap)+sz/2);x.rotate(-.12+Math.random()*.24);x.drawImage(im,-sz/2,-sz/2,sz,sz);x.restore()}}}
+ else{x.font='260px serif';x.fillText(o.emoji||'🍬',540,560)}
+ x.fillStyle='#FFD23F';x.font='110px Anton, Impact, sans-serif';
+ var words=(o.title||'').toUpperCase().split(' '),line='',y=o.imgs?900:820,lines=[];
+ words.forEach(function(w){var t=line?line+' '+w:w;if(x.measureText(t).width>960&&line){lines.push(line);line=w}else line=t});lines.push(line);
+ lines.forEach(function(l,k){x.fillText(l,540,y+k*118)});
+ x.fillStyle='#FFF7EC';x.font='bold 40px Inter, sans-serif';x.fillText(o.sub||'',540,y+lines.length*118+30);
+ x.font='bold 36px Inter, sans-serif';x.fillStyle='#CFC9E8';x.fillText('naschpass.oneflowsolution.de',540,1270);
+ var blob=await new Promise(function(r){c.toBlob(r,'image/png')}),file=new File([blob],'naschpass.png',{type:'image/png'});
+ if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],text:o.text||''});return}catch(e){return}}
+ var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='naschpass.png';document.body.appendChild(a);a.click();a.remove()};
+window.npSvgUrl=function(svg){var s=svg.cloneNode(true);s.setAttribute('xmlns','http://www.w3.org/2000/svg');s.setAttribute('width','200');s.setAttribute('height','200');
+ return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(s.outerHTML)};
+</script>"""
+
+PASS_SHARE_JS = r"""<script>
+(function(){var pb=document.getElementById('pass');if(!pb)return;var slots=pb.querySelectorAll('[data-s]'),cta=document.createElement('div');
+ cta.className='badge-cta';cta.hidden=true;pb.querySelector('.stamps').before(cta);
+ function upd(){var got=pb.querySelectorAll('.stamp-slot.got'),all=got.length===slots.length&&slots.length>0;cta.hidden=!got.length;
+  cta.innerHTML=all?'<b>🌍 Geschafft: Naschpass-Weltreisender!</b><button class="btn" type="button">Abzeichen teilen</button>'
+   :'<b>'+got.length+' von '+slots.length+' Stempeln</b><button class="btn" type="button">Pass teilen</button>';
+  cta.querySelector('button').onclick=function(){var imgs=[].map.call(got,function(g){return npSvgUrl(g.querySelector('svg'))});
+   npCard({kicker:all?'Abzeichen freigeschaltet':'Mein Naschpass',title:all?'Weltreisender':got.length+' von '+slots.length+' Ländern',
+    sub:all?'Alle Länder-Stempel gesammelt':'Süßigkeiten aus aller Welt entdeckt',imgs:imgs,color:'#8B6CFF',
+    text:all?'Ich bin Naschpass-Weltreisender 🌍🍬':'Mein Naschpass: '+got.length+'/'+slots.length+' Länder 🍬'})}}
+ upd();new MutationObserver(upd).observe(pb,{subtree:true,attributes:true,attributeFilter:['class']})})();
+</script>"""
+
+FINDER_JS = r"""<script>
+(function(){var root=document.getElementById('finder'),ans={},data=null;
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+root.addEventListener('click',async function(ev){var b=ev.target.closest('.qopt');if(!b)return;
+ var st=b.closest('.qstep'),n=+st.dataset.step;ans[b.dataset.q]=b.dataset.v;st.querySelectorAll('.qopt').forEach(function(x){x.classList.toggle('sel',x===b)});
+ var next=root.querySelector('[data-step="'+(n+1)+'"]');if(next){next.hidden=false;next.scrollIntoView({behavior:'smooth',block:'center'});return}
+ data=data||await fetch('/search.json').then(function(r){return r.json()});
+ var prods=data.items.filter(function(i){return i.type==='product'}),has=function(i,k){return (' '+i.f+' ').indexOf(' '+k+' ')>=0};
+ var want=[];if(ans.geschmack)want.push('geschmack:'+ans.geschmack);if(ans.land)want.push('land:'+ans.land);
+ if(ans.anlass!=='ich')want.push('art:boxen');
+ var scored=prods.map(function(i){return [i,want.filter(function(w){return has(i,w)}).length]}).filter(function(x){return x[1]>0||!want.length})
+  .sort(function(a,b){return b[1]-a[1]}).slice(0,6).map(function(x){return x[0]});
+ var ok=window.npImgOK&&window.npImgOK(),themes=[];
+ if(ans.anlass==='weihnachten')themes.push(['/kategorie/weihnachten/','Weihnachten & Geschenke']);
+ if(ans.anlass==='mitbringsel')themes.push(['/kategorie/boxen/','Boxen & Geschenke']);
+ var lt={asien:['/kategorie/japan/','Japan & Asien'],usa:['/kategorie/usa/','USA'],italien:['/kategorie/italien/','Italien'],schweiz:['/kategorie/schweiz/','Schweiz'],
+  mexiko:['/kategorie/mexiko/','Mexiko'],skandinavien:['/kategorie/skandinavien/','Skandinavien']};if(lt[ans.land])themes.push(lt[ans.land]);
+ if(ans.geschmack==='sauer'||ans.geschmack==='scharf')themes.push(['/kategorie/sauer-scharf/','Sauer & scharf']);
+ if(ans.geschmack==='schoko')themes.push(['/kategorie/schokolade/','Schokolade & Pralinen']);
+ var q=[];if(ans.geschmack)q.push('geschmack='+ans.geschmack);if(ans.land)q.push('land='+ans.land);
+ var cards=scored.map(function(i){var im=i.img||(i.ext&&ok?i.ext:'');return '<a class="hit" href="'+esc(i.url)+'" rel="sponsored noopener" target="_blank"><span class="th">'
+  +(im?'<img class="ct" src="'+esc(im)+'" alt="">':(i.svg||''))+'</span><span><b>'+esc(i.title)+'*</b><span>'+esc(i.sub||'')+'</span></span></a>'}).join('');
+ var res=root.querySelector('.qres');res.hidden=false;
+ res.innerHTML='<h2>Unsere Vorschläge</h2>'+(cards?cards+'<p class="wl">* Werbelink</p>':
+  '<div class="slot main"><span class="emo">🤝</span><div><strong>Noch keine passenden Produkte</strong><p>Wir nehmen gerade neue Partner-Shops auf. Bis dahin findest du hier die passenden Themenwelten.</p></div></div>')
+  +'<div class="btns" style="margin-top:14px">'+themes.map(function(t){return '<a class="btn dark" href="'+t[0]+'">'+esc(t[1])+'</a>'}).join('')
+  +'<a class="btn" style="border:2px solid var(--fg)" href="/shop/'+(q.length?'?'+q.join('&'):'')+'#alle">Im Shop filtern</a>'
+  +'<button class="btn" type="button" style="border:2px solid var(--fg)" onclick="location.reload()">Nochmal</button></div>';
+ res.scrollIntoView({behavior:'smooth',block:'start'})});
+})();
+</script>"""
+
+QUIZ_JS = r"""<script>
+(function(){var root=document.getElementById('quiz'),T=JSON.parse(document.getElementById('quiz-types').textContent),pts={},steps=root.querySelectorAll('.qstep'),
+ bar=document.querySelector('.qbar i');
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+root.addEventListener('click',function(ev){var b=ev.target.closest('.qopt');if(!b)return;var st=b.closest('.qstep'),n=+st.dataset.step;
+ var p=JSON.parse(b.dataset.pts);Object.keys(p).forEach(function(k){pts[k]=(pts[k]||0)+p[k]});bar.style.width=(n/steps.length*100)+'%';
+ st.hidden=true;var next=root.querySelector('[data-step="'+(n+1)+'"]');if(next){next.hidden=false;return}
+ var best=Object.keys(T).sort(function(a,b){return (pts[b]||0)-(pts[a]||0)})[0],t=T[best],res=root.querySelector('.qres');res.hidden=false;
+ res.innerHTML='<div class="qtype" style="--c:'+t.c+'"><div class="big">'+t.i+'</div><small>Dein Snack-Typ</small><h2>'+esc(t.n)+'</h2><p>'+esc(t.t)+'</p>'
+  +'<div class="btns"><a class="btn" href="'+t.u+'">Passende Süßigkeiten</a><button class="btn" type="button" data-share>Ergebnis teilen</button>'
+  +'<button class="btn" type="button" onclick="location.reload()">Nochmal</button></div></div>';
+ res.querySelector('[data-share]').onclick=function(){npCard({kicker:'Mein Snack-Typ',title:t.n,emoji:t.i,sub:'Welcher bist du?',color:t.c,
+  text:'Mein Snack-Typ: '+t.n+' '+t.i+' Welcher bist du? '+location.origin+'/quiz/'})}});
+})();
+</script>"""
+
+
 def cat_tile(c):
     items = cat_items(c)
     n = f'<span class="n">{len(items)} {"Sorte" if len(items) == 1 else "Sorten"}</span>' if items else '<span class="n soon">Produkte folgen</span>'
@@ -1290,7 +1501,9 @@ def build():
             f'<h1 style="margin:0">{e(c["name"])}</h1></div><p class="lead">{e(c.get("text") or c["teaser"])}</p>{inner}</section>{rel_html}'
             f'<section><h2>Mehr entdecken</h2><div class="stickers">{others}</div></section>'
             + ('<section><a class="advteaser" href="/advent/">' + sticker("weihnachten", 56) + '<div><h2>Adventskalender</h2>'
-               '<p>Vom 1. bis 24. Dezember jeden Tag ein Türchen.</p></div></a></section>' if c["id"] == "weihnachten" else ""),
+               '<p>Vom 1. bis 24. Dezember jeden Tag ein Türchen.</p></div></a>'
+               '<p style="margin-top:12px"><a class="btn dark" href="/geschenk/">🎁 Geschenk-Finder: passende Süßigkeiten in 3 Fragen</a></p></section>'
+               if c["id"] in ("weihnachten", "boxen") else ""),
             c["teaser"], f"/kategorie/{c['id']}/", stamp=c["id"]))
 
     # --- Post-Seiten
@@ -1461,9 +1674,9 @@ def build():
                     f'<div class="mrow">{"".join(minis)}</div>' + ('<p class="wl" style="margin-top:6px">* Werbelink</p>' if products else '') + '</div>')
     season_html = "".join(
         f'<section style="padding-top:22px"><a class="cat" style="--c:{cat_color[c["id"]]}" href="/kategorie/{c["id"]}/">{sticker(c["id"])}'
-        f'<h3>{e(c["name"])}</h3><p>{e(c["teaser"])}</p><span class="n">{len(cat_items(c))} '
-        f'{"Sorte" if len(cat_items(c)) == 1 else "Sorten"}</span></a></section>'
-        for c in cats if in_season(c) and cat_items(c))
+        f'<h3>{e(c["name"])}</h3><p>{e(c["teaser"])}</p>'
+        + (f'<span class="n">{len(cat_items(c))} {"Sorte" if len(cat_items(c)) == 1 else "Sorten"}</span>' if cat_items(c) else '<span class="n soon">Jetzt Saison</span>')
+        + '</a></section>' for c in cats if in_season(c))
     # Themenwelten: erst 8, Rest aufklappbar
     ordered = cats_sorted()
     tcells = [cat_tile(c) if i < 8 else cat_tile(c).replace("<a ", "<a data-more ", 1) for i, c in enumerate(ordered)]
@@ -1497,9 +1710,9 @@ def build():
     home = (f'<section class="hero hgrid">{SPRINKLES}<div class="hl"><h1>Süßes aus <span class="acc">aller Welt</span></h1>'
             f'<p class="lead" style="max-width:36ch">{e(site["intro"])}</p>{how}'
             f'<button class="fake" type="button" data-open-search>{ICON_SEARCH}<span>Snacks, Länder, Marken suchen …</span></button>{browse_html}</div>'
-            f'<div class="hr">{spin_html(live)}</div></section>'
-            f'{season_html}{advent_teaser}{home_prods}{pass_html()}{band_html}{posts_html}{about_box}{jump}')
-    write("index.html", page("Naschpass – Süßigkeiten aus aller Welt", home, script=SPIN_JS))
+            f'<div class="hr">{spin_html(live)}</div></section>{explore_html()}'
+            f'{season_html}{advent_teaser}{home_prods}{map_html()}{pass_html()}{band_html}{posts_html}{about_box}{jump}')
+    write("index.html", page("Naschpass – Süßigkeiten aus aller Welt", home, script=SPIN_JS + SHARE_JS + PASS_SHARE_JS))
 
     # --- Über Naschpass / Für Partner (ehrlich: neuer Kanal, keine Reichweitenzahlen)
     im = site["impressum"]
@@ -1530,6 +1743,10 @@ Vollständige Angaben im <a href="/impressum/">Impressum</a>.</p></section>"""
                                    "Was Naschpass ist, wie wir arbeiten und was Partner-Shops bei uns bekommen.", "/ueber/"))
 
     write("search.json", json.dumps(search_index(live), ensure_ascii=False, separators=(",", ":")))
+    write("geschenk/index.html", page("Geschenk-Finder – Naschpass", finder_page(),
+                                      "Drei Fragen, passende Süßigkeiten zum Verschenken.", "/geschenk/", script=FINDER_JS))
+    write("quiz/index.html", page("Welcher Snack-Typ bist du? – Naschpass", quiz_page(),
+                                  "Fünf Fragen, dein Snack-Typ und passende Süßigkeiten.", "/quiz/", script=SHARE_JS + QUIZ_JS))
     adv = advent_page(live)
     if adv:
         write("advent/index.html", page("Adventskalender – Naschpass", adv, "Vom 1. bis 24. Dezember jeden Tag ein Türchen.", "/advent/",

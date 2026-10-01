@@ -27,6 +27,36 @@
   },
   "categories": [
     {
+      "id": "halloween",
+      "name": "Halloween",
+      "teaser": "Candy Corn, Kürbis-Süßes und gruselig-bunte Sorten.",
+      "season": [
+        "10-01",
+        "10-31"
+      ],
+      "keywords": [
+        "halloween",
+        "kürbis",
+        "kuerbis",
+        "pumpkin",
+        "candy corn",
+        "grusel",
+        "spooky",
+        "zombie",
+        "skelett",
+        "geister",
+        "ghost",
+        "hexe",
+        "witch",
+        "vampir"
+      ],
+      "text": "In den USA ist Halloween das Fest der Süßigkeiten: Beim Trick-or-Treating werden Schokoriegel, Bonbons und Candy Corn verteilt. Hier sammeln wir gruselig-bunte Süßigkeiten rund um den 31. Oktober.",
+      "posts": [
+        "01",
+        "04"
+      ]
+    },
+    {
       "id": "weihnachten",
       "name": "Weihnachten & Geschenke",
       "teaser": "Adventskalender, Lebkuchen, Panettone und Pralinen zum Verschenken.",
