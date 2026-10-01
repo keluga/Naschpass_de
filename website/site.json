@@ -59,5 +59,433 @@
   ],
   "partner_shops": {
     "my-choco-world.com": "my world of products GmbH, Agnes-Bernauer-Straße 151, 80687 München"
-  }
+  },
+  "_filter_hinweis": "Filter für Shop und Suche. Produkte werden automatisch über 'keywords' (Name, Beschreibung, Shop-Kategorie) zugeordnet. Per Hand überschreiben: im Produkt 'land', 'geschmack', 'art' (id oder Liste). 'includes' = Oberbegriff (Asien enthält Japan). 'categories' = alte Kategorie-ids aus 'categories', die automatisch dazugehören.",
+  "filter": [
+    {
+      "id": "land",
+      "name": "Woher",
+      "options": [
+        {
+          "id": "usa",
+          "name": "USA",
+          "icon": "flag",
+          "keywords": [
+            "usa",
+            "amerika",
+            "american",
+            "reese",
+            "hershey",
+            "twinkie",
+            "jolly rancher",
+            "airheads",
+            "pop-tarts",
+            "nerds",
+            "mountain dew",
+            "dr pepper"
+          ],
+          "categories": [
+            "usa"
+          ]
+        },
+        {
+          "id": "mexiko",
+          "name": "Mexiko",
+          "icon": "flag",
+          "keywords": [
+            "mexik",
+            "mexican",
+            "takis",
+            "chamoy",
+            "tamarind",
+            "pulparindo",
+            "vero mango"
+          ]
+        },
+        {
+          "id": "japan",
+          "name": "Japan",
+          "icon": "flag",
+          "keywords": [
+            "japan",
+            "pocky",
+            "hi-chew",
+            "matcha",
+            "ramune",
+            "meiji",
+            "kinoko",
+            "takenoko",
+            "glico",
+            "morinaga",
+            "calbee"
+          ],
+          "categories": [
+            "japan"
+          ]
+        },
+        {
+          "id": "korea",
+          "name": "Korea",
+          "icon": "flag",
+          "keywords": [
+            "korea",
+            "pepero",
+            "orion",
+            "lotte",
+            "honey butter",
+            "buldak"
+          ]
+        },
+        {
+          "id": "asien",
+          "name": "Asien",
+          "icon": "flag",
+          "keywords": [
+            "asien",
+            "asiat",
+            "thai",
+            "china",
+            "chines",
+            "taiwan",
+            "mochi",
+            "vietnam"
+          ],
+          "includes": [
+            "japan",
+            "korea"
+          ]
+        },
+        {
+          "id": "uk",
+          "name": "Großbritannien",
+          "icon": "flag",
+          "keywords": [
+            "uk",
+            "brit",
+            "england",
+            "cadbury",
+            "walkers",
+            "wine gums"
+          ]
+        },
+        {
+          "id": "skandinavien",
+          "name": "Skandinavien",
+          "icon": "flag",
+          "keywords": [
+            "skandinav",
+            "schwed",
+            "swed",
+            "finn",
+            "norweg",
+            "dän",
+            "daen",
+            "salmiak",
+            "fazer",
+            "marabou",
+            "malaco",
+            "cloetta",
+            "ahlgrens"
+          ],
+          "categories": [
+            "skandinavien"
+          ]
+        },
+        {
+          "id": "deutschland",
+          "name": "Deutschland",
+          "icon": "flag",
+          "keywords": [
+            "deutsch",
+            "haribo",
+            "ritter sport",
+            "katjes",
+            "trolli",
+            "kinder"
+          ]
+        },
+        {
+          "id": "europa",
+          "name": "Europa",
+          "icon": "flag",
+          "keywords": [
+            "europa",
+            "ital",
+            "franz",
+            "belgi",
+            "niederl",
+            "holland",
+            "schweiz",
+            "österreich",
+            "oesterreich"
+          ],
+          "includes": [
+            "uk",
+            "skandinavien",
+            "deutschland"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "geschmack",
+      "name": "Geschmack",
+      "options": [
+        {
+          "id": "schoko",
+          "name": "Schokoladig",
+          "icon": "🍫",
+          "keywords": [
+            "schoko",
+            "chocolate",
+            "kakao",
+            "cocoa",
+            "praline",
+            "nougat",
+            "kitkat",
+            "reese",
+            "brownie"
+          ]
+        },
+        {
+          "id": "sauer",
+          "name": "Sauer",
+          "icon": "🍋",
+          "keywords": [
+            "sauer",
+            "saur",
+            "sour",
+            "warheads",
+            "zitron",
+            "lemon",
+            "toxic"
+          ],
+          "categories": [
+            "sauer-scharf"
+          ]
+        },
+        {
+          "id": "scharf",
+          "name": "Scharf",
+          "icon": "🌶️",
+          "keywords": [
+            "scharf",
+            "schaerf",
+            "spicy",
+            "hot",
+            "chili",
+            "fuego",
+            "wasabi",
+            "jalape",
+            "buldak",
+            "flamin"
+          ]
+        },
+        {
+          "id": "salzig",
+          "name": "Salzig",
+          "icon": "🧂",
+          "keywords": [
+            "salz",
+            "salt",
+            "chips",
+            "crisps",
+            "brezel",
+            "pretzel",
+            "popcorn",
+            "cracker"
+          ]
+        },
+        {
+          "id": "fruchtig",
+          "name": "Fruchtig",
+          "icon": "🍓",
+          "keywords": [
+            "frucht",
+            "fruit",
+            "erdbeer",
+            "strawberry",
+            "kirsch",
+            "cherry",
+            "mango",
+            "apfel",
+            "apple",
+            "beere",
+            "berry",
+            "pfirsich",
+            "peach",
+            "melone",
+            "traube",
+            "grape",
+            "hi-chew"
+          ]
+        },
+        {
+          "id": "nussig",
+          "name": "Nussig",
+          "icon": "🥜",
+          "keywords": [
+            "erdnuss",
+            "peanut",
+            "nuss",
+            "nut",
+            "mandel",
+            "almond",
+            "haselnuss",
+            "pistazie"
+          ]
+        },
+        {
+          "id": "lakritz",
+          "name": "Lakritz",
+          "icon": "🖤",
+          "keywords": [
+            "lakritz",
+            "licorice",
+            "liquorice",
+            "salmiak"
+          ]
+        },
+        {
+          "id": "suess",
+          "name": "Extra süß",
+          "icon": "🍬",
+          "keywords": [
+            "karamell",
+            "caramel",
+            "toffee",
+            "marshmallow",
+            "vanille",
+            "vanilla",
+            "honig",
+            "honey",
+            "zuckerwatte",
+            "cotton candy"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "art",
+      "name": "Art",
+      "options": [
+        {
+          "id": "schokolade",
+          "name": "Schokolade & Riegel",
+          "icon": "🍫",
+          "keywords": [
+            "schokolade",
+            "chocolate",
+            "riegel",
+            "bar",
+            "tafel",
+            "praline",
+            "kitkat"
+          ]
+        },
+        {
+          "id": "gummi",
+          "name": "Fruchtgummi",
+          "icon": "🐻",
+          "keywords": [
+            "gummi",
+            "gummy",
+            "fruchtgummi",
+            "weingummi",
+            "jelly",
+            "worms",
+            "bärchen",
+            "baerchen",
+            "bears"
+          ]
+        },
+        {
+          "id": "bonbons",
+          "name": "Bonbons & Lollis",
+          "icon": "🍭",
+          "keywords": [
+            "bonbon",
+            "lolli",
+            "lollipop",
+            "kaubonbon",
+            "drops",
+            "toffee",
+            "hi-chew",
+            "kaugummi",
+            "bubble gum"
+          ]
+        },
+        {
+          "id": "chips",
+          "name": "Chips & Snacks",
+          "icon": "🥨",
+          "keywords": [
+            "chips",
+            "crisps",
+            "takis",
+            "cracker",
+            "popcorn",
+            "brezel",
+            "pretzel",
+            "snack"
+          ]
+        },
+        {
+          "id": "kekse",
+          "name": "Kekse & Gebäck",
+          "icon": "🍪",
+          "keywords": [
+            "keks",
+            "cookie",
+            "biscuit",
+            "waffel",
+            "wafer",
+            "kuchen",
+            "cake",
+            "twinkie",
+            "pocky",
+            "kinoko",
+            "takenoko",
+            "pop-tarts",
+            "mochi"
+          ]
+        },
+        {
+          "id": "getraenke",
+          "name": "Getränke",
+          "icon": "🥤",
+          "keywords": [
+            "getränk",
+            "getraenk",
+            "drink",
+            "soda",
+            "limo",
+            "cola",
+            "ramune",
+            "energy",
+            "dose",
+            "tee",
+            "tea"
+          ]
+        },
+        {
+          "id": "boxen",
+          "name": "Boxen & Geschenke",
+          "icon": "🎁",
+          "keywords": [
+            "box",
+            "mystery",
+            "geschenk",
+            "gift",
+            "set",
+            "kalender",
+            "adventskalender"
+          ],
+          "categories": [
+            "boxen"
+          ]
+        }
+      ]
+    }
+  ]
 }

@@ -90,6 +90,54 @@
    "note": "20 Überraschungs-Snacks.",
    "shop": "World of Sweets",
    "featured": true
+  },
+  {
+   "name": "Honey Butter Chips",
+   "category": "",
+   "url": "https://example.com/werbelink",
+   "image": "/static/demo/d10.png",
+   "note": "Koreanische Chips, süß-salzig mit Honig.",
+   "shop": "Asia Snacks"
+  },
+  {
+   "name": "Calbee Shrimp Chips",
+   "category": "japan",
+   "url": "https://example.com/werbelink",
+   "image": "/static/demo/d11.png",
+   "note": "Salzige Krabbenchips aus Japan.",
+   "shop": "Japan Snacks"
+  },
+  {
+   "name": "Ramune Melone",
+   "category": "japan",
+   "url": "https://example.com/werbelink",
+   "image": "/static/demo/d12.png",
+   "note": "Japanische Limo mit Murmel-Verschluss.",
+   "shop": "Japan Snacks"
+  },
+  {
+   "name": "Walkers Salt & Vinegar Crisps",
+   "category": "",
+   "url": "https://example.com/werbelink",
+   "image": "/static/demo/d13.png",
+   "note": "Britische Chips mit Essig.",
+   "shop": "UK Sweets"
+  },
+  {
+   "name": "Ahlgrens Bilar",
+   "category": "skandinavien",
+   "url": "https://example.com/werbelink",
+   "image": "/static/demo/d14.png",
+   "note": "Schwedische Fruchtgummi-Autos.",
+   "shop": "Nordic Candy"
+  },
+  {
+   "name": "Buldak Hot Chicken Chips",
+   "category": "",
+   "url": "https://example.com/werbelink",
+   "image": "/static/demo/d15.png",
+   "note": "Extrem scharfe Chips aus Korea.",
+   "shop": "Asia Snacks"
   }
  ]
 }

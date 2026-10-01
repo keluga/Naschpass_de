@@ -100,6 +100,59 @@ def fotos_html():
             'Produktfotos widerrufen. Ohne Einwilligung siehst du statt der Fotos Platzhalter.</p>')
 
 
+# ---------- Filter: Woher / Geschmack / Art ----------
+FILTER = site.get("filter", [])
+_parents = {}  # (gruppe, kind) -> [eltern]
+for _g in FILTER:
+    for _o in _g["options"]:
+        for _c in _o.get("includes", []):
+            _parents.setdefault((_g["id"], _c), []).append(_o["id"])
+
+
+def _kw_re(k):
+    k = re.escape(translit(k))
+    # kurze Wörter nur als ganzes Wort (sonst steckt "uk" in "zucker"), längere am Wortanfang
+    return re.compile(rf"(?<![a-z0-9]){k}(?![a-z0-9])" if len(k) <= 3 else rf"(?<![a-z0-9]){k}")
+
+
+_KW = {(g["id"], o["id"]): [_kw_re(k) for k in o.get("keywords", [])] for g in FILTER for o in g["options"]}
+
+
+def facets(p):
+    """Ordnet ein Produkt automatisch zu (oder per Hand über p['land'|'geschmack'|'art'])."""
+    text = translit(" ".join([p.get("name", ""), p.get("note", ""), p.get("feed_category", ""), p.get("brand", "")]
+                             + p.get("tags", [])))
+    out = {}
+    for g in FILTER:
+        gid = g["id"]
+        if p.get(gid):
+            ids = set([p[gid]] if isinstance(p[gid], str) else p[gid])
+        else:
+            ids = {o["id"] for o in g["options"]
+                   if p.get("category") in o.get("categories", []) or any(r.search(text) for r in _KW[(gid, o["id"])])}
+        for i in list(ids):
+            ids.update(_parents.get((gid, i), []))
+        out[gid] = ids
+    return out
+
+
+def facet_attrs(p):
+    return "".join(f' data-{g}="{" ".join(sorted(v))}"' for g, v in facets(p).items())
+
+
+def facet_icon(gid, o, size=24):
+    return sticker(o["id"], size) if o.get("icon") == "flag" else f'<span class="emo" aria-hidden="true">{o.get("icon", "")}</span>'
+
+
+def facet_counts():
+    c = {}
+    for p in products:
+        for g, v in facets(p).items():
+            for i in v:
+                c[(g, i)] = c.get((g, i), 0) + 1
+    return c
+
+
 def host_of(url):
     return re.sub(r"^https?://(www\.)?", "", url).split("/")[0].lower()
 
@@ -175,12 +228,26 @@ STICKERS = {
     "verboten": '<rect width="64" height="64" rx="14" fill="#2E4FB8"/>' + "".join(
         f'<circle cx="{32 + 17 * __import__("math").cos(i * 0.5236):.1f}" cy="{32 + 17 * __import__("math").sin(i * 0.5236):.1f}" r="3" fill="#FFD23F"/>'
         for i in range(12)),
+    "mexiko": '<clipPath id="cm"><rect width="64" height="64" rx="14"/></clipPath><g clip-path="url(#cm)"><rect width="22" height="64" fill="#1F8A4C"/>'
+              '<rect x="21" width="22" height="64" fill="#fff"/><rect x="42" width="22" height="64" fill="#D8263A"/><circle cx="32" cy="32" r="6" fill="#B07A2A"/></g>',
+    "korea": '<rect x="1" y="1" width="62" height="62" rx="13" fill="#fff" stroke="#D9D4EA" stroke-width="2"/><path d="M20 32a12 12 0 0 1 24 0z" fill="#D8263A"/>'
+             '<path d="M20 32a12 12 0 0 0 24 0z" fill="#2E4FB8"/>',
+    "asien": '<rect width="64" height="64" rx="14" fill="#E8384F"/><circle cx="32" cy="32" r="13" fill="#FFD23F"/><circle cx="32" cy="32" r="6" fill="#E8384F"/>',
+    "uk": '<clipPath id="ck"><rect width="64" height="64" rx="14"/></clipPath><g clip-path="url(#ck)"><rect width="64" height="64" fill="#2E4FB8"/>'
+          '<path d="M0 0L64 64M64 0L0 64" stroke="#fff" stroke-width="12"/><path d="M0 0L64 64M64 0L0 64" stroke="#D8263A" stroke-width="4"/>'
+          '<rect x="25" width="14" height="64" fill="#fff"/><rect y="25" width="64" height="14" fill="#fff"/><rect x="28" width="8" height="64" fill="#D8263A"/>'
+          '<rect y="28" width="64" height="8" fill="#D8263A"/></g>',
+    "deutschland": '<clipPath id="cd"><rect width="64" height="64" rx="14"/></clipPath><g clip-path="url(#cd)"><rect width="64" height="22" fill="#222"/>'
+                   '<rect y="21" width="64" height="22" fill="#D8263A"/><rect y="42" width="64" height="22" fill="#FFCE00"/></g>',
     "sauer-scharf": '<rect width="64" height="64" rx="14" fill="#FFB547"/><path d="M20 22c6-2 14 2 20 10s8 16 4 18c-6 3-16-4-22-12s-8-14-2-16z" fill="#E8384F"/>'
                     '<path d="M21 23c-3-4-2-8 1-10" stroke="#2FAE7E" stroke-width="4" fill="none" stroke-linecap="round"/>',
     "skandinavien": '<rect width="64" height="64" rx="14" fill="#2D6FD2"/><rect x="18" width="10" height="64" fill="#FFD23F"/><rect y="27" width="64" height="10" fill="#FFD23F"/>',
     "boxen": '<rect width="64" height="64" rx="14" fill="#FF8FB1"/><rect x="14" y="26" width="36" height="26" rx="3" fill="#fff"/><rect x="11" y="19" width="42" height="10" rx="3" fill="#fff"/>'
              '<rect x="29" y="19" width="6" height="33" fill="#8B6CFF"/><path d="M32 19c-4-8-14-8-12-2 1 3 8 3 12 2zm0 0c4-8 14-8 12-2-1 3-8 3-12 2z" fill="#8B6CFF"/>',
 }
+
+
+STICKERS["europa"] = STICKERS["verboten"]
 
 
 def sticker(cid, size=56):
@@ -257,6 +324,22 @@ padding:15px 16px;color:var(--mut);font-size:16.5px;cursor:text;text-align:left;
 font-weight:700;font-size:13.5px;line-height:1.2;text-align:center;box-shadow:var(--sh)}
 .bc .stk{width:40px;height:40px}.bc:hover{outline:2px solid var(--vio2)}
 .bc small{font-size:11.5px;font-weight:600;color:var(--mut)}
+.emo{font-size:30px;line-height:40px;width:40px;height:40px;display:grid;place-items:center;border-radius:12px;background:var(--bg2)}
+.chip .emo{font-size:17px;width:24px;height:24px;line-height:24px;background:none}
+.chip .stk{width:24px;height:24px}.chip small{color:var(--mut);font-weight:600}
+.chip[aria-pressed=true] small{color:#CFC9E8}
+.tabs{display:flex;gap:6px;margin:0 0 10px;background:#fff;border-radius:14px;padding:4px;box-shadow:var(--sh);width:max-content;max-width:100%}
+.tabs button{border:0;background:none;font-weight:800;font-size:14.5px;padding:8px 14px;border-radius:10px;cursor:pointer;color:var(--mut)}
+.tabs button[aria-selected=true]{background:var(--fg);color:#fff}
+.filters{display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
+.fg{display:flex;align-items:center;gap:10px}
+.fg .fl{flex:none;width:86px;font-weight:800;font-size:13.5px;color:var(--mut)}
+@media(max-width:600px){.fg{flex-direction:column;align-items:stretch;gap:6px}.fg .fl{width:auto}}
+@media(min-width:900px){.filters .chips{flex-wrap:wrap}}
+.fbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:4px 0 12px}
+.fbar b{font-size:15px}
+.sres .hint{background:#fff;border-radius:14px;padding:12px;margin:12px 0 4px;font-size:14.5px}
+.sres .hint b{display:block;margin-bottom:6px}.sres .hint .chips{flex-wrap:wrap}
 .fan{display:none}@media(min-width:900px){.hero.has-fan{padding-right:400px;min-height:470px}.fan{display:block;position:absolute;right:30px;top:30px;width:360px;height:420px}.fan a{position:absolute;top:0;width:230px;border-radius:16px;overflow:hidden;box-shadow:0 14px 34px rgba(43,35,80,.25);transition:transform .2s}.fan a:nth-child(1){left:0;transform:rotate(-9deg) translateY(30px)}.fan a:nth-child(2){left:120px;transform:rotate(7deg) translateY(40px)}.fan a:nth-child(3){left:60px;transform:rotate(-1deg);z-index:2}.fan a:hover{z-index:3}}
 .spr i{position:absolute;width:30px;height:9px;border-radius:5px}
 
@@ -486,7 +569,7 @@ def prod_card(p):
     pic = pic_html(p, 480, p["name"], cid)
     shop = p.get("shop", "")
     btn = f"Bei {e(shop)} ansehen*" if shop else "Zum Shop*"
-    return (f'<a class="prod" href="{e(p["url"])}" rel="sponsored noopener" target="_blank" data-cat="{e(cid)}" style="--c:{cat_color.get(cid, "#CFE7DD")}">'
+    return (f'<a class="prod" href="{e(p["url"])}" rel="sponsored noopener" target="_blank" data-cat="{e(cid)}"{facet_attrs(p)} style="--c:{cat_color.get(cid, "#CFE7DD")}">'
             f'<div class="pi">{pic}' + (f'<span class="pc"><i></i>{e(cname)}</span>' if cname else "") + '</div>'
             f'<div class="pb"><h3>{e(p["name"])}</h3>'
             + (f'<p class="note">{e(p["note"])}</p>' if p.get("note") else "")
@@ -564,6 +647,29 @@ document.querySelectorAll('.band').forEach(function(b){
 document.querySelectorAll('[data-expand]').forEach(function(b){b.addEventListener('click',function(){
  var g=document.getElementById(b.dataset.expand);g.classList.remove('clip');b.remove();
  var f=g.querySelector('[data-more]');if(f){var a=f.matches('a')?f:f.querySelector('a');if(a)a.focus({preventScroll:true})}})});
+/* Stöbern-Tabs */
+document.querySelectorAll('[role=tab]').forEach(function(t){t.addEventListener('click',function(){
+ var n=t.closest('nav');n.querySelectorAll('[role=tab]').forEach(function(x){x.setAttribute('aria-selected',x===t)});
+ n.querySelectorAll('[data-panel]').forEach(function(p){p.hidden=p.dataset.panel!==t.dataset.tab})})});
+/* Shop-Filter: innerhalb einer Gruppe ODER, zwischen Gruppen UND; Zustand steht in der Adresse (teilbar) */
+var fl=document.getElementById('flt');
+if(fl){var grid=document.getElementById(fl.dataset.grid),cards=[].slice.call(grid.children),PAGE=24,shown=PAGE,sel={};
+ var cnt=document.getElementById('fcount'),rst=document.getElementById('freset'),more=document.getElementById('fmore'),emp=document.getElementById('fempty');
+ fl.querySelectorAll('[data-g]').forEach(function(b){sel[b.dataset.g]=[]});
+ var u=new URLSearchParams(location.search);Object.keys(sel).forEach(function(k){var v=u.get(k);if(v)sel[k]=v.split(',')});
+ function ok(c){return Object.keys(sel).every(function(k){if(!sel[k].length)return true;var h=' '+(c.dataset[k]||'')+' ';
+  return sel[k].some(function(v){return h.indexOf(' '+v+' ')>=0})})}
+ function apply(){var n=0;cards.forEach(function(c){var m=ok(c);if(m)n++;c.hidden=!m||n>shown});
+  fl.querySelectorAll('[data-g]').forEach(function(b){b.setAttribute('aria-pressed',sel[b.dataset.g].indexOf(b.dataset.v)>=0)});
+  cnt.textContent=n+' Treffer';more.hidden=n<=shown;more.textContent='Mehr zeigen ('+(n-shown)+')';emp.hidden=n>0;
+  var any=Object.keys(sel).some(function(k){return sel[k].length});rst.hidden=!any;
+  var q=Object.keys(sel).filter(function(k){return sel[k].length}).map(function(k){return k+'='+sel[k].join(',')}).join('&');
+  history.replaceState(null,'',location.pathname+(q?'?'+q:'')+location.hash)}
+ fl.addEventListener('click',function(ev){var b=ev.target.closest('[data-g]');if(!b)return;var a=sel[b.dataset.g],i=a.indexOf(b.dataset.v);
+  if(i>=0)a.splice(i,1);else a.push(b.dataset.v);shown=PAGE;apply()});
+ rst.addEventListener('click',function(){Object.keys(sel).forEach(function(k){sel[k]=[]});shown=PAGE;apply()});
+ more.addEventListener('click',function(){shown+=PAGE;apply()});
+ apply();fl.querySelectorAll('[aria-pressed=true]').forEach(function(b){var r=b.parentNode;r.scrollLeft=b.offsetLeft-r.offsetLeft-16})}
 /* Folien-Galerie */
 var s=document.querySelector('.slides');
 if(s){var im=s.querySelectorAll('img'),d=document.querySelectorAll('.dots b');
@@ -606,10 +712,37 @@ function render(){
  const n=v.replace(/^#/,'');
  if(/^\d{1,3}$/.test(n)){const id=n.padStart(2,'0');const p=data.items.find(i=>i.type==='post'&&i.id===id);
   if(p)res=[p,...res.filter(x=>x!==p)]}
- const P=res.filter(i=>i.type==='product'),C=res.filter(i=>i.type==='cat'),T=res.filter(i=>i.type==='post');
- out.innerHTML=(group('Süßigkeiten',P.slice(0,12))+group('Länder & Themen',C)+group('Posts',T.slice(0,8)))
+ let P=res.filter(i=>i.type==='product'),hint='';
+ const C=res.filter(i=>i.type==='cat'),T=res.filter(i=>i.type==='post');
+ /* Ganze Wünsche verstehen: "salzige Chips, eventuell asiatisch" -> Salzig + Chips + Asien */
+ const {found,rest}=parse(v);
+ if(found.length){
+  const groups={};found.forEach(f=>(groups[f.g]=groups[f.g]||[]).push(f.id));
+  const gk=Object.keys(groups),prods=data.items.filter(i=>i.type==='product');
+  const score=i=>gk.filter(g=>groups[g].some(id=>(' '+i.f+' ').includes(' '+g+':'+id+' '))).length;
+  let best=prods.map(i=>[i,score(i)]).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]);
+  const full=best.filter(x=>x[1]===gk.length).map(x=>x[0]);
+  let list=full.length?full:best.map(x=>x[0]);
+  if(rest.length){const f2=fuse.search(rest.join(' ')).map(r=>r.item);list=[...f2.filter(x=>list.includes(x)),...list.filter(x=>!f2.includes(x))]}
+  P=[...list,...P.filter(x=>!list.includes(x))];
+  const qs=gk.map(g=>g+'='+groups[g].join(',')).join('&');
+  hint=`<div class="hint"><b>${full.length?'Passt zu':'Nicht alles auf einmal gefunden, das kommt am nächsten'}:</b><div class="chips">`
+   +found.map(f=>`<span class="chip" aria-pressed="true">${esc(f.name)}</span>`).join('')
+   +`</div><p style="margin:10px 0 0"><a class="btn dark" href="/shop/?${qs}#alle">${full.length} im Shop ansehen</a></p></div>`}
+ out.innerHTML=hint+((group('Süßigkeiten',P.slice(0,12))+group('Länder & Themen',C)+group('Posts',T.slice(0,8)))
   +(P.length?'<p class="wl">* Werbelink</p>':'')
-  ||`<p class="none">Nichts gefunden zu „${esc(v)}“. Probier ein Land (Japan, USA) oder eine Marke.</p>`}
+  ||`<p class="none">Nichts gefunden zu „${esc(v)}“. Probier ein Land (Japan, USA), einen Geschmack (sauer, salzig) oder eine Marke.</p>`)}
+const STOP=new Set('ich mag mich mir und oder eventuell evtl vielleicht was mit ohne gern gerne etwas irgendwas auch die der das den dem ein eine einen liebsten mal bitte lust auf suche such haette habe hab aus von fuer sowas sachen zeug richtig sehr total eher bisschen oder sind ist was'.split(' '));
+const norm=s=>s.toLowerCase().replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/ß/g,'ss');
+function parse(v){
+ const toks=norm(v).split(/[^a-z0-9]+/).filter(t=>t.length>=3&&!STOP.has(t));const found=[],rest=[];
+ toks.forEach(t=>{const st=t.replace(/(en|er|es|em|e|n|s)$/,'');
+  let h=data.facets.filter(f=>f.id===t||f.id===st||norm(f.name).split(/[^a-z0-9]+/).some(w=>w===t||w===st));
+  let byKw=false;
+  if(!h.length){h=data.facets.filter(f=>f.kw.some(k=>t.startsWith(k)||(st.length>=4&&k.startsWith(st))));byKw=true}
+  h.forEach(x=>{if(!found.some(y=>y.g===x.g&&y.id===x.id))found.push(x)});
+  if(!h.length||byKw)rest.push(t)});
+ return {found,rest}}
 out.addEventListener('click',ev=>{const b=ev.target.closest('[data-s]');if(b){q.value=b.dataset.s;render();q.focus()}});
 q.addEventListener('input',()=>{if(fuse)render()});
 async function open(){dlg.showModal();q.focus();out.innerHTML='<p class="none">Lädt …</p>';await load();render()}
@@ -662,7 +795,8 @@ def search_index(live):
                       "svg": "" if ii and ii[0] == "own" else sticker(cid, 52),
                       "sub": " · ".join(x for x in (p.get("shop", ""), cname) if x),
                       "alt": translit(p["name"]), "tags": " ".join([cname, cid] + p.get("tags", [])),
-                      "text": p.get("note", "")})
+                      "text": p.get("note", ""),
+                      "f": " ".join(f"{g}:{i}" for g, v in facets(p).items() for i in sorted(v))})
     for c in cats:
         items.append({"type": "cat", "title": c["name"], "url": f"/kategorie/{c['id']}/", "svg": sticker(c["id"], 52),
                       "sub": c["teaser"], "alt": translit(c["name"]), "tags": c["id"].replace("-", " "), "text": c["teaser"]})
@@ -673,7 +807,11 @@ def search_index(live):
                       "sub": p.get("tag", ""), "alt": translit(p.get("short", "")),
                       "tags": " ".join([p.get("tag", ""), p.get("short", "")] + p.get("hashtags", [])), "text": txt})
     sugg = [c["name"] for c in cats[:4]] + ["KitKat", "Farbstoffe"]  # feste Vorschläge, keine Auswertung
-    return {"items": items, "sugg": sugg}
+    fac = [{"g": g["id"], "gn": g["name"], "id": o["id"], "name": o["name"],
+            "kw": sorted({translit(k) for k in o.get("keywords", []) + [o["name"], o["id"]] if len(k) >= 3})}
+           for g in FILTER for o in g["options"]]
+    sugg = ["salzige Chips aus Asien", "sauer", "Japan", "Schokolade", "scharf", "Lakritz"]
+    return {"items": items, "sugg": sugg, "facets": fac}
 
 
 def build():
@@ -768,16 +906,31 @@ def build():
                   'Wir suchen gerade Shops aus, bei denen du die Sachen aus den Posts in Deutschland bekommst.</div>')
 
     # --- Shop-Seite: alle Länder/Themen + alle Produkte
-    shop_all = (f'<div class="tools">{prod_chips}{view_toggle("g-all", ["big", "small", "list"], "small")}</div>'
-                + prod_grid(products, "g-all")) if products else empty_shop
+    counts = facet_counts()
+    fgroups = ""
+    for g in FILTER:
+        opts = [o for o in g["options"] if counts.get((g["id"], o["id"]))]
+        if not opts:
+            continue
+        fgroups += (f'<div class="fg"><span class="fl">{e(g["name"])}</span><div class="chips">'
+                    + "".join(f'<button class="chip" type="button" data-g="{g["id"]}" data-v="{o["id"]}" aria-pressed="false">'
+                              f'{facet_icon(g["id"], o)}{e(o["name"])} <small>{counts[(g["id"], o["id"])]}</small></button>' for o in opts)
+                    + '</div></div>')
+    shop_all = (f'<div class="filters" id="flt" data-grid="g-all">{fgroups}</div>'
+                f'<div class="fbar"><b id="fcount" aria-live="polite"></b><button class="linkbtn" type="button" id="freset" hidden>Filter zurücksetzen</button>'
+                f'<span style="margin-left:auto">{view_toggle("g-all", ["big", "small", "list"], "small")}</span></div>'
+                f'<div class="grid prods v-small" id="g-all">{"".join(prod_card(p) for p in reversed(products))}</div>'
+                f'<div class="empty" id="fempty" hidden><strong>Keine Treffer mit dieser Kombination.</strong> Nimm einen Filter raus oder probier die Suche.</div>'
+                f'<div class="morebar"><button class="morebtn" type="button" id="fmore" hidden>Mehr zeigen</button></div>'
+                f'<p class="wl">* Werbelink</p>') if products else empty_shop
     write("shop/index.html", page(
         "Shop – Naschpass",
         f'<section class="hero" style="padding-bottom:0">{SPRINKLES}<h1>Shop</h1>'
-        f'<p class="sub">Süßigkeiten aus aller Welt, die du in Deutschland bestellen kannst.</p>'
-        f'<button class="fake" type="button" data-open-search>{ICON_SEARCH}<span>Snacks, Länder, Marken suchen …</span></button></section>'
-        f'<section><div class="head"><h2>Länder & Themen</h2></div>{tiles}</section>'
-        f'<section id="alle"><div class="head"><h2>Alle Süßigkeiten</h2></div>{shop_all}</section>',
-        "Süßigkeiten aus aller Welt nach Land und Thema.", "/shop/"))
+        f'<p class="sub">Such dir aus, worauf du Lust hast: nach Herkunft, Geschmack und Art, frei kombinierbar.</p>'
+        f'<button class="fake" type="button" data-open-search>{ICON_SEARCH}<span>z. B. „salzige Chips aus Asien“ …</span></button></section>'
+        f'<section id="alle" style="padding-top:22px">{shop_all}</section>'
+        f'<section><div class="head"><h2>Themenwelten</h2></div>{tiles}</section>',
+        "Süßigkeiten aus aller Welt nach Herkunft, Geschmack und Art.", "/shop/"))
 
     # --- Posts-Seite: alle Posts mit Filter, Nummernsuche unten
     write("posts/index.html", page(
@@ -806,18 +959,31 @@ def build():
                   f'{more_bar("g-new", len(new_prods), len(products), "/shop/", f"Alle {len(products)} im Shop")}</section>'
                   ) if products else ""
     home_posts = newest[:LIMIT]
-    # Kategorien mit Produkten zuerst
-    ordered = sorted(cats, key=lambda c: -sum(1 for p in products if p.get("category") == c["id"]))
-    browse = "".join(
-        f'<a class="bc" href="/kategorie/{c["id"]}/">{sticker(c["id"], 40)}{e(c["name"])}'
-        + (f'<small>{n} {"Sorte" if n == 1 else "Sorten"}</small>' if (n := sum(1 for p in products if p.get("category") == c["id"])) else '<small>bald</small>')
-        + '</a>' for c in ordered)
+    # Stöbern: Tabs Woher / Geschmack / Art (nur Optionen mit Produkten), sonst alte Kategorien
+    counts = facet_counts()
+    tabs, panels = "", ""
+    for g in FILTER:
+        opts = sorted([o for o in g["options"] if counts.get((g["id"], o["id"]))], key=lambda o: -counts[(g["id"], o["id"])])[:6]
+        if not opts:
+            continue
+        first = not tabs
+        tabs += (f'<button type="button" role="tab" data-tab="{g["id"]}" aria-selected="{str(first).lower()}">{e(g["name"])}</button>')
+        panels += (f'<div class="bgrid" data-panel="{g["id"]}"{"" if first else " hidden"}>' + "".join(
+            f'<a class="bc" href="/shop/?{g["id"]}={o["id"]}#alle">{facet_icon(g["id"], o, 40)}{e(o["name"])}'
+            f'<small>{counts[(g["id"], o["id"])]} {"Sorte" if counts[(g["id"], o["id"])] == 1 else "Sorten"}</small></a>' for o in opts) + '</div>')
+    if tabs:
+        browse_html = (f'<nav class="browse" aria-label="Stöbern"><h2>Stöbern nach</h2><div class="tabs" role="tablist">{tabs}</div>{panels}'
+                       f'<p style="margin:10px 0 0"><a class="more" href="/shop/#alle">Alles frei filtern</a></p></nav>')
+    else:
+        ordered = sorted(cats, key=lambda c: -sum(1 for p in products if p.get("category") == c["id"]))
+        browse_html = ('<nav class="browse" aria-label="Stöbern"><h2>Stöbern nach Land & Thema</h2><div class="bgrid">' + "".join(
+            f'<a class="bc" href="/kategorie/{c["id"]}/">{sticker(c["id"], 40)}{e(c["name"])}<small>bald</small></a>' for c in ordered) + '</div></nav>')
     fan = "".join(f'<a href="/p/{p["id"]}/" tabindex="-1" aria-hidden="true">{slide_img(cover_url(p), "", 230, "230px")}</a>'
                   for p in newest[:3][::-1])
     home = (f'<section class="hero has-fan">{SPRINKLES}<div class="fan">{fan}</div><h1>Süßes aus <span class="acc">aller Welt</span></h1>'
             f'<p class="sub">{e(site["tagline"])} Und wo du es in Deutschland bekommst.</p>'
             f'<button class="fake" type="button" data-open-search>{ICON_SEARCH}<span>Snacks, Länder, Marken suchen …</span></button>'
-            f'<nav class="browse" aria-label="Stöbern"><h2>Stöbern nach Land & Thema</h2><div class="bgrid">{browse}</div></nav></section>'
+            f'{browse_html}</section>'
             f'{band(live)}'
             f'{home_prods}'
             f'<section id="posts"><div class="head"><h2>Aus unseren Posts</h2>{view_toggle("g-home-posts", ["big", "small"], "small")}</div>'
