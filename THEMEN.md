@@ -24,5 +24,6 @@ Status: `offen` · `Entwurf in Metricool` · `Dateien – selbst posten` · `gep
 | 18 | Die Geschichte des Adventskalenders | Saison | Ende November | offen |
 | 19 | Tim Tam Slam aus Australien | Länder | | offen |
 | 20 | Cadbury in UK vs. USA: warum es anders schmeckt | USA vs. EU | | offen |
+| 21 | Gefriergetrocknete Süßigkeiten: was beim Gefriertrocknen passiert | Kurios | | offen |
 
 Neue Ideen einfach unten anhängen (Status `offen`).
