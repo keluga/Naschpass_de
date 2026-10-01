@@ -1,4 +1,21 @@
 {
   "_hinweis": "Produkte erst eintragen, wenn der Partner-Shop (AWIN) freigeschaltet hat. url = Affiliate-Link, image = nur Bild-URL aus dem Partner-Feed (der Bild-Server muss in netlify.toml unter [images] remote_images stehen, sonst wird das Bild weggelassen). post = Nummer des passenden Posts (optional). Optional: featured = true -> erscheint im Laufband 'Unsere Empfehlungen'; tags = Liste zusätzlicher Suchwörter.",
-  "products": []
+  "products": [
+    {
+      "name": "Schoko-Box mit deinem Foto (9 Stück)",
+      "category": "boxen",
+      "url": "https://www.awin1.com/cread.php?awinmid=16944&awinaffid=3111189&ued=https%3A%2F%2Fmy-choco-world.com%2Fprodukte%2F9er-boxen%2F",
+      "image": "",
+      "note": "Belgische Schokolade, bedruckt mit deinem Bild oder Puzzle – kleines Geschenk mit Wow-Effekt.",
+      "shop": "my-choco-world"
+    },
+    {
+      "name": "Schoko-Box mit 24 Stück – auch als Kalender",
+      "category": "boxen",
+      "url": "https://www.awin1.com/cread.php?awinmid=16944&awinaffid=3111189&ued=https%3A%2F%2Fmy-choco-world.com%2Fprodukte%2F24er-boxen%2F",
+      "image": "",
+      "note": "24 Schokotäfelchen mit eigenen Fotos, als Collage, Memo oder Kalender. Der Bestseller.",
+      "shop": "my-choco-world"
+    }
+  ]
 }

@@ -26,6 +26,8 @@ site = json.loads((HERE / "site.json").read_text(encoding="utf-8"))
 DEMO = os.environ.get("DEMO") == "1"  # nur Netlify-Vorschau: Beispielprodukte aus website/demo/
 _pf = Path(os.environ.get("PRODUCTS_FILE") or (HERE / "demo" / "products.json" if DEMO else HERE / "products.json"))
 products = json.loads(_pf.read_text(encoding="utf-8"))["products"]
+if DEMO and not os.environ.get("PRODUCTS_FILE"):  # Vorschau: echte Produkte zuerst, dann Beispiele
+    products = json.loads((HERE / "products.json").read_text(encoding="utf-8"))["products"] + products
 posts = json.loads((ROOT / "generator" / "posts.json").read_text(encoding="utf-8"))["posts"]
 
 BASE = f"https://{site['domain']}"
