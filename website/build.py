@@ -120,7 +120,7 @@ def tag_slug(tag):
 
 # Kleine, selbst gezeichnete Sticker pro Kategorie (keine fremden Bilder)
 STICKERS = {
-    "japan": '<rect width="64" height="64" rx="14" fill="#fff"/><circle cx="32" cy="32" r="14" fill="#E8384F"/>',
+    "japan": '<rect x="1" y="1" width="62" height="62" rx="13" fill="#fff" stroke="#D9D4EA" stroke-width="2"/><circle cx="32" cy="32" r="14" fill="#E8384F"/>',
     "usa": '<clipPath id="cu"><rect width="64" height="64" rx="14"/></clipPath><g clip-path="url(#cu)"><rect width="64" height="64" fill="#fff"/>'
            + "".join(f'<rect y="{y}" width="64" height="5" fill="#E8384F"/>' for y in range(0, 64, 10))
            + '<rect width="30" height="30" fill="#2E4FB8"/><circle cx="9" cy="9" r="2.4" fill="#fff"/><circle cx="21" cy="9" r="2.4" fill="#fff"/>'
@@ -185,9 +185,9 @@ header{position:sticky;top:0;z-index:30;background:rgba(234,246,241,.9);backdrop
 header .wrap{display:flex;align-items:center;gap:10px;height:60px}
 .logo{display:flex;align-items:center;gap:9px;text-decoration:none;color:var(--fg);font:23px Anton,sans-serif;letter-spacing:.5px;margin-right:auto}
 .logo img{width:38px;height:38px;border-radius:50%}
-nav{display:flex;gap:2px}
-nav a{color:var(--fg);text-decoration:none;font-weight:700;font-size:15px;padding:8px 11px;border-radius:999px}
-nav a:hover{background:#fff}
+header nav{display:flex;gap:2px}
+header nav a{color:var(--fg);text-decoration:none;font-weight:700;font-size:15px;padding:8px 11px;border-radius:999px}
+header nav a:hover{background:#fff}
 .sbtn{display:grid;place-items:center;width:42px;height:42px;border-radius:50%;border:0;background:var(--fg);color:#fff;cursor:pointer}
 
 /* Hero */
@@ -202,6 +202,14 @@ padding:15px 16px;color:var(--mut);font-size:16.5px;cursor:text;text-align:left;
 .sc .stk{width:34px;height:34px}
 .sc:hover{outline:2px solid var(--vio2)}
 .spr{position:absolute;inset:0;pointer-events:none;z-index:-1;overflow:hidden}
+.browse{margin-top:20px;max-width:620px}
+.browse h2{font:800 15px Inter,sans-serif;text-transform:none;letter-spacing:0;margin:0 0 10px;color:var(--mut)}
+.browse{display:block}.bgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(min-width:900px){.bgrid{grid-template-columns:repeat(6,1fr)}}
+.bc{display:flex;flex-direction:column;align-items:center;gap:6px;background:#fff;border-radius:16px;padding:12px 6px 10px;text-decoration:none;color:var(--fg);
+font-weight:700;font-size:13.5px;line-height:1.2;text-align:center;box-shadow:var(--sh)}
+.bc .stk{width:40px;height:40px}.bc:hover{outline:2px solid var(--vio2)}
+.bc small{font-size:11.5px;font-weight:600;color:var(--mut)}
 .fan{display:none}@media(min-width:900px){.hero.has-fan{padding-right:400px;min-height:470px}.fan{display:block;position:absolute;right:30px;top:30px;width:360px;height:420px}.fan a{position:absolute;top:0;width:230px;border-radius:16px;overflow:hidden;box-shadow:0 14px 34px rgba(43,35,80,.25);transition:transform .2s}.fan a:nth-child(1){left:0;transform:rotate(-9deg) translateY(30px)}.fan a:nth-child(2){left:120px;transform:rotate(7deg) translateY(40px)}.fan a:nth-child(3){left:60px;transform:rotate(-1deg);z-index:2}.fan a:hover{z-index:3}}
 .spr i{position:absolute;width:30px;height:9px;border-radius:5px}
 
@@ -272,6 +280,11 @@ section{padding:34px 0 6px}
 .v-list .prod .note{display:none}
 .v-list .prod .cta span{display:inline-block;padding:7px 12px;font-size:13.5px}
 .wl{font-size:13px;color:var(--mut);margin:10px 0 0}
+.clip>[data-more]{display:none}
+.morebar{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.morebtn{border:2px solid var(--fg);background:none;color:var(--fg);font-weight:800;font-size:15px;border-radius:999px;padding:9px 16px;cursor:pointer}
+.morebtn:hover{background:#fff}
+.btn.dark{background:var(--fg);color:#fff}
 .empty{background:#fff;border:2px dashed var(--line);border-radius:18px;padding:18px;color:var(--mut)}
 .empty strong{color:var(--fg)}
 [hidden]{display:none!important}
@@ -464,6 +477,11 @@ document.querySelectorAll('[data-filter]').forEach(function(c){c.addEventListene
  g.querySelectorAll(':scope > a').forEach(function(a){a.hidden=!(v==='alle'||a.dataset[k]===v)})})});
 /* Empfehlungs-Band: läuft langsam durch, stoppt beim Anfassen/Hovern, wischbar */
 var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+document.querySelectorAll('.band[data-shuffle]').forEach(function(b){
+ var o=[].slice.call(b.querySelectorAll('.ri:not([aria-hidden])'));if(o.length<2)return;
+ for(var i=o.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=o[i];o[i]=o[j];o[j]=t}
+ b.innerHTML='';o.forEach(function(x){b.appendChild(x)});
+ o.forEach(function(x){var c=x.cloneNode(true);c.setAttribute('aria-hidden','true');c.tabIndex=-1;b.appendChild(c)})});
 document.querySelectorAll('.band').forEach(function(b){
  if(reduce||b.scrollWidth<=b.clientWidth+10)return;
  var half=b.scrollWidth/2,pause=0,x=b.scrollLeft;
@@ -472,6 +490,10 @@ document.querySelectorAll('.band').forEach(function(b){
  b.addEventListener('mousemove',hold,{passive:true});
  function tick(){if(Date.now()>pause&&!document.hidden){x=b.scrollLeft+.45;if(x>=half)x-=half;b.scrollLeft=x}requestAnimationFrame(tick)}
  requestAnimationFrame(tick)});
+/* Mehr zeigen */
+document.querySelectorAll('[data-expand]').forEach(function(b){b.addEventListener('click',function(){
+ var g=document.getElementById(b.dataset.expand);g.classList.remove('clip');b.remove();
+ var f=g.querySelector('[data-more]');if(f){var a=f.matches('a')?f:f.querySelector('a');if(a)a.focus({preventScroll:true})}})});
 /* Folien-Galerie */
 var s=document.querySelector('.slides');
 if(s){var im=s.querySelectorAll('img'),d=document.querySelectorAll('.dots b');
@@ -534,7 +556,7 @@ def cat_tile(c):
             f'<h3>{e(c["name"])}</h3><p>{e(c["teaser"])}</p>{n}</a>')
 
 
-def band(live, title_prod="Unsere Empfehlungen", title_post="Neu auf Naschpass"):
+def band(live, title_prod="Meine ganz persönlichen Empfehlungen", title_post="Neu auf Naschpass"):
     """Laufband: empfohlene Produkte (featured), sonst die neuesten Produkte, sonst die neuesten Posts."""
     feat = [p for p in products if p.get("featured")] or products[:12]
     if feat:
@@ -556,7 +578,7 @@ def band(live, title_prod="Unsere Empfehlungen", title_post="Neu auf Naschpass")
     # Inhalt doppelt, damit das Band endlos weiterlaufen kann (die Kopie ist für Screenreader versteckt)
     dup = "".join(cells).replace('<a class="ri', '<a tabindex="-1" aria-hidden="true" class="ri')
     return (f'<section class="recs"><div class="head"><h2>{title}</h2></div>'
-            f'<div class="band">{"".join(cells)}{dup}</div>{foot}</section>')
+            f'<div class="band" data-shuffle>{"".join(cells)}{dup}</div>{foot}</section>')
 
 
 def search_index(live):
@@ -695,25 +717,40 @@ def build():
         "Alle Naschpass-Posts auf einen Blick.", "/posts/"))
 
     # --- Startseite: Shop zuerst, Posts danach, Nummernsuche ganz unten
-    LIMIT = 8
+    SHOW, LIMIT = 4, 12  # erst 4 zeigen, per Knopf bis 12 aufklappen, Rest im Shop
+    def clip_grid(cards, gid, cls):
+        cells = [c if i < SHOW else c.replace("<a ", "<a data-more ", 1) for i, c in enumerate(cards)]
+        return f'<div class="grid {cls} v-small clip" id="{gid}">{"".join(cells)}</div>'
+
+    def more_bar(gid, n_shown, total, href, label):
+        btn = (f'<button class="morebtn" type="button" data-expand="{gid}" aria-controls="{gid}">{n_shown - SHOW} weitere zeigen</button>'
+               if n_shown > SHOW else "")
+        link = f'<a class="btn dark" href="{href}">{label}</a>' if total > SHOW else ""
+        return f'<div class="morebar">{btn}{link}</div>' if (btn or link) else ""
+
     new_prods = list(reversed(products))[:LIMIT]
     home_prods = (f'<section id="neu"><div class="head"><h2>Neu im Shop</h2>{view_toggle("g-new", ["big", "small", "list"], "small")}</div>'
-                  f'{prod_grid(new_prods, "g-new")}'
-                  f'<p style="margin-top:14px"><a class="btn" style="background:var(--fg);color:#fff" href="/shop/">Alle {len(products)} Süßigkeiten ansehen</a></p></section>'
+                  f'{clip_grid([prod_card(p) for p in new_prods], "g-new", "prods")}<p class="wl">* Werbelink</p>'
+                  f'{more_bar("g-new", len(new_prods), len(products), "/shop/", f"Alle {len(products)} im Shop")}</section>'
                   ) if products else ""
-    more_posts = (f'<p style="margin-top:14px"><a class="btn" style="background:var(--fg);color:#fff" href="/posts/">Alle {len(live)} Posts ansehen</a></p>'
-                  if len(live) > LIMIT else "")
+    home_posts = newest[:LIMIT]
+    # Kategorien mit Produkten zuerst
+    ordered = sorted(cats, key=lambda c: -sum(1 for p in products if p.get("category") == c["id"]))
+    browse = "".join(
+        f'<a class="bc" href="/kategorie/{c["id"]}/">{sticker(c["id"], 40)}{e(c["name"])}'
+        + (f'<small>{n} {"Sorte" if n == 1 else "Sorten"}</small>' if (n := sum(1 for p in products if p.get("category") == c["id"])) else '<small>bald</small>')
+        + '</a>' for c in ordered)
     fan = "".join(f'<a href="/p/{p["id"]}/" tabindex="-1" aria-hidden="true">{slide_img(cover_url(p), "", 230, "230px")}</a>'
                   for p in newest[:3][::-1])
     home = (f'<section class="hero has-fan">{SPRINKLES}<div class="fan">{fan}</div><h1>Süßes aus <span class="acc">aller Welt</span></h1>'
             f'<p class="sub">{e(site["tagline"])} Und wo du es in Deutschland bekommst.</p>'
             f'<button class="fake" type="button" data-open-search>{ICON_SEARCH}<span>Snacks, Länder, Marken suchen …</span></button>'
-            f'<div class="stickers" aria-label="Länder & Themen">{stick}</div></section>'
+            f'<nav class="browse" aria-label="Stöbern"><h2>Stöbern nach Land & Thema</h2><div class="bgrid">{browse}</div></nav></section>'
             f'{band(live)}'
-            f'<section id="shop"><div class="head"><h2>Länder & Themen</h2><a class="more" href="/shop/">Zum Shop</a></div>{tiles}</section>'
             f'{home_prods}'
             f'<section id="posts"><div class="head"><h2>Aus unseren Posts</h2>{view_toggle("g-home-posts", ["big", "small"], "small")}</div>'
-            f'<div class="grid posts v-small" id="g-home-posts">{"".join(post_card(p) for p in newest[:LIMIT])}</div>{more_posts}</section>'
+            f'{clip_grid([post_card(p) for p in home_posts], "g-home-posts", "posts")}'
+            f'{more_bar("g-home-posts", len(home_posts), len(live), "/posts/", f"Alle {len(live)} Posts")}</section>'
             f'{jump}')
     write("index.html", page("Naschpass – Süßigkeiten aus aller Welt", home))
 
