@@ -2,9 +2,8 @@
   command = "python3 website/import_feeds.py && python3 website/build.py"
   publish = "website/dist"
 
-# Vorschau-Links (Pull Requests) zeigen Beispielprodukte, live nie
-[context.deploy-preview.environment]
-  DEMO = "1"
+# Beispielprodukte für Vorschau-Links: DEMO = "1" unter [context.deploy-preview.environment] setzen.
+# Aus, damit die Vorschau genau das zeigt, was live geht.
 
 # Produktbilder aus dem AWIN-Feed: Netlify holt sie serverseitig und liefert sie über die eigene Domain aus
 # (kein Kontakt der Besucher zum Shop -> kein Cookie-Banner nötig). Neue Bild-Server hier ergänzen.

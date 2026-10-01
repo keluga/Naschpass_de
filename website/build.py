@@ -195,12 +195,8 @@ def cat_items(c):
 
 
 def cats_sorted():
-    """Saisonale Themenwelt in der Saison ganz vorn, außerhalb ganz hinten; sonst nach Anzahl."""
-    def key(c):
-        if c.get("season"):
-            return (0 if in_season(c) else 2, 0)
-        return (1, -len(cat_items(c)))
-    return sorted(cats, key=key)
+    """Reihenfolge aus site.json; saisonale Themenwelt in ihrer Saison ganz vorn."""
+    return sorted(cats, key=lambda c: 0 if in_season(c) else 1)
 
 
 def host_of(url):
@@ -302,7 +298,7 @@ STICKERS["italien"] = ('<clipPath id="ci"><rect width="64" height="64" rx="14"/>
                        '<rect x="21" width="22" height="64" fill="#fff"/><rect x="42" width="22" height="64" fill="#D8263A"/></g>')
 STICKERS["schweiz"] = ('<rect width="64" height="64" rx="14" fill="#D8263A"/><rect x="27" y="14" width="10" height="36" fill="#fff"/>'
                        '<rect x="14" y="27" width="36" height="10" fill="#fff"/>')
-for _k, (_bg, _em) in {"weihnachten": ("#2FAE7E", "🎄"), "getraenke": ("#9FD3FF", "🥤"), "snacks": ("#FFD966", "🥜"),
+for _k, (_bg, _em) in {"weihnachten": ("#2FAE7E", "🎄"), "schokolade": ("#B07A55", "🍫"), "getraenke": ("#9FD3FF", "🥤"), "snacks": ("#FFD966", "🥜"),
                        "klassiker": ("#FF8FB1", "🛒")}.items():
     STICKERS[_k] = (f'<rect width="64" height="64" rx="14" fill="{_bg}"/>'
                     f'<text x="32" y="44" font-size="34" text-anchor="middle">{_em}</text>')
@@ -350,6 +346,15 @@ h1{font-size:clamp(38px,9.5vw,76px)}h2{font-size:clamp(28px,6vw,42px)}
 h3{font-size:17px;line-height:1.25;margin:0}
 .acc{color:var(--vio)}
 .sub{color:var(--mut);max-width:60ch;margin:0 0 1em}
+.lead{font-size:18px;line-height:1.6;max-width:62ch;margin:6px 0 18px}
+.how{list-style:none;padding:0;margin:0 0 18px;display:grid;gap:8px;max-width:560px}
+.how li{display:flex;gap:10px;align-items:center;background:#fff;border-radius:14px;padding:9px 12px;font-weight:600;font-size:15px;box-shadow:var(--sh)}
+.how span{font-size:20px;flex:none}
+.cats.clip>[data-more]{display:none}
+.aboutbox{background:#fff;border-radius:var(--r);padding:20px;box-shadow:var(--sh);position:relative;overflow:hidden}
+.aboutbox:after{content:"";position:absolute;right:-40px;top:-40px;width:140px;height:140px;border-radius:50%;background:var(--mint);opacity:.5}
+.aboutbox p{color:var(--mut);max-width:60ch;position:relative;z-index:1}.aboutbox .btn{border:2px solid var(--fg)}
+.prose{max-width:68ch}.prose h2{font-size:clamp(24px,5vw,32px);margin-top:1.4em}.prose li{margin:6px 0}
 
 /* Werbehinweis + Kopf */
 .ad{background:var(--fg);color:#EAF6F1;font-size:12.5px;line-height:1.35;text-align:center;padding:6px 12px}
@@ -360,6 +365,7 @@ header .wrap{display:flex;align-items:center;gap:10px;height:60px}
 header nav{display:flex;gap:2px}
 header nav a{color:var(--fg);text-decoration:none;font-weight:700;font-size:15px;padding:8px 11px;border-radius:999px}
 header nav a:hover{background:#fff}
+@media(max-width:420px){.hide-s{display:none}}
 .sbtn{display:grid;place-items:center;width:42px;height:42px;border-radius:50%;border:0;background:var(--fg);color:#fff;cursor:pointer}
 
 /* Hero */
@@ -622,13 +628,13 @@ def page(title, body, desc=None, path="/", og_img=None, script=""):
 <style>{CSS}</style></head><body>
 <div class="ad">{AD}</div>{'<div class="ad" style="background:#FFB547;color:#2B2350;font-weight:700">VORSCHAU mit Beispielprodukten – nicht live</div>' if DEMO else ''}
 <header><div class="wrap"><a class="logo" href="/"><img src="/static/logo.png" alt="" width="38" height="38">NASCHPASS</a>
-<nav aria-label="Hauptmenü"><a href="/shop/">Shop</a><a href="/posts/">Posts</a></nav>
+<nav aria-label="Hauptmenü"><a href="/shop/">Shop</a><a href="/posts/">Posts</a><a href="/ueber/" class="hide-s">Über uns</a></nav>
 <button class="sbtn" type="button" data-open-search aria-label="Suche öffnen">{ICON_SEARCH}</button></div></header>
 <main class="wrap">
 {body}
 {follow_box()}
 </main>
-<footer><div class="wrap"><a href="/impressum/">Impressum</a><a href="/datenschutz/">Datenschutz</a>
+<footer><div class="wrap"><a href="/ueber/">Über Naschpass</a><a href="/ueber/#partner">Für Partner</a><a href="/impressum/">Impressum</a><a href="/datenschutz/">Datenschutz</a>
 <button class="linkbtn" type="button" data-imgpref hidden>Foto-Einstellung</button>
 <span>Keine Cookies, kein Tracking.</span></div></footer>
 <div class="imgbar" id="imgbar" role="region" aria-label="Produktfotos" hidden><p>Einige Produktfotos kommen direkt vom Shop. Dabei bekommt der Shop deine IP-Adresse. <a href="/datenschutz/#fotos">Mehr</a></p>
@@ -838,7 +844,7 @@ document.addEventListener('keydown',ev=>{if(ev.key==='/'&&!dlg.open&&!/input|tex
 
 def cat_tile(c):
     items = cat_items(c)
-    n = f'<span class="n">{len(items)} {"Sorte" if len(items) == 1 else "Sorten"}</span>' if items else '<span class="n soon">Bald hier</span>'
+    n = f'<span class="n">{len(items)} {"Sorte" if len(items) == 1 else "Sorten"}</span>' if items else '<span class="n soon">Produkte folgen</span>'
     return (f'<a class="cat" href="/kategorie/{c["id"]}/" style="--c:{cat_color[c["id"]]}">{sticker(c["id"])}'
             f'<h3>{e(c["name"])}</h3><p>{e(c["teaser"])}</p>{n}</a>')
 
@@ -846,7 +852,7 @@ def cat_tile(c):
 def band(live, title_prod="Unsere Empfehlungen", title_post="Neu auf Naschpass"):
     """Laufband: empfohlene Produkte (featured), sonst die neuesten Produkte, sonst die neuesten Posts."""
     feat = [p for p in products if p.get("featured")] or products[:12]
-    if feat:
+    if len(feat) >= 6:
         cells = []
         for p in feat:
             pic = pic_html(p, 340, "", p.get("category", ""))
@@ -912,9 +918,10 @@ def build():
         items = cat_items(c)
         inner = (f'<div class="tools"><span></span>{view_toggle("g-cat", ["big", "small", "list"], "small")}</div>'
                  + prod_grid(items, "g-cat")) if items else (
-            '<div class="empty"><strong>Hier kommen bald die ersten Sorten rein.</strong><br>'
-            'Bis dahin findest du in den Posts, was es in dieser Ecke der Welt zu naschen gibt.</div>')
-        rel = [p for p in live if any(x.get("post") == p["id"] and in_cat(x, c) for x in products)]
+            '<div class="empty"><strong>Produkte folgen, sobald Partner-Shops freigeschaltet sind.</strong>'
+            + (' Bis dahin findest du unten die passenden Posts.' if c.get("posts") else '') + '</div>')
+        rel = [p for p in live if p["id"] in c.get("posts", [])
+               or any(x.get("post") == p["id"] and in_cat(x, c) for x in products)]
         rel_html = (f'<section><h2>Passende Posts</h2><div class="grid posts v-small">{"".join(post_card(p) for p in rel)}</div></section>'
                     if rel else "")
         others = "".join(f'<a class="sc" href="/kategorie/{o["id"]}/">{sticker(o["id"], 34)}{e(o["name"])}</a>'
@@ -923,7 +930,7 @@ def build():
             f"{c['name']} – Naschpass",
             f'<a class="back" href="/shop/">← Zum Shop</a>'
             f'<section style="padding-top:14px"><div style="display:flex;align-items:center;gap:14px;margin-bottom:6px">{sticker(c["id"], 64)}'
-            f'<h1 style="margin:0">{e(c["name"])}</h1></div><p class="sub">{e(c["teaser"])}</p>{inner}</section>{rel_html}'
+            f'<h1 style="margin:0">{e(c["name"])}</h1></div><p class="lead">{e(c.get("text") or c["teaser"])}</p>{inner}</section>{rel_html}'
             f'<section><h2>Mehr entdecken</h2><div class="stickers">{others}</div></section>',
             c["teaser"], f"/kategorie/{c['id']}/"))
 
@@ -1064,32 +1071,72 @@ def build():
         panels += (f'<div class="bgrid" data-panel="{g["id"]}"{"" if first else " hidden"}>' + "".join(
             f'<a class="bc" href="/shop/?{g["id"]}={o["id"]}#alle">{facet_icon(g["id"], o, 40)}{e(o["name"])}'
             f'<small>{counts[(g["id"], o["id"])]} {"Sorte" if counts[(g["id"], o["id"])] == 1 else "Sorten"}</small></a>' for o in opts) + '</div>')
-    if tabs:
-        browse_html = (f'<nav class="browse" aria-label="Stöbern"><h2>Stöbern nach</h2><div class="tabs" role="tablist">{tabs}</div>{panels}'
-                       f'<p style="margin:10px 0 0"><a class="more" href="/shop/#alle">Alles frei filtern</a></p></nav>')
-    else:
-        ordered = cats_sorted()
-        browse_html = ('<nav class="browse" aria-label="Stöbern"><h2>Stöbern nach Land & Thema</h2><div class="bgrid">' + "".join(
-            f'<a class="bc" href="/kategorie/{c["id"]}/">{sticker(c["id"], 40)}{e(c["name"])}<small>bald</small></a>' for c in ordered) + '</div></nav>')
+    # Stöbern-Tabs erst, wenn genug Produkte da sind (sonst wirken sie leer)
+    browse_html = (f'<section><nav class="browse" aria-label="Stöbern" style="margin-top:0"><h2>Stöbern nach</h2><div class="tabs" role="tablist">{tabs}</div>{panels}'
+                   f'<p style="margin:10px 0 0"><a class="more" href="/shop/#alle">Alles frei filtern</a></p></nav></section>') if tabs and len(products) >= 30 else ""
     season_html = "".join(
         f'<section style="padding-top:22px"><a class="cat" style="--c:{cat_color[c["id"]]}" href="/kategorie/{c["id"]}/">{sticker(c["id"])}'
         f'<h3>{e(c["name"])}</h3><p>{e(c["teaser"])}</p><span class="n">{len(cat_items(c))} '
         f'{"Sorte" if len(cat_items(c)) == 1 else "Sorten"}</span></a></section>'
         for c in cats if in_season(c) and cat_items(c))
+    # Themenwelten: erst 8, Rest aufklappbar
+    ordered = cats_sorted()
+    tcells = [cat_tile(c) if i < 8 else cat_tile(c).replace("<a ", "<a data-more ", 1) for i, c in enumerate(ordered)]
+    themes_html = (f'<section id="themen"><div class="head"><h2>Themenwelten</h2><a class="more" href="/shop/">Zum Shop</a></div>'
+                   f'<div class="cats clip" id="g-themen">{"".join(tcells)}</div>'
+                   + (f'<div class="morebar"><button class="morebtn" type="button" data-expand="g-themen">{len(ordered) - 8} weitere Themenwelten</button></div>'
+                      if len(ordered) > 8 else "") + '</section>')
+    band_html = band(live)
+    band_is_posts = 'class="ri post"' in band_html
+    if band_is_posts:
+        band_html = band_html.replace('<h2>Neu auf Naschpass</h2></div>',
+                                      f'<h2>Neu auf Naschpass</h2><a class="more" href="/posts/">Alle {len(live)} Posts</a></div>', 1)
+    posts_html = "" if band_is_posts else (
+        f'<section id="posts"><div class="head"><h2>Aus unseren Posts</h2>{view_toggle("g-home-posts", ["big", "small"], "small")}</div>'
+        f'{clip_grid([post_card(p) for p in home_posts], "g-home-posts", "posts")}'
+        f'{more_bar("g-home-posts", len(home_posts), len(live), "/posts/", f"Alle {len(live)} Posts")}</section>')
+    how = ('<ul class="how">'
+           '<li><span aria-hidden="true">📲</span>Kurze Fakten-Posts auf Instagram, TikTok und Pinterest, mit Quellen</li>'
+           '<li><span aria-hidden="true">🗺️</span>Hier die Süßigkeiten dazu, sortiert nach Land und Thema</li>'
+           '<li><span aria-hidden="true">🛒</span>Ein Klick führt zum Partner-Shop, der nach Deutschland liefert</li></ul>')
+    about_box = (f'<section><div class="aboutbox"><h2>Neu hier?</h2><p>Naschpass ist ein junges Projekt rund um Süßigkeiten aus aller Welt. '
+                 f'Wie wir arbeiten und was Shops und Marken bei uns bekommen, steht auf einer Seite.</p>'
+                 f'<div class="btns"><a class="btn dark" href="/ueber/">Über Naschpass</a><a class="btn" href="/ueber/#partner">Für Partner</a></div></div></section>')
     fan = "".join(f'<a href="/p/{p["id"]}/" tabindex="-1" aria-hidden="true">{slide_img(cover_url(p), "", 230, "230px")}</a>'
                   for p in newest[:3][::-1])
     home = (f'<section class="hero has-fan">{SPRINKLES}<div class="fan">{fan}</div><h1>Süßes aus <span class="acc">aller Welt</span></h1>'
-            f'<p class="sub">{e(site["tagline"])} Und wo du es in Deutschland bekommst.</p>'
-            f'<button class="fake" type="button" data-open-search>{ICON_SEARCH}<span>Snacks, Länder, Marken suchen …</span></button>'
-            f'{browse_html}</section>'
-            f'{season_html}'
-            f'{band(live)}'
-            f'{home_prods}'
-            f'<section id="posts"><div class="head"><h2>Aus unseren Posts</h2>{view_toggle("g-home-posts", ["big", "small"], "small")}</div>'
-            f'{clip_grid([post_card(p) for p in home_posts], "g-home-posts", "posts")}'
-            f'{more_bar("g-home-posts", len(home_posts), len(live), "/posts/", f"Alle {len(live)} Posts")}</section>'
-            f'{jump}')
+            f'<p class="lead" style="max-width:34ch">{e(site["intro"])}</p>{how}'
+            f'<button class="fake" type="button" data-open-search>{ICON_SEARCH}<span>Snacks, Länder, Marken suchen …</span></button></section>'
+            f'{season_html}{band_html}{themes_html}{home_prods}{browse_html}{posts_html}{about_box}{jump}')
     write("index.html", page("Naschpass – Süßigkeiten aus aller Welt", home))
+
+    # --- Über Naschpass / Für Partner (ehrlich: neuer Kanal, keine Reichweitenzahlen)
+    im = site["impressum"]
+    chans = "".join(f'<li><a href="{e(x["url"])}" rel="noopener" target="_blank">{e(x["name"])}</a></li>' for x in site["socials"])
+    worlds = ", ".join(e(c["name"]) for c in cats_sorted()[:6])
+    about = f"""<section class="prose"><h1 style="margin-top:22px">Über Naschpass</h1>
+<p class="lead">Naschpass zeigt Süßigkeiten aus aller Welt: was sie besonders macht, wo sie verboten sind und wo du sie in Deutschland bekommst.</p>
+<h2>Das Konzept</h2>
+<ul><li>Wir veröffentlichen kurze Karussell-Posts über Süßigkeiten aus aller Welt: Kuriositäten, Verbote und Unterschiede zwischen Ländern.</li>
+<li>Jede Zahl und jedes Datum prüfen wir an einer Quelle. Die Quellen stehen bei jedem Post.</li>
+<li>Auf dieser Website hat jeder Post eine eigene Seite. Dazu sortieren wir Süßigkeiten nach Herkunft, Geschmack, Art und Anlass und verlinken Shops, die nach Deutschland liefern.</li>
+<li>Naschpass richtet sich an Erwachsene.</li></ul>
+<h2>Kanäle</h2>
+<ul>{chans}<li><a href="/">naschpass.oneflowsolution.de</a> (diese Website)</li></ul>
+<p>Ehrlich gesagt: Naschpass ist neu und die Kanäle sind im Aufbau. Bisher gibt es {len(live)} Posts, alle findest du unter <a href="/posts/">Posts</a>.</p>
+<h2 id="partner">Für Partner</h2>
+<p>Du betreibst einen Shop oder eine Marke mit Süßigkeiten, Snacks oder alkoholfreien Getränken? So arbeiten wir:</p>
+<ul><li>Deine Produkte erscheinen in passenden Themenwelten (zum Beispiel {worlds}) und auf den Seiten der Posts, in denen sie vorkommen.</li>
+<li>Jeder Partner-Link ist als Werbung gekennzeichnet, dazu steht ein Hinweis oben auf jeder Seite.</li>
+<li>Keine Gutscheinseite, keine bezahlten Suchanzeigen, kein Bieten auf Markennamen.</li>
+<li>Keine Gesundheitsversprechen und keine Werbung, die sich an Kinder richtet.</li>
+<li>Keine Cookies und kein Tracking auf dieser Website. Die Zuordnung von Bestellungen läuft über das Partnernetzwerk Awin (Publisher-ID 3111189).</li>
+<li>Produktnamen und Bilder übernehmen wir aus deinem Awin-Produktfeed, damit die Angaben aktuell bleiben.</li></ul>
+<h2>Kontakt</h2>
+<p>{e(im["name"])}, {e(im["firma"])}<br>E-Mail: <a href="mailto:{e(im["email"])}">{e(im["email"])}</a><br>
+Vollständige Angaben im <a href="/impressum/">Impressum</a>.</p></section>"""
+    write("ueber/index.html", page("Über Naschpass & für Partner", about,
+                                   "Was Naschpass ist, wie wir arbeiten und was Partner-Shops bei uns bekommen.", "/ueber/"))
 
     write("search.json", json.dumps(search_index(live), ensure_ascii=False, separators=(",", ":")))
     write("404.html", page("Seite nicht gefunden – Naschpass",

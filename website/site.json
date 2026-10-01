@@ -27,55 +27,9 @@
   },
   "categories": [
     {
-      "id": "japan",
-      "name": "Japan & Asien",
-      "teaser": "KitKat-Sorten, Pocky, Hi-Chew und Snacks aus ganz Asien.",
-      "facets": [
-        "land:asien"
-      ]
-    },
-    {
-      "id": "usa",
-      "name": "USA",
-      "teaser": "Kultriegel, Peanut Butter und alles, was es hier kaum gibt.",
-      "facets": [
-        "land:usa"
-      ]
-    },
-    {
-      "id": "verboten",
-      "name": "Anders in der EU",
-      "teaser": "Snacks, die es bei uns nur mit anderer Rezeptur gibt."
-    },
-    {
-      "id": "sauer-scharf",
-      "name": "Sauer & scharf",
-      "teaser": "Mexikanische Chili-Bonbons und saure Monster.",
-      "facets": [
-        "geschmack:sauer",
-        "geschmack:scharf"
-      ]
-    },
-    {
-      "id": "skandinavien",
-      "name": "Skandinavien",
-      "teaser": "Salmiak, Salzlakritz und schwedisches Pick & Mix.",
-      "facets": [
-        "land:skandinavien"
-      ]
-    },
-    {
-      "id": "boxen",
-      "name": "Boxen & Geschenke",
-      "teaser": "Mystery-Boxen und Sets zum Durchprobieren.",
-      "facets": [
-        "art:boxen"
-      ]
-    },
-    {
       "id": "weihnachten",
-      "name": "Weihnachten",
-      "teaser": "Adventskalender, Lebkuchen, Stollen und süße Geschenke.",
+      "name": "Weihnachten & Geschenke",
+      "teaser": "Adventskalender, Lebkuchen, Panettone und Pralinen zum Verschenken.",
       "season": [
         "11-01",
         "12-26"
@@ -91,15 +45,59 @@
         "panettone",
         "pandoro",
         "nikolaus"
+      ],
+      "text": "Adventskalender, Lebkuchen, Stollen, Panettone und Pralinen: Hier sammeln wir süße Geschenkideen aus aller Welt für die Adventszeit. Vieles davon gibt es nur saisonal, deshalb lohnt sich ein früher Blick."
+    },
+    {
+      "id": "schokolade",
+      "name": "Schokolade & Pralinen",
+      "teaser": "Tafeln, Riegel und Pralinen aus aller Welt.",
+      "facets": [
+        "art:schokolade",
+        "art:pralinen",
+        "geschmack:schoko"
+      ],
+      "text": "Von der Tafel über den Riegel bis zur Praline aus der Manufaktur: Schokolade schmeckt in jedem Land ein bisschen anders. In unseren Posts geht es zum Beispiel darum, warum das Überraschungsei in den USA verboten ist und was hinter Japans Schoko-Streit zwischen Pilz und Bambussprosse steckt.",
+      "posts": [
+        "01",
+        "02",
+        "03"
+      ]
+    },
+    {
+      "id": "japan",
+      "name": "Japan & Asien",
+      "teaser": "KitKat-Sorten, Pocky, Hi-Chew und Snacks aus ganz Asien.",
+      "facets": [
+        "land:asien"
+      ],
+      "text": "Japan ist bekannt für limitierte und regionale Sorten, die es oft nur für kurze Zeit gibt. Dazu kommen Klassiker aus Korea, Thailand und dem Rest Asiens: Mochi, Pocky, Hi-Chew und Snacks, die bei uns im Supermarkt fehlen.",
+      "posts": [
+        "02",
+        "03"
+      ]
+    },
+    {
+      "id": "usa",
+      "name": "USA",
+      "teaser": "Kultriegel, Peanut Butter und alles, was es hier kaum gibt.",
+      "facets": [
+        "land:usa"
+      ],
+      "text": "Kultriegel, Erdnussbutter-Süßes und Sodas: Viele amerikanische Süßigkeiten gibt es bei uns gar nicht oder nur mit anderer Rezeptur. In unseren Posts geht es auch um Farbstoffe und das Überraschungsei-Verbot.",
+      "posts": [
+        "01",
+        "04"
       ]
     },
     {
       "id": "italien",
       "name": "Italien",
-      "teaser": "Panettone, Cantucci, Torrone und italienische Schokolade.",
+      "teaser": "Panettone, Cantucci, Torrone und Gianduja.",
       "facets": [
         "land:italien"
-      ]
+      ],
+      "text": "Italien hat eine eigene Süßwaren-Tradition: Panettone und Pandoro zu Weihnachten, Torrone mit Honig und Mandeln, Cantucci zum Kaffee und Gianduja, die Verbindung aus Schokolade und Haselnuss aus dem Piemont."
     },
     {
       "id": "schweiz",
@@ -107,7 +105,47 @@
       "teaser": "Schweizer Schokolade und Klassiker aus den Alpen.",
       "facets": [
         "land:schweiz"
+      ],
+      "text": "Die Schweiz und Schokolade gehören zusammen: Milchschokolade wurde dort entwickelt, und das Conchieren, also das lange Rühren für den zarten Schmelz, geht auf Rodolphe Lindt zurück. Hier sammeln wir Tafeln, Pralinen und Klassiker aus den Alpen."
+    },
+    {
+      "id": "mexiko",
+      "name": "Mexiko",
+      "teaser": "Süß, sauer und scharf: Chili, Tamarinde und Limette.",
+      "facets": [
+        "land:mexiko"
+      ],
+      "text": "In Mexiko treffen Süßigkeiten auf Chili: Fruchtiges wird mit Chilipulver, Limette und Salz kombiniert, dazu kommt Tamarinde. Für viele hier ungewohnt, für Fans genau der Reiz."
+    },
+    {
+      "id": "skandinavien",
+      "name": "Skandinavien",
+      "teaser": "Salmiak, Salzlakritz und schwedisches Pick & Mix.",
+      "facets": [
+        "land:skandinavien"
+      ],
+      "text": "Im Norden ist Lakritz gern salzig, und Süßigkeiten kauft man oft lose aus der Wand, als Pick & Mix. Hier findest du Salmiak, Salzlakritz und schwedische Fruchtgummis."
+    },
+    {
+      "id": "verboten",
+      "name": "Anders in der EU",
+      "teaser": "Snacks, die es bei uns nur mit anderer Rezeptur gibt.",
+      "text": "Manche Zutaten sind in der EU verboten oder brauchen einen Warnhinweis, in den USA aber erlaubt, und manchmal ist es umgekehrt. Hier sammeln wir die Fälle aus unseren Posts, jeweils mit Quellen.",
+      "posts": [
+        "04",
+        "07",
+        "08"
       ]
+    },
+    {
+      "id": "sauer-scharf",
+      "name": "Sauer & scharf",
+      "teaser": "Mexikanische Chili-Bonbons und saure Monster.",
+      "facets": [
+        "geschmack:sauer",
+        "geschmack:scharf"
+      ],
+      "text": "Extrem saure Bonbons, Chili-Lollis und scharfe Chips: für alle, die es beim Naschen gern intensiv mögen."
     },
     {
       "id": "getraenke",
@@ -115,7 +153,8 @@
       "teaser": "Limos, Sodas und Sirupe aus aller Welt.",
       "facets": [
         "art:getraenke"
-      ]
+      ],
+      "text": "Limos, Sodas und Sirupe aus aller Welt, von japanischer Ramune mit Murmel-Verschluss bis zu amerikanischen Sodas. Alkohol gibt es hier bewusst nicht."
     },
     {
       "id": "snacks",
@@ -123,12 +162,23 @@
       "teaser": "Nüsse, Riegel, Trockenfrüchte und Gefriergetrocknetes.",
       "facets": [
         "art:snacks"
-      ]
+      ],
+      "text": "Nüsse, Trockenfrüchte, Riegel und Gefriergetrocknetes. Beim Gefriertrocknen wird Obst oder Süßes tiefgefroren und das Wasser im Vakuum entzogen, übrig bleibt etwas Leichtes, Knuspriges."
+    },
+    {
+      "id": "boxen",
+      "name": "Boxen & Geschenke",
+      "teaser": "Mystery-Boxen und Sets zum Durchprobieren.",
+      "facets": [
+        "art:boxen"
+      ],
+      "text": "Mystery-Boxen, Probiersets und süße Geschenke: zum Selbstprobieren oder Verschenken."
     },
     {
       "id": "klassiker",
       "name": "Supermarkt-Klassiker",
-      "teaser": "Die bekannten Marken, bequem online bestellt."
+      "teaser": "Die bekannten Marken, bequem online bestellt.",
+      "text": "Die bekannten Marken aus dem Supermarkt, bequem online bestellt. Damit findest du hier neben Exoten auch die Klassiker."
     }
   ],
   "partner_shops": {
@@ -624,5 +674,5 @@
       ]
     }
   ],
-  "_categories_hinweis": "Themenwelten. Ein Produkt gehört dazu über 'category' (Hand), 'themen' (Liste, z. B. aus feeds.json), 'facets' (z. B. land:italien) oder 'keywords'. 'season' [MM-TT, MM-TT] = in diesem Zeitraum ganz vorne, sonst hinten. Leere zeigen 'Bald hier'. ids nie umbenennen."
+  "_categories_hinweis": "Themenwelten. Ein Produkt gehört dazu über 'category' (Hand), 'themen' (Liste, z. B. aus feeds.json), 'facets' (z. B. land:italien) oder 'keywords'. 'season' [MM-TT, MM-TT] = in diesem Zeitraum ganz vorne, sonst hinten. Leere zeigen 'Bald hier'. ids nie umbenennen. Reihenfolge hier = Anzeige-Reihenfolge (saisonale in der Saison zuerst). 'text' = 2–3 Sätze, nur Belegtes. 'posts' = passende Post-ids."
 }
