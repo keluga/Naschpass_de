@@ -347,10 +347,9 @@ h3{font-size:17px;line-height:1.25;margin:0}
 .acc{color:var(--vio)}
 .sub{color:var(--mut);max-width:60ch;margin:0 0 1em}
 .lead{font-size:18px;line-height:1.6;max-width:62ch;margin:6px 0 18px}
-.how{list-style:none;padding:0;margin:0 0 18px;display:grid;gap:8px;max-width:560px}
-.how li{display:flex;gap:10px;align-items:center;background:#fff;border-radius:14px;padding:9px 12px;font-weight:600;font-size:15px;box-shadow:var(--sh)}
-.how span{font-size:20px;flex:none}
-.cats.clip>[data-more]{display:none}
+.how{list-style:none;padding:0;margin:-6px 0 16px;display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px;font-weight:700;color:var(--mut)}
+.how li{display:flex;gap:5px;align-items:center}.how span{font-size:16px}
+.cats.clip>[data-more],.bgrid.clip>[data-more]{display:none}
 .aboutbox{background:#fff;border-radius:var(--r);padding:20px;box-shadow:var(--sh);position:relative;overflow:hidden}
 .aboutbox:after{content:"";position:absolute;right:-40px;top:-40px;width:140px;height:140px;border-radius:50%;background:var(--mint);opacity:.5}
 .aboutbox p{color:var(--mut);max-width:60ch;position:relative;z-index:1}.aboutbox .btn{border:2px solid var(--fg)}
@@ -1071,9 +1070,28 @@ def build():
         panels += (f'<div class="bgrid" data-panel="{g["id"]}"{"" if first else " hidden"}>' + "".join(
             f'<a class="bc" href="/shop/?{g["id"]}={o["id"]}#alle">{facet_icon(g["id"], o, 40)}{e(o["name"])}'
             f'<small>{counts[(g["id"], o["id"])]} {"Sorte" if counts[(g["id"], o["id"])] == 1 else "Sorten"}</small></a>' for o in opts) + '</div>')
-    # Stöbern-Tabs erst, wenn genug Produkte da sind (sonst wirken sie leer)
-    browse_html = (f'<section><nav class="browse" aria-label="Stöbern" style="margin-top:0"><h2>Stöbern nach</h2><div class="tabs" role="tablist">{tabs}</div>{panels}'
-                   f'<p style="margin:10px 0 0"><a class="more" href="/shop/#alle">Alles frei filtern</a></p></nav></section>') if tabs and len(products) >= 30 else ""
+    # Stöbern direkt unter der Suche: Themenwelten immer, Woher/Geschmack/Art sobald genug gefüllt
+    ordered = cats_sorted()
+    def _cnt(c):
+        n = len(cat_items(c))
+        return f'{n} {"Sorte" if n == 1 else "Sorten"}' if n else "bald"
+    tcells = [f'<a class="bc"{" data-more" if i >= 9 else ""} href="/kategorie/{c["id"]}/">{sticker(c["id"], 40)}{e(c["name"])}<small>{_cnt(c)}</small></a>'
+              for i, c in enumerate(ordered)]
+    ftabs, fpanels = "", ""
+    for g in FILTER:
+        opts = sorted([o for o in g["options"] if counts.get((g["id"], o["id"]))], key=lambda o: -counts[(g["id"], o["id"])])[:6]
+        if len(opts) < 3:
+            continue
+        ftabs += f'<button type="button" role="tab" data-tab="{g["id"]}" aria-selected="false">{e(g["name"])}</button>'
+        fpanels += (f'<div class="bgrid" data-panel="{g["id"]}" hidden>' + "".join(
+            f'<a class="bc" href="/shop/?{g["id"]}={o["id"]}#alle">{facet_icon(g["id"], o, 40)}{e(o["name"])}'
+            f'<small>{counts[(g["id"], o["id"])]} {"Sorte" if counts[(g["id"], o["id"])] == 1 else "Sorten"}</small></a>' for o in opts) + '</div>')
+    browse_html = (f'<nav class="browse" aria-label="Stöbern"><h2>Stöbern</h2>'
+                   + (f'<div class="tabs" role="tablist"><button type="button" role="tab" data-tab="themen" aria-selected="true">Themenwelten</button>{ftabs}</div>' if ftabs else "")
+                   + f'<div data-panel="themen"><div class="bgrid clip" id="g-themen">{"".join(tcells)}</div>'
+                   + (f'<div class="morebar" style="margin-top:10px"><button class="morebtn" type="button" data-expand="g-themen">{len(ordered) - 9} weitere</button>'
+                      f'<a class="more" style="align-self:center" href="/shop/">Zum Shop</a></div>' if len(ordered) > 9 else "")
+                   + f'</div>{fpanels}</nav>')
     season_html = "".join(
         f'<section style="padding-top:22px"><a class="cat" style="--c:{cat_color[c["id"]]}" href="/kategorie/{c["id"]}/">{sticker(c["id"])}'
         f'<h3>{e(c["name"])}</h3><p>{e(c["teaser"])}</p><span class="n">{len(cat_items(c))} '
@@ -1096,9 +1114,9 @@ def build():
         f'{clip_grid([post_card(p) for p in home_posts], "g-home-posts", "posts")}'
         f'{more_bar("g-home-posts", len(home_posts), len(live), "/posts/", f"Alle {len(live)} Posts")}</section>')
     how = ('<ul class="how">'
-           '<li><span aria-hidden="true">📲</span>Kurze Fakten-Posts auf Instagram, TikTok und Pinterest, mit Quellen</li>'
-           '<li><span aria-hidden="true">🗺️</span>Hier die Süßigkeiten dazu, sortiert nach Land und Thema</li>'
-           '<li><span aria-hidden="true">🛒</span>Ein Klick führt zum Partner-Shop, der nach Deutschland liefert</li></ul>')
+           '<li><span aria-hidden="true">📲</span>Fakten-Posts mit Quellen</li>'
+           '<li><span aria-hidden="true">🗺️</span>Nach Land & Thema</li>'
+           '<li><span aria-hidden="true">🛒</span>Direkt zum Shop</li></ul>')
     about_box = (f'<section><div class="aboutbox"><h2>Neu hier?</h2><p>Naschpass ist ein junges Projekt rund um Süßigkeiten aus aller Welt. '
                  f'Wie wir arbeiten und was Shops und Marken bei uns bekommen, steht auf einer Seite.</p>'
                  f'<div class="btns"><a class="btn dark" href="/ueber/">Über Naschpass</a><a class="btn" href="/ueber/#partner">Für Partner</a></div></div></section>')
@@ -1106,8 +1124,8 @@ def build():
                   for p in newest[:3][::-1])
     home = (f'<section class="hero has-fan">{SPRINKLES}<div class="fan">{fan}</div><h1>Süßes aus <span class="acc">aller Welt</span></h1>'
             f'<p class="lead" style="max-width:34ch">{e(site["intro"])}</p>{how}'
-            f'<button class="fake" type="button" data-open-search>{ICON_SEARCH}<span>Snacks, Länder, Marken suchen …</span></button></section>'
-            f'{season_html}{band_html}{themes_html}{home_prods}{browse_html}{posts_html}{about_box}{jump}')
+            f'<button class="fake" type="button" data-open-search>{ICON_SEARCH}<span>Snacks, Länder, Marken suchen …</span></button>{browse_html}</section>'
+            f'{season_html}{band_html}{home_prods}{posts_html}{about_box}{jump}')
     write("index.html", page("Naschpass – Süßigkeiten aus aller Welt", home))
 
     # --- Über Naschpass / Für Partner (ehrlich: neuer Kanal, keine Reichweitenzahlen)
