@@ -430,6 +430,7 @@ font-weight:700;font-size:13.5px;line-height:1.2;text-align:center;box-shadow:va
 .themes h2{font:800 15px Inter,sans-serif;text-transform:none;letter-spacing:0;margin:0 0 10px;color:var(--mut)}
 .trow{display:flex;gap:10px;overflow-x:auto;padding:2px 16px 8px;margin:0 -16px;scrollbar-width:none}
 .trow::-webkit-scrollbar{display:none}.trow .bc{flex:none;width:118px}
+@media(min-width:760px){.trow{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));overflow:visible;margin:0;padding:2px 0 8px}.trow .bc{width:auto}}
 .filters{margin-bottom:8px}
 .fbtns{position:relative;display:flex;gap:8px;flex-wrap:wrap}
 .ddb{display:inline-flex;align-items:center;gap:7px;border:0;background:#fff;box-shadow:var(--sh);border-radius:999px;padding:10px 15px;
@@ -1031,10 +1032,26 @@ function setX(x){track.style.transform='translateX('+x+'px)'}
 (function(){var h='';for(var k=0;k<14;k++)h+=card(items[rnd(items.length)]);track.innerHTML=h;setX(-40)})();
 res.innerHTML='<small>Tippe auf „Drehen“ und lass dich überraschen.</small>';
 snd.addEventListener('click',function(){sound=!sound;snd.textContent=sound?'🔊':'🔇';snd.setAttribute('aria-pressed',sound)});
-function beep(f,d,v,type){if(!sound)return;try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();
- var o=ac.createOscillator(),g=ac.createGain();o.type=type||'square';o.frequency.value=f;g.gain.setValueAtTime(v,ac.currentTime);
- g.gain.exponentialRampToValueAtTime(0.0001,ac.currentTime+d);o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+d)}catch(e){}}
-function fanfare(){[523,659,784,1047,1319].forEach(function(f,k){setTimeout(function(){beep(f,.22,.07,'triangle')},k*95)})}
+/* Klänge werden im Browser erzeugt (keine Audiodateien):
+   Tick = kurzes, gefiltertes Rauschen wie ein Plastik-Klick, plus leiser "Körper"-Ton
+   Einrasten = weicher, tiefer Plopp; Aufdecken = Glocken-Pling mit Glitzer */
+var master=null,noise=null;
+function audio(){if(!sound)return null;try{if(!ac){ac=new (window.AudioContext||window.webkitAudioContext)();
+  master=ac.createDynamicsCompressor();master.connect(ac.destination);
+  noise=ac.createBuffer(1,Math.floor(ac.sampleRate*.05),ac.sampleRate);var d=noise.getChannelData(0);for(var k=0;k<d.length;k++)d[k]=(Math.random()*2-1)*Math.pow(1-k/d.length,3)}
+ if(ac.state==='suspended')ac.resume();return ac}catch(e){return null}}
+function env(g,t,peak,att,dec){g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(peak,t+att);g.gain.exponentialRampToValueAtTime(0.0001,t+att+dec)}
+function tick(speed){var a=audio();if(!a)return;var t=a.currentTime,src=a.createBufferSource(),bp=a.createBiquadFilter(),g=a.createGain();
+ src.buffer=noise;bp.type='bandpass';bp.frequency.value=2300+Math.random()*500+speed*600;bp.Q.value=4;env(g,t,.18,.001,.03);
+ src.connect(bp);bp.connect(g);g.connect(master);src.start(t);src.stop(t+.05);
+ var o=a.createOscillator(),g2=a.createGain();o.type='sine';o.frequency.setValueAtTime(420,t);o.frequency.exponentialRampToValueAtTime(180,t+.03);
+ env(g2,t,.05,.001,.035);o.connect(g2);g2.connect(master);o.start(t);o.stop(t+.05)}
+function bell(f,t,vol,dur){var a=ac;[1,2.01,3.02].forEach(function(m,k){var o=a.createOscillator(),g=a.createGain();o.type='sine';o.frequency.value=f*m;
+ env(g,t,vol/(k*1.8+1),.004,dur/(k+1));o.connect(g);g.connect(master);o.start(t);o.stop(t+dur+.1)})}
+function thunk(){var a=audio();if(!a)return;var t=a.currentTime,o=a.createOscillator(),g=a.createGain();o.type='sine';
+ o.frequency.setValueAtTime(220,t);o.frequency.exponentialRampToValueAtTime(90,t+.09);env(g,t,.16,.003,.12);o.connect(g);g.connect(master);o.start(t);o.stop(t+.2)}
+function fanfare(){var a=audio();if(!a)return;var t=a.currentTime+.02;bell(880,t,.12,1.4);bell(1318.5,t+.11,.08,1.2);
+ [1760,2093,2637,3136].forEach(function(f,k){bell(f,t+.22+k*.07,.035,.45)})}
 function confetti(color){var r=reel.getBoundingClientRect(),b=box.getBoundingClientRect();
  for(var k=0;k<44;k++){var c=document.createElement('i');c.className='confetti';
   c.style.background=['#FFD23F','#FF4D8D','#3DDC97','#3D8BFF',color][k%5];
@@ -1068,12 +1085,12 @@ function spin(){if(busy)return;busy=true;btn.disabled=true;btn.textContent='…'
  function settle(){var s0=null,from=end;
   function f(ts){if(!s0)s0=ts;var p=Math.min(1,(ts-s0)/550),e=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;setX(from+(center-from)*e);
    if(p<1)requestAnimationFrame(f);else reveal()}
-  setTimeout(function(){requestAnimationFrame(f)},450)}
+  setTimeout(function(){thunk();requestAnimationFrame(f)},450)}
  function frame(ts){if(!t0)t0=ts;var t=ts-t0,x;
   if(t<260){x=26*Math.sin(t/260*Math.PI/2)}                 /* ausholen */
   else{var p=Math.min(1,(t-260)/dur),e=1-Math.pow(1-p,3.4);x=26+(end-26)*e}
   setX(x);var idx=Math.floor((mid-x)/W);
-  if(idx!==last&&idx>=0){last=idx;hi(idx);beep(1250+Math.random()*250,.035,.04);mk.classList.add('tick');setTimeout(function(){mk.classList.remove('tick')},70)}
+  if(idx!==last&&idx>=0){last=idx;hi(idx);try{tick(Math.max(0,1-(p||0)*1.4))}catch(e){}mk.classList.add('tick');setTimeout(function(){mk.classList.remove('tick')},70)}
   if(t<260+dur)requestAnimationFrame(frame);else settle()}
  requestAnimationFrame(frame)}
 btn.addEventListener('click',function(){btn.blur();spin()});
