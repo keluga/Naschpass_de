@@ -233,7 +233,9 @@ WELT_HINTS = [(re.compile(r, re.I), w) for r, w in WELT_HINTS]
 HART = re.compile(r"(wurst|würst|salami|schinken|speck\b|fleisch|geschnetzelt|leber|pastete|terrine|rillette|schmalz|verhackert|grammel|"
                   r"fisch|lachs|hering|thunfisch|sardine|sardelle|anchovi|kaviar|garnele|krabbe|\bhipp\b|babybrei|säugling|basmati|\breis\b|"
                   r"naturreis|langkorn|wildreis|couscous|bulgur|quinoa|polenta|risotto|gnocchi|ravioli|tortellini|maultasche|knödel|windel|"
-                  r"teekanne|teefilter|kaffeefilter|filtertüte|flammkuchen|fondant|backmischung|backpulver|\bhefe\b|\bmehl\b)", re.I)
+                  r"teekanne|teefilter|kaffeefilter|filtertüte|flammkuchen|fondant|backmischung|backpulver|\bhefe\b|\bmehl\b|"
+                  r"(grün|rot|weiß|weiss|rosen|spitz|blumen)kohl|sauerkraut|rotkraut|rote bete|spargel|spinat|chia|flohsamen|hanfsamen|leinsamen|"
+                  r"gemüseaufstrich|tortencreme|tortenguss|sahnesteif|pampers|feuchttüch|stövchen|fertiggericht|mikrowellen)", re.I)
 WEICH = re.compile(r"(käse|kaese|parmesan|pecorino|joghurt|quark|sahne\b|\bbutter\b|gemüse|tomate|zwiebel|knoblauch|kartoffel|oliven|pilz|"
                    r"kapern|gurke|bohne|linse|erbse|kichererbse|hummus|pesto|sugo|sauce|soße|sosse|dressing|brot\b|brötchen|toast|knäcke|"
                    r"nudel|pasta\b|spaghetti|\bsalz\b|pfeffer(?!minz)|pfefferoni|pfefferschote|gewürz|würz|brühe|bouillon|suppe|pizza|\böl\b|"

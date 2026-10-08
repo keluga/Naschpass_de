@@ -316,6 +316,10 @@ def order_products():
         a = art(p)
         if a in ("tee", "feinkost"):
             s -= 3
+        elif a == "getraenke":  # Getränke bleiben, aber eher als Beilage: weiter hinten, eigener Knopf im Rad
+            s -= 2
+        elif a == "sonst":  # keine Art erkannt -> vermutlich kein klassisches Naschzeug
+            s -= 3
         return s
     in_seas = {id(x) for c in season for x in cat_items(c)}
     sc, ar = {}, {}
@@ -1226,20 +1230,40 @@ ART_COLORS = {"schokolade": "#8B5A3C", "pralinen": "#C2185B", "gummi": "#FF4D8D"
               "kekse": "#D4A373", "snacks": "#2FAE7E", "getraenke": "#3D8BFF", "boxen": "#8B6CFF"}
 
 
+# "Lust auf …": das Rad dreht nur innerhalb der Auswahl (Treffer kommen aus search.json, beste zuerst)
+MOODS = [("alles", "Überrasch mich", [], "#FFD23F"),
+         ("schoko", "Schoko", ["art:schokolade", "art:pralinen", "geschmack:schoko"], "#8B5A3C"),
+         ("fruchtig", "Fruchtig & Gummi", ["art:gummi", "art:bonbons", "geschmack:fruchtig"], "#FF4D8D"),
+         ("knabbern", "Knabbern", ["art:chips", "art:snacks", "geschmack:salzig"], "#E8384F"),
+         ("sauerscharf", "Sauer & scharf", ["geschmack:sauer", "geschmack:scharf"], "#3DDC97"),
+         ("fern", "Weit weg", ["land:usa", "land:mexiko", "land:japan", "land:korea", "land:asien", "land:orient"], "#8B6CFF"),
+         ("trinken", "Was zum Trinken", ["art:getraenke"], "#3D8BFF")]
+SPIN_SKIP = {"getraenke", "tee", "feinkost"}  # Getränke nur über den eigenen Knopf
+
+
+def _stem(name):
+    """Gleiche Sorte in anderer Größe/Packung = gleiches Produkt fürs Rad."""
+    w = re.sub(r"[^a-zäöüß ]", " ", name.lower()).split()
+    return " ".join(w[:3])
+
+
 def spin_items(live):
-    items = []
+    items, seen = [], set()
     art_name = {o["id"]: o["name"] for g in FILTER if g["id"] == "art" for o in g["options"]}
-    # Rad: höchstens 60 Sorten aus der vorderen "Entdecken"-Liste (ohne Tee/Feinkost), sonst wird die Startseite riesig
-    pool = [p for p in products[:900] if not facets(p).get("art", set()) & {"tee", "feinkost"}]
-    step = max(1, len(pool) // 60)
-    for p in pool[::step][:60]:
-        arts = [a for a in ART_COLORS if a in facets(p).get("art", set())]
-        a = arts[0] if arts else ""
+    # Rad: 60 verschiedene Sorten aus der vorderen "Entdecken"-Liste, nur mit eigenem Bild, ohne Getränke/Tee/Feinkost
+    for p in products[:1500]:
+        if len(items) >= 60:
+            break
+        arts = facets(p).get("art", set())
         i = prod_img(p, 240)
+        st = _stem(p["name"])
+        if not arts or arts & SPIN_SKIP or st in seen or not i:
+            continue
+        seen.add(st)
+        a = next((x for x in ART_COLORS if x in arts), "")
         items.append({"t": p["name"], "u": p["url"], "k": "p", "c": ART_COLORS.get(a, "#9C94C7"), "l": art_name.get(a, "Süßigkeit"),
-                      "img": i[1] if i and i[0] == "own" else "", "ext": i[1] if i and i[0] == "ext" else "",
-                      "svg": "" if i and i[0] == "own" else sticker(p.get("category", ""), 64)})
-    if len(products) < 6:  # noch wenige Produkte: Posts und Themenwelten mit ins Rad
+                      "img": i[1] if i[0] == "own" else "", "ext": i[1] if i[0] == "ext" else "", "svg": ""})
+    if len(items) < 6:  # noch wenige Produkte: Posts und Themenwelten mit ins Rad
         for p in live:
             items.append({"t": f"#{p['id']} {plain(p.get('short', ''))}", "u": f"/p/{p['id']}/", "k": "post", "c": "#FF4D8D",
                           "l": "Post", "img": cdn(cover_url(p), 240) if (ON_NETLIFY or ON_CF) else cover_url(p)})
@@ -1253,21 +1277,27 @@ def spin_html(live):
     items = spin_items(live)
     if len(items) < 3:
         return ""
-    leg, seen = [], set()
-    for i in items:
-        if i["l"] not in seen:
-            seen.add(i["l"])
-            leg.append(f'<span class="chip" style="--c:{i["c"]}"><i></i>{e(i["l"])}</span>')
-    data = json.dumps(items, ensure_ascii=False).replace("</", "<\\/")
+    art_name = {o["id"]: o["name"] for g in FILTER if g["id"] == "art" for o in g["options"]}
+    cnt = {}
+    for p in products:
+        f = {f"{g}:{v}" for g, vs in facets(p).items() for v in vs}
+        for mid, _, toks, _ in MOODS[1:]:
+            if f & set(toks):
+                cnt[mid] = cnt.get(mid, 0) + 1
+    moods = [m for m in MOODS if not m[2] or cnt.get(m[0], 0) >= 8]
+    chips = "".join(f'<button class="chip" type="button" data-mood="{m[0]}" aria-pressed="{"true" if not m[2] else "false"}" style="--c:{m[3]}">'
+                    f'<i></i>{e(m[1])}</button>' for m in moods)
+    data = json.dumps({"i": items, "m": {m[0]: m[2] for m in moods}, "skip": sorted(SPIN_SKIP),
+                       "a": {k: [art_name.get(k, k), v] for k, v in ART_COLORS.items()}}, ensure_ascii=False).replace("</", "<\\/")
     return (f'<section class="spin" id="zufall"><div class="spinbox"><div class="spinhead"><h2>Was naschst du heute?</h2>'
-            f'<button class="snd" type="button" aria-pressed="true" aria-label="Ton an/aus">🔊</button></div>'
-            f'<p class="sub" style="margin:0 0 12px">Dreh das Rad und lass dich überraschen. Die Farbe verrät, was es ist.</p>'
+            f'<div class="vol"><button class="snd" type="button" aria-pressed="true" aria-label="Ton an/aus">🔊</button>'
+            f'<input type="range" class="volr" min="0" max="1" step="0.05" value="0.35" aria-label="Lautstärke"></div></div>'
+            f'<p class="sub" style="margin:0 0 12px">Worauf hast du Lust? Wähl aus und dreh. Die Farbe verrät, was es ist.</p>'
+            f'<div class="legend moods" role="group" aria-label="Lust auf">{chips}</div>'
             f'<div class="reel"><div class="track"></div><div class="marker" aria-hidden="true"></div></div>'
-            f'<div class="legend">{"".join(leg)}</div>'
-            f'<button class="spinbtn" type="button">Drehen</button>'
+            f'<button class="spinbtn" type="button" style="margin-top:12px">Drehen</button>'
             f'<div class="result" aria-live="polite"></div></div>'
             f'<script type="application/json" id="spin-data">{data}</script></section>')
-
 
 SPIN_CSS = """
 .spin .spinbox{position:relative;background:var(--fg);color:#fff;border-radius:26px;padding:20px 16px 18px;overflow:hidden}
@@ -1297,7 +1327,9 @@ box-shadow:0 0 10px #FFD23F,0 0 26px #FF4D8D}
 .marker:before{top:0;border-top-color:#FFD23F}.marker:after{bottom:0;border-bottom-color:#FFD23F}
 .marker.tick{box-shadow:0 0 18px #FFD23F,0 0 44px #FF4D8D}
 .legend{position:relative;display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
-.legend .chip{background:rgba(255,255,255,.1);color:#fff;box-shadow:none;font-size:13px;padding:6px 11px;cursor:default}
+.legend .chip{background:rgba(255,255,255,.1);color:#fff;box-shadow:none;font-size:13px;padding:6px 11px;cursor:pointer;border:2px solid transparent}
+.legend .chip i{background:var(--c)}.legend .chip[aria-pressed=true]{background:#fff;color:#2B2350;border-color:var(--c)}
+.vol{display:flex;align-items:center;gap:8px}.volr{width:90px;accent-color:#FFD23F}
 .spinbtn{position:relative;width:100%;border:0;border-radius:16px;padding:16px;font:28px Anton,sans-serif;letter-spacing:1px;text-transform:uppercase;
 color:#2B2350;background:linear-gradient(90deg,#FFD23F,#FF8FB1,#8B6CFF,#3DDC97,#FFD23F);background-size:300% 100%;cursor:pointer;
 animation:btnflow 6s linear infinite;box-shadow:0 8px 26px rgba(255,77,141,.35)}
@@ -1323,7 +1355,8 @@ animation:conf 1.1s ease-out forwards}
 SPIN_JS = r"""<script>
 (function(){
 var root=document.getElementById('zufall');if(!root)return;
-var items=JSON.parse(document.getElementById('spin-data').textContent),track=root.querySelector('.track'),reel=root.querySelector('.reel'),
+var SD=JSON.parse(document.getElementById('spin-data').textContent),base=SD.i,items=base,ALL=null,
+ vr=root.querySelector('.volr'),track=root.querySelector('.track'),reel=root.querySelector('.reel'),
  mk=root.querySelector('.marker'),btn=root.querySelector('.spinbtn'),res=root.querySelector('.result'),snd=root.querySelector('.snd'),
  box=root.querySelector('.spinbox'),reduce=matchMedia('(prefers-reduced-motion: reduce)').matches,sound=true,ac=null,busy=false;
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
@@ -1331,15 +1364,37 @@ function pic(i){var ok=window.npImgOK&&window.npImgOK(),src=i.img||(i.ext&&ok?i.
  return src?'<img src="'+esc(src)+'" alt="" loading="lazy">':'<span class="svgw">'+(i.svg||'')+'</span>'}
 function card(i){return '<div class="card" style="--c:'+i.c+'">'+pic(i)+'<b>'+esc(i.t)+'</b></div>'}
 function rnd(n){return Math.floor(Math.random()*n)}
+function deal(n){var a=items.slice(),o=[];for(var k=a.length-1;k>0;k--){var j=rnd(k+1),t=a[k];a[k]=a[j];a[j]=t}
+ while(o.length<n)o=o.concat(a);return o.slice(0,n)}
 function setX(x){track.style.transform='translateX('+x+'px)'}
-(function(){var h='';for(var k=0;k<14;k++)h+=card(items[rnd(items.length)]);track.innerHTML=h;setX(-40)})();
+track.innerHTML=deal(14).map(card).join('');setX(-40);
 res.innerHTML='<small>Tippe auf „Drehen“ und lass dich überraschen.</small>';
-snd.addEventListener('click',function(){sound=!sound;snd.textContent=sound?'🔊':'🔇';snd.setAttribute('aria-pressed',sound)});
+var vol=.35;try{var sv=localStorage.getItem('npVol');if(sv!==null){vol=+sv;vr.value=vol}}catch(e){}
+function setVol(v){vol=v;sound=v>0;snd.textContent=sound?'🔊':'🔇';snd.setAttribute('aria-pressed',sound);if(gain)gain.gain.value=v;
+ try{localStorage.setItem('npVol',v)}catch(e){}}
+vr.addEventListener('input',function(){setVol(+vr.value)});
+snd.addEventListener('click',function(){if(sound){snd.dataset.v=vol;vr.value=0;setVol(0)}else{var v=+(snd.dataset.v||.35)||.35;vr.value=v;setVol(v)}});
+setVol(vol);
+/* Lust auf …: Treffer aus allen Produkten (search.json, beste zuerst), je Sorte nur einmal */
+function stem(t){return t.toLowerCase().replace(/[^a-zäöüß ]/g,' ').split(/\s+/).filter(Boolean).slice(0,3).join(' ')}
+function pool(m){var toks=SD.m[m]||[],out=[],seen={};
+ ALL.forEach(function(i){if(out.length>=150||!(i.img||i.ext))return;var f=' '+(i.f||'')+' ',has=function(t){return f.indexOf(' '+t+' ')>=0};
+  if(toks.length?!toks.some(has):SD.skip.some(function(a){return has('art:'+a)}))return;
+  if(m!=='trinken'&&has('art:getraenke'))return;var k=stem(i.title);if(seen[k])return;seen[k]=1;
+  var a=Object.keys(SD.a).filter(function(x){return has('art:'+x)})[0],c=a?SD.a[a]:['Süßigkeit','#9C94C7'];
+  out.push({t:i.title,u:i.url,k:'p',c:c[1],l:c[0],img:i.img,ext:i.ext})});return out}
+root.querySelectorAll('[data-mood]').forEach(function(b){b.addEventListener('click',function(){if(busy)return;
+ root.querySelectorAll('[data-mood]').forEach(function(x){x.setAttribute('aria-pressed',x===b)});var m=b.dataset.mood;
+ function go(){var p=m==='alles'?base:pool(m);items=p.length>=3?p:base;
+  track.innerHTML=deal(14).map(card).join('');setX(-40)}
+ if(m==='alles'||ALL){go();return}
+ btn.disabled=true;fetch('/search.json').then(function(r){return r.json()}).then(function(j){
+  ALL=j.items.filter(function(i){return i.type==='product'});btn.disabled=false;go()}).catch(function(){btn.disabled=false})})});
 /* Klänge: Casino-Set aus /static/snd (Kenney Casino Audio, CC0, + eigene Synthese; Quelle: tools/make_sounds.py).
    Wird erst beim ersten Drehen geladen. Ticks werden zum Ende hin höher (Spannung), Riser kurz vor dem Stopp. */
-var master=null,buf={},loading=false;
+var master=null,gain=null,buf={},loading=false;
 function audio(){if(!sound)return null;try{if(!ac){ac=new (window.AudioContext||window.webkitAudioContext)();
-  master=ac.createDynamicsCompressor();master.connect(ac.destination)}
+  gain=ac.createGain();gain.gain.value=vol;gain.connect(ac.destination);master=ac.createDynamicsCompressor();master.connect(gain)}
  if(ac.state==='suspended')ac.resume();
  if(!loading){loading=true;['tick','start','riser','stop','win'].forEach(function(n){
   fetch('/static/snd/'+n+'.mp3').then(function(r){return r.arrayBuffer()}).then(function(d){return new Promise(function(ok,no){ac.decodeAudioData(d,ok,no)})})
@@ -1370,7 +1425,7 @@ function show(i){var ext=i.k==='p',lbl=i.k==='p'?'Zum Shop*':(i.k==='post'?'Zum 
 /* Ablauf wie beim Case-Opening: kurz ausholen, schnell los, lange sanft auslaufen,
    knapp an der Kante liegen bleiben, kurze Pause, dann in die Mitte rutschen und aufdecken */
 function spin(){if(busy)return;busy=true;audio();btn.disabled=true;btn.textContent='…';res.classList.add('dim');
- var N=48,T=41,seq=[];for(var k=0;k<N;k++)seq.push(items[rnd(items.length)]);var win=seq[T];
+ var N=48,T=41,seq=deal(N);var win=seq[T];
  var PS='<div class="card ps"><span class="svgw"><span style="font-size:34px">🤝</span></span><b>Hier könnte dein Produkt stehen</b></div>';
  track.innerHTML=seq.map(function(i,k){return (k!==T&&items.length<20&&Math.random()<.18)?PS:card(i)}).join('');setX(0);
  var cw=track.children[0].offsetWidth,W=cw+10,mid=reel.clientWidth/2,center=-(T*W+cw/2-mid),
