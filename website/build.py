@@ -123,8 +123,9 @@ def slide_img(src, alt, w, sizes, cls="", eager=False):
     if ON_CF and src.startswith("/p/"):
         THUMBS.add(src)
         t = src[:-4] + "_t.jpg"
-        return (f'<img src="{t}" alt="{e(alt)}" width="1080" height="1350"{c}{lazy} '
-                f'onerror="this.onerror=null;this.src=\'{src}\'">')
+        # kleines Bild für Karten, Original für große/scharfe Bildschirme (Browser wählt selbst)
+        return (f'<img src="{t}" srcset="{t} 480w, {src} 1080w" sizes="{sizes}" alt="{e(alt)}" width="1080" height="1350"{c}{lazy} '
+                f'onerror="this.onerror=null;this.removeAttribute(\'srcset\');this.src=\'{src}\'">')
     if not ON_NETLIFY:
         return f'<img src="{src}" alt="{e(alt)}" width="1080" height="1350"{c}{lazy}>'
     srcset = ", ".join(f"{cdn(src, x)} {x}w" for x in (w, w * 2))
@@ -1661,10 +1662,13 @@ root.addEventListener('click',async function(ev){var b=ev.target.closest('.qopt'
  var next=root.querySelector('[data-step="'+(n+1)+'"]');if(next){next.hidden=false;next.scrollIntoView({behavior:'smooth',block:'center'});return}
  data=data||await fetch('/search.json').then(function(r){return r.json()});
  var prods=data.items.filter(function(i){return i.type==='product'}),has=function(i,k){return (' '+i.f+' ').indexOf(' '+k+' ')>=0};
- var want=[];if(ans.geschmack)want.push('geschmack:'+ans.geschmack);if(ans.land)want.push('land:'+ans.land);
- if(ans.anlass!=='ich')want.push('art:boxen');
- var scored=prods.map(function(i){return [i,want.filter(function(w){return has(i,w)}).length]}).filter(function(x){return x[1]>0||!want.length})
-  .sort(function(a,b){return b[1]-a[1]}).slice(0,6).map(function(x){return x[0]});
+ var want=[];if(ans.geschmack)want.push(['geschmack:'+ans.geschmack,2]);if(ans.land)want.push(['land:'+ans.land,2]);
+ var th={weihnachten:['weihnachten','adventskalender','mitbringsel'],mitbringsel:['mitbringsel','geburtstag','boxen']}[ans.anlass]||[];
+ var inTh=function(i){return th.some(function(t){return (' '+(i.th||'')+' ').indexOf(' '+t+' ')>=0})};
+ /* Punkte: Geschmack und Land je 2, passende Themenwelt (Weihnachten/Mitbringsel) 1,5; dann je Shop höchstens 2, damit es gemischt bleibt */
+ var scored=prods.map(function(i){return [i,want.reduce(function(s,w){return s+(has(i,w[0])?w[1]:0)},0)+(inTh(i)?1.5:0)]})
+  .filter(function(x){return x[1]>0||!want.length}).sort(function(a,b){return b[1]-a[1]});
+ var per={},pick=[];scored.forEach(function(x){var sh=(x[0].sub||'').split(' · ')[0];if(pick.length<6&&(per[sh]||0)<2){per[sh]=(per[sh]||0)+1;pick.push(x[0])}});scored=pick;
  var ok=window.npImgOK&&window.npImgOK(),themes=[];
  if(ans.anlass==='weihnachten')themes.push(['/kategorie/weihnachten/','Weihnachten & Geschenke']);
  if(ans.anlass==='mitbringsel')themes.push(['/kategorie/boxen/','Boxen & Geschenke']);

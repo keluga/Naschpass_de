@@ -211,7 +211,7 @@ _BAD_BRANDS = sorted((k for k, v in BRANDS.items() if v.get("alkohol") or v.get(
 TIER = re.compile(r"\b(katze\w*|hund\w*|kitten|welpe\w*|tierfutter|katzenfutter|hundefutter|nassfutter|trockenfutter|leckerli\w*|kauknochen|vogelfutter)\b", re.I)
 # Welt-Hinweise aus Kategorie/Name, wenn die Marke nichts verrät (es geht um die Idee, nicht um die Fabrik)
 WELT_HINTS = [
-    (r"\bjapan|japanisch|matcha|mochi|pocky|ramune|hi-?chew|wasabi|yuzu", "japan"),
+    (r"\bjapan|japanisch|matcha|mochi|pocky|ramune|hi-?chew|yuzu", "japan"),
     (r"\bkorea|koreanisch|kimchi|buldak|gochujang|pepero", "korea"),
     (r"asiatisch|thailand|thai\b|thailändisch|china|chinesisch|vietnam|indonesi|indisch|indien|ayurved|masala|chai\b", "asien"),
     (r"mexikan|mexiko|mexico|jalape|tortilla|nacho|chipotle|tajin|takis", "mexiko"),
@@ -239,7 +239,7 @@ ART_KERN = re.compile(r"schoko|choco|praline|trüffel|fruchtgummi|gummi|bonbon|l
 _BRAND_RX = re.compile(r"(?<![\w])(" + "|".join(re.escape(k) for k in sorted(BRANDS, key=len, reverse=True) if len(k) >= 3) + r")(?![\w])", re.I) if BRANDS else None
 _BRAND_LC = {k.lower(): k for k in BRANDS}
 _STRONG = re.compile(r"\b(japan|japanisch\w*|korea|koreanisch\w*|usa|amerikanisch\w*|mexikanisch\w*|italienisch\w*|thailändisch\w*|chinesisch\w*|"
-                     r"türkisch\w*|griechisch\w*|arabisch\w*|indisch\w*|französisch\w*|spanisch\w*|englisch\w*|britisch\w*|schwedisch\w*|matcha|sakura|yuzu|wasabi|"
+                     r"türkisch\w*|griechisch\w*|arabisch\w*|indisch\w*|französisch\w*|spanisch\w*|englisch\w*|britisch\w*|schwedisch\w*|matcha|sakura|yuzu|"
                      r"finnisch\w*|norwegisch\w*|dänisch\w*|österreichisch\w*|schweizer|belgisch\w*|holländisch\w*|asiatisch\w*)\b", re.I)
 
 
