@@ -82,6 +82,15 @@ def open_feed(path):
 
 def download(url, n):
     """Lädt einen Feed in eine temporäre Datei. Die URL wird nie ausgegeben."""
+    # Google-Format-Feeds (IDs wie "F4010") lassen sich nicht mit Awin-Format-Feeds in einem Link mischen
+    # (AWIN antwortet dann mit HTTP 400). Solche IDs hier rausnehmen; sie brauchen einen eigenen Link.
+    m = re.search(r"/fid/([^/]+)/", url)
+    if m:
+        ids = m.group(1).split(",")
+        keep = [x for x in ids if x.isdigit()]
+        if keep and len(keep) < len(ids):
+            log(f"Feed {n}: Google-Format-Feed(s) {', '.join(x for x in ids if not x.isdigit())} übersprungen (brauchen eigenen Link).")
+            url = url[:m.start(1)] + ",".join(keep) + url[m.end(1):]
     tmp = tempfile.NamedTemporaryFile(prefix="awin_", suffix=".feed", delete=False)
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "naschpass-build"})
