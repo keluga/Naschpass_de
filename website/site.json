@@ -783,7 +783,12 @@
             "worms",
             "bärchen",
             "baerchen",
-            "bears"
+            "bears",
+            "gummies",
+            "chewy",
+            "sour patch",
+            "gummibär",
+            "marshmallow"
           ]
         },
         {
@@ -799,7 +804,9 @@
             "toffee",
             "hi-chew",
             "kaugummi",
-            "bubble gum"
+            "bubble gum",
+            "candy",
+            "karamell"
           ]
         },
         {
@@ -945,7 +952,11 @@
             "pudding",
             "dessert",
             "mousse",
-            "eis am stiel"
+            "eis am stiel",
+            "eisriegel",
+            "eiskonfekt",
+            "stieleis",
+            "sorbet"
           ]
         }
       ]
