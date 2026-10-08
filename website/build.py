@@ -1261,26 +1261,22 @@ function setX(x){track.style.transform='translateX('+x+'px)'}
 (function(){var h='';for(var k=0;k<14;k++)h+=card(items[rnd(items.length)]);track.innerHTML=h;setX(-40)})();
 res.innerHTML='<small>Tippe auf „Drehen“ und lass dich überraschen.</small>';
 snd.addEventListener('click',function(){sound=!sound;snd.textContent=sound?'🔊':'🔇';snd.setAttribute('aria-pressed',sound)});
-/* Klänge werden im Browser erzeugt (keine Audiodateien):
-   Tick = kurzes, gefiltertes Rauschen wie ein Plastik-Klick, plus leiser "Körper"-Ton
-   Einrasten = weicher, tiefer Plopp; Aufdecken = Glocken-Pling mit Glitzer */
-var master=null,noise=null;
+/* Klänge: Casino-Set aus /static/snd (Kenney Casino Audio, CC0, + eigene Synthese; Quelle: tools/make_sounds.py).
+   Wird erst beim ersten Drehen geladen. Ticks werden zum Ende hin höher (Spannung), Riser kurz vor dem Stopp. */
+var master=null,buf={},loading=false;
 function audio(){if(!sound)return null;try{if(!ac){ac=new (window.AudioContext||window.webkitAudioContext)();
-  master=ac.createDynamicsCompressor();master.connect(ac.destination);
-  noise=ac.createBuffer(1,Math.floor(ac.sampleRate*.05),ac.sampleRate);var d=noise.getChannelData(0);for(var k=0;k<d.length;k++)d[k]=(Math.random()*2-1)*Math.pow(1-k/d.length,3)}
- if(ac.state==='suspended')ac.resume();return ac}catch(e){return null}}
-function env(g,t,peak,att,dec){g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(peak,t+att);g.gain.exponentialRampToValueAtTime(0.0001,t+att+dec)}
-function tick(speed){var a=audio();if(!a)return;var t=a.currentTime,src=a.createBufferSource(),bp=a.createBiquadFilter(),g=a.createGain();
- src.buffer=noise;bp.type='bandpass';bp.frequency.value=2300+Math.random()*500+speed*600;bp.Q.value=4;env(g,t,.18,.001,.03);
- src.connect(bp);bp.connect(g);g.connect(master);src.start(t);src.stop(t+.05);
- var o=a.createOscillator(),g2=a.createGain();o.type='sine';o.frequency.setValueAtTime(420,t);o.frequency.exponentialRampToValueAtTime(180,t+.03);
- env(g2,t,.05,.001,.035);o.connect(g2);g2.connect(master);o.start(t);o.stop(t+.05)}
-function bell(f,t,vol,dur){var a=ac;[1,2.01,3.02].forEach(function(m,k){var o=a.createOscillator(),g=a.createGain();o.type='sine';o.frequency.value=f*m;
- env(g,t,vol/(k*1.8+1),.004,dur/(k+1));o.connect(g);g.connect(master);o.start(t);o.stop(t+dur+.1)})}
-function thunk(){var a=audio();if(!a)return;var t=a.currentTime,o=a.createOscillator(),g=a.createGain();o.type='sine';
- o.frequency.setValueAtTime(220,t);o.frequency.exponentialRampToValueAtTime(90,t+.09);env(g,t,.16,.003,.12);o.connect(g);g.connect(master);o.start(t);o.stop(t+.2)}
-function fanfare(){var a=audio();if(!a)return;var t=a.currentTime+.02;bell(880,t,.12,1.4);bell(1318.5,t+.11,.08,1.2);
- [1760,2093,2637,3136].forEach(function(f,k){bell(f,t+.22+k*.07,.035,.45)})}
+  master=ac.createDynamicsCompressor();master.connect(ac.destination)}
+ if(ac.state==='suspended')ac.resume();
+ if(!loading){loading=true;['tick','start','riser','stop','win'].forEach(function(n){
+  fetch('/static/snd/'+n+'.mp3').then(function(r){return r.arrayBuffer()}).then(function(d){return new Promise(function(ok,no){ac.decodeAudioData(d,ok,no)})})
+   .then(function(b){buf[n]=b}).catch(function(){})})}
+ return ac}catch(e){return null}}
+function play(n,vol,rate){var a=audio();if(!a||!buf[n])return;var s=a.createBufferSource(),g=a.createGain();s.buffer=buf[n];
+ if(rate)s.playbackRate.value=rate;g.gain.value=vol==null?1:vol;s.connect(g);g.connect(master);s.start()}
+document.addEventListener('pointerdown',function(){audio()},{once:true});  /* Sounds schon beim ersten Antippen der Seite vorladen */
+function tick(speed){play('tick',.75,1+Math.max(0,1-speed)*.28)}
+function thunk(){play('stop',.95)}
+function fanfare(){play('win',.85)}
 function confetti(color){var r=reel.getBoundingClientRect(),b=box.getBoundingClientRect();
  for(var k=0;k<44;k++){var c=document.createElement('i');c.className='confetti';
   c.style.background=['#FFD23F','#FF4D8D','#3DDC97','#3D8BFF',color][k%5];
@@ -1299,14 +1295,14 @@ function show(i){var ext=i.k==='p',lbl=i.k==='p'?'Zum Shop*':(i.k==='post'?'Zum 
   else{try{navigator.clipboard.writeText(d.text+' '+d.url);b.textContent='Kopiert!'}catch(e){}}})}
 /* Ablauf wie beim Case-Opening: kurz ausholen, schnell los, lange sanft auslaufen,
    knapp an der Kante liegen bleiben, kurze Pause, dann in die Mitte rutschen und aufdecken */
-function spin(){if(busy)return;busy=true;btn.disabled=true;btn.textContent='…';res.classList.add('dim');
+function spin(){if(busy)return;busy=true;audio();btn.disabled=true;btn.textContent='…';res.classList.add('dim');
  var N=48,T=41,seq=[];for(var k=0;k<N;k++)seq.push(items[rnd(items.length)]);var win=seq[T];
  var PS='<div class="card ps"><span class="svgw"><span style="font-size:34px">🤝</span></span><b>Hier könnte dein Produkt stehen</b></div>';
  track.innerHTML=seq.map(function(i,k){return (k!==T&&items.length<20&&Math.random()<.18)?PS:card(i)}).join('');setX(0);
  var cw=track.children[0].offsetWidth,W=cw+10,mid=reel.clientWidth/2,center=-(T*W+cw/2-mid),
   edge=(Math.random()<.5?-1:1)*cw*(.28+Math.random()*.17),end=center+edge,
-  dur=reduce?0:8200,t0=null,last=-1,hot=null;
- root.classList.add('go');
+  dur=reduce?0:8200,t0=null,last=-1,hot=null,rised=false;
+ root.classList.add('go');play('start',.8);
  function hi(idx){if(hot)hot.classList.remove('hot');hot=track.children[idx];if(hot)hot.classList.add('hot')}
  function reveal(){if(hot)hot.classList.remove('hot');track.children[T].classList.add('win');root.classList.remove('go');
   fanfare();if(!reduce)confetti(win.c);show(win);res.classList.remove('dim');busy=false;btn.disabled=false;btn.textContent='Nochmal drehen'}
@@ -1318,6 +1314,7 @@ function spin(){if(busy)return;busy=true;btn.disabled=true;btn.textContent='…'
  function frame(ts){if(!t0)t0=ts;var t=ts-t0,x;
   if(t<260){x=26*Math.sin(t/260*Math.PI/2)}                 /* ausholen */
   else{var p=Math.min(1,(t-260)/dur),e=1-Math.pow(1-p,3.4);x=26+(end-26)*e}
+  if(!rised&&t>260+dur-1650){rised=true;play('riser',.5)}
   setX(x);var idx=Math.floor((mid-x)/W);
   if(idx!==last&&idx>=0){last=idx;hi(idx);try{tick(Math.max(0,1-(p||0)*1.4))}catch(e){}mk.classList.add('tick');setTimeout(function(){mk.classList.remove('tick')},70)}
   if(t<260+dur)requestAnimationFrame(frame);else settle()}
