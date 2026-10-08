@@ -211,6 +211,10 @@ WELT_HINTS = [
     (r"belgisch|holländ|niederländ|stroopwafel|speculoos|spekulatius", "benelux"),
 ]
 WELT_HINTS = [(re.compile(r, re.I), w) for r, w in WELT_HINTS]
+# Passt nicht zum Naschen, auch wenn die Shop-Kategorie es reinlässt
+GRUNDNAHRUNG = re.compile(r"\b(reis|basmati|risotto|nudel\w*|spaghetti|penne|fusilli|windel\w*|teekanne\w*|teefilter|kaffeefilter|filtertüte\w*|"
+                          r"flammkuchen|backmischung\w*|mehl|hefe|leberwurst|leberaufstrich|thunfisch\w*|grammel\w*|sardine\w*|"
+                          r"brühe|bouillon|suppe\w*|eintopf|senf|ketchup|mayonnaise|essig|speiseöl|olivenöl)\b", re.I)
 ART_KERN = re.compile(r"schoko|choco|praline|trüffel|fruchtgummi|gummi|bonbon|lolli|kaugummi|lakritz|marshmallow|chips|cracker|popcorn|"
                       r"keks|cookie|waffel|riegel|nüss|nuss|mandel|cashew|snack|sour|sauer|candy|sweets|zuckerl|brause|nougat|marzipan|"
                       r"adventskalender|soda|limo|cola|sirup|ramune|mochi|pocky", re.I)
@@ -326,6 +330,9 @@ def main():
                         continue
                     if NONFOOD.search(name) or re.search(r"heim & garten|küche & esszimmer|drogerie|baby & klein|haushalt", f"{mcat} {cat}", re.I):
                         stats["nonfood"] += 1
+                        continue
+                    if GRUNDNAHRUNG.search(name):
+                        stats["thema"] += 1
                         continue
                     ok = (inc[mid] is None or inc[mid].search(f"{mcat} || {cat}")) or (inc_name[mid] and inc_name[mid].search(name))
                     if not ok or (exc_name[mid] and exc_name[mid].search(name)):

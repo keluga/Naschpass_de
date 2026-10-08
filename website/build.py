@@ -170,13 +170,23 @@ _KW = {(g["id"], o["id"]): [_kw_re(k) for k in o.get("keywords", [])] for g in F
 
 
 _FACET_CACHE = {}
+_OVR = json.loads((HERE / "overrides.json").read_text(encoding="utf-8")).get("items", {}) if (HERE / "overrides.json").exists() else {}
 
 
 def facets(p):
     """Ordnet ein Produkt automatisch zu (gecacht, bei tausenden Feed-Produkten wichtig)."""
     k = id(p)
     if k not in _FACET_CACHE:
-        _FACET_CACHE[k] = _facets(p)
+        f = _facets(p)
+        o = _OVR.get(re.sub(r"[^a-z0-9]+", " ", p.get("name", "").lower()).strip())
+        if o:  # geschätzte Werte nur dort, wo die Regeln nichts gefunden haben
+            for g in ("art", "land"):
+                if o.get(g) and not f.get(g):
+                    ids = {o[g]}
+                    for i in list(ids):
+                        ids.update(_parents.get((g, i), []))
+                    f[g] = ids
+        _FACET_CACHE[k] = f
     return _FACET_CACHE[k]
 
 
