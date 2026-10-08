@@ -31,6 +31,12 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 OUT = HERE / "feed_products.json"
 CONF = Path(os.environ.get("FEEDS_CONFIG") or HERE / "feeds.json")
+_toml = (HERE.parent / "netlify.toml").read_text(encoding="utf-8")
+_m = re.search(r"remote_images\s*=\s*\[(.*?)\]", _toml, re.S)
+REMOTE_OK = [re.compile(x) for x in re.findall(r"'([^']+)'", _m.group(1))] if _m else []
+# Nur in Netlify-Vorschauen: Rohdaten (ohne Links) zum Entwickeln der Sortierung ablegen
+DUMP = os.environ.get("CONTEXT") == "deploy-preview" or os.environ.get("FEED_DUMP") == "1"
+DUMP_ROWS = []
 
 ALKOHOL = re.compile(
     r"\b(wein|weine|rotwein|weißwein|weisswein|ros[eé]wein|sekt|prosecco|champagner|cava|spirituose\w*|lik[öo]r\w*|likoer\w*|"
@@ -40,18 +46,19 @@ NONFOOD = re.compile(
     r"\b(tasse|becher|teller|schale|geschirr|porzellan|st[äa]bchen|messer|gabel|l[öo]ffel|topf|pfanne|buch|kochbuch|t-?shirt|"
     r"shirt|hoodie|socken|kerze|deko|dekoration|vase|gutschein|geschenkgutschein|spielzeug|pl[üu]sch|kosmetik|seife|duft|"
     r"backform|ausstecher|dose leer|grill)\b", re.I)
-NO = {"0", "no", "nein", "false", "n", "out of stock", "outofstock", "nicht verfügbar"}
+NO = {"0", "no", "nein", "false", "n", "out of stock", "outofstock", "out_of_stock", "nicht verfügbar"}
 
 ALIASES = {
     "name": ["product_name", "name", "title"],
+    "desc": ["description", "product_short_description"],
     "url": ["aw_deep_link", "deep_link", "link"],
-    "image": ["aw_image_url", "aw_thumb_url"],
+    "image": ["aw_image_url", "aw_thumb_url", "image_link"],
     "merchant_id": ["merchant_id", "advertiser_id"],
     "merchant_name": ["merchant_name", "advertiser_name"],
     "mcat": ["merchant_category", "merchant_product_category_path"],
-    "cat": ["category_name", "product_type"],
+    "cat": ["category_name", "product_type", "google_product_category"],
     "brand": ["brand_name", "brand"],
-    "stock": ["in_stock", "stock_status", "is_for_sale"],
+    "stock": ["in_stock", "stock_status", "is_for_sale", "availability"],
 }
 
 
@@ -120,8 +127,10 @@ def split_feed(url, label):
         return [(label, url, True)]
     ids = m.group(1).split(",")
     bad = [x for x in ids if not x.isdigit()]
-    if bad:
+    if bad and any(x.isdigit() for x in ids):
         log(f"Feed {label}: Google-Format-Feed(s) {', '.join(bad)} übersprungen (brauchen eigenen Link).")
+    if not any(x.isdigit() for x in ids):  # eigener Link nur mit Google-Feed(s): so lassen
+        return [(label, url, True)]
     return [(f"{label}/{x}", url[:m.start(1)] + x + url[m.end(1):], True) for x in ids if x.isdigit()]
 
 
@@ -164,6 +173,9 @@ def main():
                         stats["inaktiv"] += 1
                         continue
                     name, url, img = col(row, "name"), col(row, "url"), col(row, "image")
+                    if DUMP:
+                        DUMP_ROWS.append([a.get("shop", ""), name[:120], col(row, "mcat")[:80], col(row, "cat")[:80],
+                                          col(row, "brand")[:40], col(row, "desc")[:160], col(row, "stock")[:12], 1 if img else 0])
                     if not name or not url:
                         continue
                     if col(row, "stock").lower() in NO:
@@ -180,7 +192,7 @@ def main():
                     if mid in only and not only[mid].search(hay):
                         stats["kategorie"] += 1
                         continue
-                    if not img or "productserve.com" not in img:
+                    if not img or not any(r.match(img) for r in REMOTE_OK):
                         stats["ohne_bild"] += 1
                         continue
                     key = norm(f"{name} {brand}")
@@ -203,7 +215,7 @@ def main():
     # Pro Shop über die Kategorien mischen, dann Shops reihum mischen
     per_shop = {}
     for shop, cats in buckets.items():
-        lim = next((a.get("max", 120) for a in adv.values() if a.get("shop") == shop), 120)
+        lim = next((a.get("max", 40000) for a in adv.values() if a.get("shop") == shop), 40000)
         lists, picked = list(cats.values()), []
         while len(picked) < lim and any(lists):
             for l in lists:
@@ -216,6 +228,12 @@ def main():
             if l and len(result) < total:
                 result.append(l.pop(0))
 
+    if DUMP and DUMP_ROWS:
+        d = HERE / "static" / "_dump"
+        d.mkdir(exist_ok=True)
+        with gzip.open(d / "rows.json.gz", "wt", encoding="utf-8") as fh:
+            json.dump(DUMP_ROWS, fh, ensure_ascii=False)
+        log(f"Vorschau-Dump: {len(DUMP_ROWS)} Zeilen")
     OUT.write_text(json.dumps({"generated": datetime.now(timezone.utc).isoformat(timespec="seconds"),
                                "products": result}, ensure_ascii=False), encoding="utf-8")
     shops = {}

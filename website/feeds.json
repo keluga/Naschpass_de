@@ -1,6 +1,6 @@
 {
   "_hinweis": "AWIN-Advertiser mit Produktfeed. Bei einer Zusage active=true setzen. 'only' = Regex auf Shop-Kategorie/Produktname (Pflicht bei großen Feeds), 'themen' = Themenwelten aus site.json, 'max' = höchstens so viele Produkte dieses Shops (Standard 120). Der Feed-Link mit API-Schlüssel steht NUR in Netlify (Umgebungsvariable AWIN_FEED_URL), nie hier.",
-  "max_total": 1200,
+  "max_total": 40000,
   "advertisers": [
     {
       "id": 112586,
