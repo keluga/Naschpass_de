@@ -66,6 +66,10 @@ posts = json.loads((ROOT / "generator" / "posts.json").read_text(encoding="utf-8
 
 BASE = f"https://{site['domain']}"
 ON_NETLIFY = os.environ.get("NETLIFY") == "true"
+ON_CF = os.environ.get("CF_PAGES") == "1" or os.environ.get("IMG_LOCAL") == "1"  # Cloudflare Pages: Bilder selbst verkleinert
+PREVIEW = os.environ.get("CONTEXT") == "deploy-preview" or (os.environ.get("CF_PAGES") == "1" and os.environ.get("CF_PAGES_BRANCH", "main") != "main") \
+    or os.environ.get("PRUEFEN") == "1"
+THUMBS = set()  # Folienbilder, die beim Build verkleinert werden (Cloudflare)
 FUSE = "/static/vendor/fuse-7.5.0.basic.min.mjs"
 
 # Erlaubte Bild-Server für Partner-Bilder (aus netlify.toml gelesen)
@@ -99,7 +103,15 @@ def translit(s):
     return s
 
 
+def thumb(src):
+    """Cloudflare: kleines Folienbild statt 1080er-Original."""
+    THUMBS.add(src)
+    return src[:-4] + "_t.jpg"
+
+
 def cdn(src, w):
+    if ON_CF and not ON_NETLIFY:
+        return thumb(src) if src.startswith("/p/") else src
     return f"/.netlify/images?url={quote(src, safe='/')}&w={w}&q=78" if src.startswith("/") else \
         f"/.netlify/images?url={quote(src, safe='')}&w={w}&q=80"
 
@@ -108,6 +120,11 @@ def slide_img(src, alt, w, sizes, cls="", eager=False):
     """Eigene Folienbilder. Auf Netlify verkleinert (spart Ladezeit und Netlify-Credits), sonst Original."""
     lazy = "" if eager else ' loading="lazy" decoding="async"'
     c = f' class="{cls}"' if cls else ""
+    if ON_CF and src.startswith("/p/"):
+        THUMBS.add(src)
+        t = src[:-4] + "_t.jpg"
+        return (f'<img src="{t}" alt="{e(alt)}" width="1080" height="1350"{c}{lazy} '
+                f'onerror="this.onerror=null;this.src=\'{src}\'">')
     if not ON_NETLIFY:
         return f'<img src="{src}" alt="{e(alt)}" width="1080" height="1350"{c}{lazy}>'
     srcset = ", ".join(f"{cdn(src, x)} {x}w" for x in (w, w * 2))
@@ -633,6 +650,7 @@ font-size:26px;line-height:1;cursor:pointer;box-shadow:0 4px 14px rgba(43,35,80,
 .fav[aria-pressed=true]{background:#E8457A;color:#fff}
 .v-list .fav{top:auto;bottom:8px;right:8px;width:30px;height:30px;font-size:16px}
 .prod .reg{font-size:11.5px;color:var(--mut);line-height:1.3}
+.prod .pr{font-weight:800;font-size:15px;color:var(--fg)}
 .prod{display:flex;flex-direction:column;background:#fff;border-radius:18px;overflow:hidden;text-decoration:none;color:var(--fg);box-shadow:var(--sh)}
 .prod .pi{position:relative;background:var(--bg2);aspect-ratio:1;display:grid;place-items:center;padding:12px}
 .prod .pi img{max-height:100%;object-fit:contain}
@@ -808,6 +826,11 @@ def page(title, body, desc=None, path="/", og_img=None, script="", stamp=""):
 
 
 REGION_NOTE = {"REWE": "Lieferung je nach Wohnort, sonst Abholung im Markt"}
+WL = f"* Werbelink · Preise vom {TODAY.strftime('%d.%m.')}, maßgeblich ist der Shop"
+
+
+def euro(x):
+    return f"{x:.2f}".replace(".", ",") + " €" if x else ""
 
 
 def fav_data(p):
@@ -827,6 +850,7 @@ def prod_card(p):
             f'<div class="pi">{pic}' + (f'<span class="pc"><i></i>{e(cname)}</span>' if cname else "") + '</div>'
             f'<div class="pb"><h3>{e(p["name"])}</h3>'
             + (f'<p class="note">{e(p["note"])}</p>' if p.get("note") else "")
+            + (f'<span class="pr">{euro(p["price"])}</span>' if p.get("price") else "")
             + (f'<span class="shop">bei {e(shop)}</span>' if shop else "")
             + (f'<span class="reg">{e(reg)}</span>' if reg else "")
             + f'<div class="cta"><span><em class="l">{btn}</em><em class="s">Zum Shop*</em></span></div></div></a>'
@@ -847,7 +871,7 @@ def fill_slots(cards, target):
 
 def prod_grid(items, gid, default="small"):
     return (f'<div class="grid prods v-{default}" id="{gid}">{"".join(prod_card(p) for p in items)}</div>'
-            f'<p class="wl">* Werbelink</p>')
+            f'<p class="wl">{WL}</p>')
 
 
 def cover_url(p):
@@ -985,7 +1009,7 @@ if(fl){var grid=document.getElementById(fl.dataset.grid),PAGE=24,shown=48,sel={}
   var fav=esc2(JSON.stringify({u:i.url,n:i.title,s:sh,i:i.img||''}));
   return '<div class="pcw"><a class="prod" href="'+esc2(i.url)+'" rel="sponsored noopener" target="_blank"><div class="pi">'
    +(im?'<img src="'+esc2(im)+'" alt="'+esc2(i.title)+'" loading="lazy">':'<span class="svgw">'+(i.svg||'')+'</span>')+'</div><div class="pb"><h3>'+esc2(i.title)+'</h3>'
-   +(sh?'<span class="shop">bei '+esc2(sh)+'</span>':'')+(i.reg?'<span class="reg">'+esc2(i.reg)+'</span>':'')
+   +(i.pr?'<span class="pr">'+esc2(i.pr)+'</span>':'')+(sh?'<span class="shop">bei '+esc2(sh)+'</span>':'')+(i.reg?'<span class="reg">'+esc2(i.reg)+'</span>':'')
    +'<div class="cta"><span><em class="l">'+(sh?'Bei '+esc2(sh)+' ansehen*':'Zum Shop*')+'</em><em class="s">Zum Shop*</em></span></div></div></a>'
    +'<button class="fav" type="button" aria-pressed="false" aria-label="Merken" data-fav="'+fav+'">♡</button></div>'}
  function load(cb){if(data){cb();return}if(loading)return;loading=true;
@@ -1134,7 +1158,7 @@ def spin_items(live):
     if len(products) < 6:  # noch wenige Produkte: Posts und Themenwelten mit ins Rad
         for p in live:
             items.append({"t": f"#{p['id']} {plain(p.get('short', ''))}", "u": f"/p/{p['id']}/", "k": "post", "c": "#FF4D8D",
-                          "l": "Post", "img": cdn(cover_url(p), 240) if ON_NETLIFY else cover_url(p)})
+                          "l": "Post", "img": cdn(cover_url(p), 240) if (ON_NETLIFY or ON_CF) else cover_url(p)})
         for c in cats:
             items.append({"t": c["name"], "u": f"/kategorie/{c['id']}/", "k": "cat", "c": "#3DDC97", "l": "Themenwelt",
                           "svg": sticker(c["id"], 64)})
@@ -1324,7 +1348,7 @@ def advent_page(live):
     pool = []
     for p in reversed(live):
         pool.append({"t": plain(p["hook"]), "s": f"Post #{p['id']}", "u": f"/p/{p['id']}/",
-                     "img": cdn(cover_url(p), 240) if ON_NETLIFY else cover_url(p)})
+                     "img": cdn(cover_url(p), 240) if (ON_NETLIFY or ON_CF) else cover_url(p)})
     for c in cats_sorted():
         pool.append({"t": c["name"], "s": c.get("teaser", ""), "u": f"/kategorie/{c['id']}/", "svg": sticker(c["id"], 64)})
     if not pool:
@@ -1690,14 +1714,14 @@ def search_index(live):
                       "alt": translit(p["name"]), "tags": " ".join([cname, cid] + p.get("tags", [])),
                       "text": p.get("note", ""),
                       "f": " ".join(f"{g}:{i}" for g, v in facets(p).items() for i in sorted(v)),
-                      "th": " ".join(themes_of(p)), **({"reg": REGION_NOTE[p.get("shop")]} if p.get("shop") in REGION_NOTE else {})})
+                      "th": " ".join(themes_of(p)), "pr": euro(p.get("price")), **({"reg": REGION_NOTE[p.get("shop")]} if p.get("shop") in REGION_NOTE else {})})
     for c in cats:
         items.append({"type": "cat", "title": c["name"], "url": f"/kategorie/{c['id']}/", "svg": sticker(c["id"], 52),
                       "sub": c["teaser"], "alt": translit(c["name"]), "tags": c["id"].replace("-", " "), "text": c["teaser"]})
     for p in reversed(live):
         txt = " ".join([p.get("sub", "")] + [plain(s.get("title", "")) + " " + s.get("body", "") for s in p.get("slides", [])])
         items.append({"type": "post", "id": p["id"], "title": f"#{p['id']} {p['hook'].replace('*', '')}", "url": f"/p/{p['id']}/",
-                      "img": cdn(f"/p/{p['id']}/01.jpg", 120) if ON_NETLIFY else f"/p/{p['id']}/01.jpg",
+                      "img": cdn(f"/p/{p['id']}/01.jpg", 120) if (ON_NETLIFY or ON_CF) else f"/p/{p['id']}/01.jpg",
                       "sub": p.get("tag", ""), "alt": translit(p.get("short", "")),
                       "tags": " ".join([p.get("tag", ""), p.get("short", "")] + p.get("hashtags", [])), "text": txt})
     sugg = [c["name"] for c in cats[:4]] + ["KitKat", "Farbstoffe"]  # feste Vorschläge, keine Auswertung
@@ -1852,7 +1876,7 @@ def build():
                 f'<div class="grid prods v-small" id="g-all" data-total="{len(products)}">{"".join(fill_slots([prod_card(p) for p in products[:SHOP_STATIC]], 8 if len(products) < 8 else 0))}</div>'
                 f'<div class="empty" id="fempty" hidden><strong>Keine Treffer mit dieser Kombination.</strong> Nimm einen Filter raus oder probier die Suche.</div>'
                 f'<div class="morebar"><button class="morebtn" type="button" id="fmore" hidden>Mehr zeigen</button></div>'
-                f'<p class="wl">* Werbelink</p>') if products else empty_shop
+                f'<p class="wl">{WL}</p>') if products else empty_shop
     write("shop/index.html", page(
         "Shop – Naschpass",
         f'<section class="hero" style="padding-bottom:0">{SPRINKLES}<h1>Shop</h1>'
@@ -1885,7 +1909,7 @@ def build():
 
     new_prods = products[:LIMIT]
     home_prods = (f'<section id="neu"><div class="head"><h2>Zum Entdecken</h2>{view_toggle("g-new", ["big", "small", "list"], "small")}</div>'
-                  f'{clip_grid(fill_slots([prod_card(p) for p in new_prods], 4), "g-new", "prods")}<p class="wl">* Werbelink</p>'
+                  f'{clip_grid(fill_slots([prod_card(p) for p in new_prods], 4), "g-new", "prods")}<p class="wl">{WL}</p>'
                   f'{more_bar("g-new", len(new_prods), len(products), "/shop/", f"Alle {len(products)} im Shop")}</section>'
                   ) if products else ""
     home_posts = newest[:LIMIT]
@@ -2024,7 +2048,7 @@ Vollständige Angaben im <a href="/impressum/">Impressum</a>.</p></section>"""
     write("search.json", json.dumps(si, ensure_ascii=False, separators=(",", ":")))
     write("merkliste/index.html", page("Merkliste – Naschpass", MERK_HTML, "Deine gemerkten Süßigkeiten, sortiert nach Shop.",
                                        "/merkliste/", script=MERK_JS))
-    if os.environ.get("CONTEXT") == "deploy-preview" or os.environ.get("PRUEFEN") == "1":
+    if PREVIEW:
         rows = "".join(
             f'<tr><td>{k + 1}</td><td><a href="{e(p["url"])}" rel="sponsored noopener" target="_blank">{e(p["name"])}</a></td><td>{e(p.get("shop", ""))}</td>'
             f'<td>{e(p.get("brand", ""))}</td><td>{e(" ".join(sorted(facets(p).get("land", set()))))}</td>'
@@ -2087,11 +2111,24 @@ Vollständige Angaben im <a href="/impressum/">Impressum</a>.</p></section>"""
     urls = sorted({"/" + str(f.relative_to(DIST)).replace("index.html", "") for f in DIST.rglob("index.html")})
     (DIST / "sitemap.xml").write_text('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
                                       + "".join(f"<url><loc>{BASE}{u}</loc></url>\n" for u in urls) + "</urlset>\n", encoding="utf-8")
+    if (HERE / "img_cache").exists():
+        shutil.copytree(HERE / "img_cache", DIST / "i", dirs_exist_ok=True)
+    if THUMBS:
+        try:
+            from PIL import Image
+            for src in THUMBS:
+                f = DIST / src.lstrip("/")
+                if f.exists():
+                    im = Image.open(f).convert("RGB")
+                    im.thumbnail((480, 600))
+                    im.save(f.with_name(f.stem + "_t.jpg"), quality=80, optimize=True)
+        except ImportError:
+            print("WARNUNG: Pillow fehlt, Vorschaubilder der Posts nicht verkleinert (Original wird geladen)")
     (DIST / "robots.txt").write_text(f"User-agent: *\nAllow: /\nSitemap: {BASE}/sitemap.xml\n", encoding="utf-8")
     # Sicherheits-Header: Seite darf nur Dinge von der eigenen Domain laden (plus freigegebene Partner-Bildserver nach Einwilligung)
     img_hosts = " ".join(f"https://{h}" for h in sorted(PARTNERS))
     csp = ("default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; "
-           f"img-src 'self' data: blob: {img_hosts}; font-src 'self'; connect-src 'self'; media-src 'none'; object-src 'none'; "
+           f"img-src 'self' data: blob: {img_hosts}; font-src 'self'; connect-src 'self'; media-src 'self'; object-src 'none'; "
            "base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests")
     (DIST / "_headers").write_text(
         "/*\n"
@@ -2101,7 +2138,9 @@ Vollständige Angaben im <a href="/impressum/">Impressum</a>.</p></section>"""
         "  Referrer-Policy: strict-origin-when-cross-origin\n"
         "  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()\n"
         "  Strict-Transport-Security: max-age=31536000\n"
-        "  Cross-Origin-Opener-Policy: same-origin\n", encoding="utf-8")
+        "  Cross-Origin-Opener-Policy: same-origin\n"
+        "/static/*\n  Cache-Control: public, max-age=2592000\n"
+        "/i/*\n  Cache-Control: public, max-age=31536000, immutable\n", encoding="utf-8")
     for w in WARN:
         print("WARNUNG:", w)
     print("fertig:", DIST, "| Impressum-Adresse fehlt!" if missing else "")

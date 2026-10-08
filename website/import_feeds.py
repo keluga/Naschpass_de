@@ -37,6 +37,56 @@ REMOTE_OK = [re.compile(x) for x in re.findall(r"'([^']+)'", _m.group(1))] if _m
 # Nur in Netlify-Vorschauen: Rohdaten (ohne Links) zum Entwickeln der Sortierung ablegen
 DUMP = os.environ.get("CONTEXT") == "deploy-preview" or os.environ.get("FEED_DUMP") == "1"
 DUMP_ROWS = []
+# Cloudflare Pages (oder IMG_LOCAL=1): Produktbilder beim Build einmal klein herunterladen und selbst ausliefern.
+# Kein Bild-CDN nötig, keine Verbindung der Besucher zu den Shops (kein Cookie-Banner), Traffic bei Cloudflare kostenlos.
+IMG_LOCAL = os.environ.get("CF_PAGES") == "1" or os.environ.get("IMG_LOCAL") == "1"
+IMG_DIR = HERE / "img_cache"
+
+
+def parse_price(v):
+    m = re.search(r"(\d+(?:[.,]\d{1,2})?)", (v or "").replace("\u00a0", " "))
+    if not m:
+        return None
+    try:
+        x = float(m.group(1).replace(",", "."))
+    except ValueError:
+        return None
+    return x if 0.1 <= x <= 2000 else None
+
+
+def small_img(url, w=320):
+    """Bild-URL in kleiner Größe (AWIN-Bildserver und Shopify können das selbst)."""
+    if "productserve.com" in url:
+        url = re.sub(r"([?&])w=\d+", rf"\g<1>w={w}", url)
+        return re.sub(r"([?&])h=\d+", rf"\g<1>h={w}", url)
+    if "cdn.shopify.com" in url:
+        return url + ("&" if "?" in url else "?") + f"width={w}"
+    return url
+
+
+def fetch_images(prods):
+    import hashlib
+    from concurrent.futures import ThreadPoolExecutor
+    IMG_DIR.mkdir(exist_ok=True)
+    def one(p):
+        name = hashlib.sha1(p["image"].encode()).hexdigest()[:16] + ".jpg"
+        dest = IMG_DIR / name
+        if not dest.exists():
+            try:
+                req = urllib.request.Request(small_img(p["image"]), headers={"User-Agent": "naschpass-build"})
+                with urllib.request.urlopen(req, timeout=30) as r:
+                    data = r.read()
+                if len(data) < 300:
+                    return None
+                dest.write_bytes(data)
+            except Exception:
+                return None
+        p["image"] = "/i/" + name
+        return p
+    with ThreadPoolExecutor(max_workers=24) as ex:
+        out = [p for p in ex.map(one, prods) if p]
+    log(f"Bilder: {len(out)} von {len(prods)} geladen")
+    return out
 
 ALKOHOL = re.compile(
     r"\b(wein|weine|rotwein|weißwein|weisswein|ros[eé]wein|sekt|prosecco|champagner|cava|spirituose\w*|lik[öo]r\w*|likoer\w*|"
@@ -53,6 +103,8 @@ ALIASES = {
     "desc": ["description", "product_short_description"],
     "url": ["aw_deep_link", "deep_link", "link"],
     "image": ["aw_image_url", "aw_thumb_url", "image_link"],
+    "price": ["search_price", "display_price", "price", "store_price"],
+    "sale": ["sale_price"],
     "merchant_id": ["merchant_id", "advertiser_id"],
     "merchant_name": ["merchant_name", "advertiser_name"],
     "mcat": ["merchant_category", "merchant_product_category_path"],
@@ -291,6 +343,9 @@ def main():
                     fc = " ".join(_cat_tail(x) for x in (mcat, cat) if x)
                     p = {"name": name[:120], "url": url, "image": img, "shop": a.get("shop") or col(row, "merchant_name"),
                          "brand": brand, "feed_category": fc[:160], "source": "awin", "advertiser": int(mid)}
+                    pr = parse_price(col(row, "sale")) or parse_price(col(row, "price"))
+                    if pr:
+                        p["price"] = round(pr, 2)
                     w = welt_of(name, brand, f"{mcat} {cat}")
                     if w:
                         p["land"] = w
@@ -307,6 +362,8 @@ def main():
                 os.unlink(path)
         per_src[label] = stats["zeilen"] - n0
 
+    if IMG_LOCAL and result:
+        result = fetch_images(result)
     if DUMP and DUMP_ROWS:
         d = HERE / "static" / "_dump"
         d.mkdir(exist_ok=True)

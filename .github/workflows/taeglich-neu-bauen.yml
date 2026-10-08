@@ -1,0 +1,17 @@
+# Baut die Seite jeden Morgen neu (frische Produkte und Preise aus den AWIN-Feeds).
+# Braucht das GitHub-Secret CF_DEPLOY_HOOK (Deploy-Hook-URL aus Cloudflare Pages). Ohne Secret passiert nichts.
+name: Täglich neu bauen
+on:
+  schedule:
+    - cron: "17 4 * * *"   # 04:17 UTC = 06:17 Uhr deutscher Sommerzeit
+  workflow_dispatch: {}
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cloudflare-Build anstoßen
+        env:
+          HOOK: ${{ secrets.CF_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$HOOK" ]; then echo "Kein CF_DEPLOY_HOOK gesetzt, übersprungen."; exit 0; fi
+          curl -fsS -X POST "$HOOK" > /dev/null && echo "Build angestoßen."
