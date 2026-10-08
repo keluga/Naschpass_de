@@ -262,7 +262,11 @@ _CAT_CACHE = {}
 
 def cat_items(c):
     if c["id"] not in _CAT_CACHE:
-        _CAT_CACHE[c["id"]] = [p for p in products if in_cat(p, c)]
+        items = [p for p in products if in_cat(p, c)]
+        kws = [_kw_re(k) for k in c.get("keywords", []) + c.get("top", [])]
+        if kws:  # stabil sortieren: wer das Thema im Namen trägt, steht vorn (Reihenfolge sonst "Entdecken")
+            items.sort(key=lambda p: -sum(1 for r in kws if r.search(translit(p.get("name", "")))))
+        _CAT_CACHE[c["id"]] = items
     return _CAT_CACHE[c["id"]]
 
 
@@ -274,6 +278,17 @@ def themes_of(p):
         for c in cats:
             _THEME_SETS[c["id"]] = {id(x) for x in cat_items(c)}
     return [c["id"] for c in cats if id(p) in _THEME_SETS[c["id"]]]
+
+
+# Marken, die fast jeder kennt -> ziehen den Blick und schaffen Vertrauen (nach vorn)
+TOP_BRANDS = {b.lower() for b in ["Haribo", "Milka", "Ritter Sport", "Lindt", "Kinder", "Ferrero", "Raffaello", "Toffifee", "Merci", "Reese's",
+              "Hershey's", "M&M's", "Oreo", "Pringles", "KitKat", "Toblerone", "Pocky", "Pepero", "Takis", "Skittles", "Twix", "Snickers",
+              "Mars", "Bounty", "Maoam", "Katjes", "Trolli", "Nimm2", "Hanuta", "Duplo", "Lay's", "Doritos", "Chio", "funny-frisch",
+              "Ben & Jerry's", "Magnum", "Nutella", "Lotus", "Manner", "Mövenpick", "Tony's Chocolonely", "Warheads", "Sour Patch Kids",
+              "Airheads", "Jolly Rancher", "Nerds", "Cheetos", "Lucky Charms", "Mike & Ike", "Herr's", "Reese", "Hussel", "Zotter",
+              "Leibniz", "Bahlsen", "Ferrero Rocher", "After Eight", "Smarties", "Werther's Original", "Chupa Chups", "Hubba Bubba"]}
+DULL = re.compile(r"(sparpaket|sparset|vorteilspack|großpackung|\b\d{2,3}\s*x\s*\d|\bx\s*\d{2,3}\b|1\s*kg|1000\s*g|5\s*kg|"
+                  r"portionsstick|nachfüll|refill|ersatz|zubehör|kapsel|pads\b|zuckerfrei|stevia)", re.I)
 
 
 ART_ORDER = ["schokolade", "gummi", "chips", "getraenke", "pralinen", "bonbons", "kekse", "snacks", "boxen", "eis", "feinkost", "tee"]
@@ -288,6 +303,14 @@ def order_products():
         return next((x for x in ART_ORDER if x in a), "sonst")
     def score(p):
         s = p.get("score", 6 if p.get("source") != "awin" else 0)  # Handeinträge zählen als gute Auswahl
+        if (p.get("brand") or "").lower() in TOP_BRANDS or any(p.get("name", "").lower().startswith(b) for b in TOP_BRANDS):
+            s += 3
+        if DULL.search(p.get("name", "")):
+            s -= 3
+        if p.get("imgkb") and p["imgkb"] < 7:  # winziges/schwaches Produktbild
+            s -= 4
+        if not p.get("price") and p.get("source") == "awin":
+            s -= 1
         if p.get("post"):
             s += 3
         a = art(p)
@@ -1049,10 +1072,14 @@ if(fl){var grid=document.getElementById(fl.dataset.grid),PAGE=24,shown=48,sel={}
  function load(cb){if(data){cb();return}if(loading)return;loading=true;
   fetch('/search.json').then(function(r){return r.json()}).then(function(j){data=j.items.filter(function(i){return i.type==='product'}).map(function(i){
    var o={i:i};(i.f||'').split(' ').forEach(function(x){var kv=x.split(':');if(kv[1])o[kv[0]]=(o[kv[0]]?o[kv[0]]+' ':'')+kv[1]});o.t=(i.th||'');return o});cb()})}
+ var TK=null;try{TK=JSON.parse(fl.dataset.tk||'null')}catch(e){}
  function apply(){
   if(!data&&(any()||shown>48)){cnt.textContent='Lädt …';load(apply);return}
   var n;
-  if(data){var hits=data.filter(okD);n=hits.length;grid.innerHTML=hits.slice(0,shown).map(function(d){return card(d.i)}).join('');
+  if(data){var hits=data.filter(okD);n=hits.length;
+   if(sel.t&&sel.t.length&&TK){var rx=[];sel.t.forEach(function(t){(TK[t]||[]).forEach(function(w){rx.push(w)})});
+    if(rx.length){var sc=function(d){var h=(d.i.title||'').toLowerCase(),k=0;rx.forEach(function(w){if(h.indexOf(w)>=0)k++});return k};
+     hits=hits.map(function(d,j){return [sc(d),j,d]}).sort(function(a,b){return b[0]-a[0]||a[1]-b[1]}).map(function(x){return x[2]})}}grid.innerHTML=hits.slice(0,shown).map(function(d){return card(d.i)}).join('');
    if(window.npFavSync)window.npFavSync(grid)}
   else{n=total}
   fl.querySelectorAll('[data-g]').forEach(function(b){b.setAttribute('aria-pressed',sel[b.dataset.g].indexOf(b.dataset.v)>=0)});
@@ -1930,10 +1957,20 @@ def build():
                     + "".join(f'<button class="chip" type="button" data-g="{g["id"]}" data-v="{o["id"]}" data-n="{e(o["name"])}" aria-pressed="false">'
                               f'{facet_icon(g["id"], o)}{e(o["name"])} <small>{counts[(g["id"], o["id"])]}</small></button>' for o in opts)
                     + '</div></div></div>')
+    # Themen & Anlässe als eigener Filter (Adventskalender, Boxen, Filmabend …), Saison-Themen zuerst
+    # Länder und Arten haben schon eigene Filter (Woher/Art) -> hier nur Saison, Anlass, Boxen & Co.
+    DOPPELT = {"japan", "usa", "italien", "schweiz", "mexiko", "skandinavien", "schokolade", "getraenke", "snacks"}
+    tcats = [c for c in cats_sorted() if _n(c) and c["id"] not in DOPPELT]
+    fgroups = ('<div class="dd"><button class="ddb" type="button" aria-expanded="false" aria-controls="dd-t">'
+               'Thema &amp; Anlass <span class="badge" data-badge="t" hidden></span><span class="car" aria-hidden="true">▾</span></button>'
+               '<div class="ddp" id="dd-t"><div class="chips">' + "".join(
+        f'<button class="chip" type="button" data-g="t" data-v="{c["id"]}" data-n="{e(c["name"])}" aria-pressed="false">'
+        f'{e(c["name"])} <small>{_n(c)}</small></button>' for c in tcats) + '</div></div></div>') + fgroups
     fgroups += ('<div class="dd" hidden><div class="chips">' + "".join(
         f'<button class="chip" type="button" data-g="t" data-v="{c["id"]}" data-n="{e(c["name"])}" aria-pressed="false">{e(c["name"])}</button>'
-        for c in cats) + '</div></div>')
-    shop_all = (f'<div class="filters" id="flt" data-grid="g-all"><div class="fbtns">{fgroups}</div><div class="active" id="factive"></div></div>'
+        for c in cats if not _n(c)) + '</div></div>')
+    tk = json.dumps({c["id"]: [k.lower() for k in c.get("top", []) + c.get("keywords", [])[:8]] for c in tcats}, ensure_ascii=False)
+    shop_all = (f'<div class="filters" id="flt" data-grid="g-all" data-tk="{e(tk)}"><div class="fbtns">{fgroups}</div><div class="active" id="factive"></div></div>'
                 f'<div class="fbar"><b id="fcount" aria-live="polite"></b><button class="linkbtn" type="button" id="freset" hidden>Filter zurücksetzen</button>'
                 f'<span style="margin-left:auto">{view_toggle("g-all", ["big", "small", "list"], "small")}</span></div>'
                 f'<div class="grid prods v-small" id="g-all" data-total="{len(products)}">{"".join(fill_slots([prod_card(p) for p in products[:SHOP_STATIC]], 8 if len(products) < 8 else 0))}</div>'
@@ -1961,7 +1998,8 @@ def build():
     # --- Startseite: Shop zuerst, Posts danach, Nummernsuche ganz unten
     SHOW, LIMIT = 4, 12  # erst 4 zeigen, per Knopf bis 12 aufklappen, Rest im Shop
     def clip_grid(cards, gid, cls):
-        cells = [c if i < SHOW else c.replace("<a ", "<a data-more ", 1) for i, c in enumerate(cards)]
+        cells = [c if i < SHOW else (c.replace("<div ", "<div data-more ", 1) if c.startswith("<div") else c.replace("<a ", "<a data-more ", 1))
+                 for i, c in enumerate(cards)]
         return f'<div class="grid {cls} v-small clip" id="{gid}">{"".join(cells)}</div>'
 
     def more_bar(gid, n_shown, total, href, label):

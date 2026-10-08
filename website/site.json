@@ -69,7 +69,16 @@
         "adventskalender",
         "adventkalender",
         "advent calendar",
-        "adventsbox"
+        "adventsbox",
+        "24 türchen",
+        "24 tuerchen",
+        "türchen",
+        "countdown kalender",
+        "advent box"
+      ],
+      "top": [
+        "adventskalender",
+        "24 türchen"
       ]
     },
     {
@@ -90,9 +99,29 @@
         "christmas",
         "panettone",
         "pandoro",
-        "nikolaus"
+        "nikolaus",
+        "xmas",
+        "santa",
+        "weihnachtsmann",
+        "dominostein",
+        "printen",
+        "zimtstern",
+        "vanillekipferl",
+        "christstollen",
+        "elisenlebkuchen",
+        "schneemann",
+        "rentier",
+        "tannenbaum",
+        "winterzauber"
       ],
-      "text": "Adventskalender, Lebkuchen, Stollen, Panettone und Pralinen: Hier sammeln wir süße Geschenkideen aus aller Welt für die Adventszeit. Vieles davon gibt es nur saisonal, deshalb lohnt sich ein früher Blick."
+      "text": "Adventskalender, Lebkuchen, Stollen, Panettone und Pralinen: Hier sammeln wir süße Geschenkideen aus aller Welt für die Adventszeit. Vieles davon gibt es nur saisonal, deshalb lohnt sich ein früher Blick.",
+      "top": [
+        "weihnacht",
+        "adventskalender",
+        "lebkuchen",
+        "christmas",
+        "santa"
+      ]
     },
     {
       "id": "schokolade",
@@ -218,7 +247,32 @@
       "facets": [
         "art:boxen"
       ],
-      "text": "Mystery-Boxen, Probiersets und süße Geschenke: zum Selbstprobieren oder Verschenken."
+      "text": "Mystery-Boxen, Probiersets und süße Geschenke: zum Selbstprobieren oder Verschenken.",
+      "keywords": [
+        "geschenkbox",
+        "geschenkset",
+        "geschenkkorb",
+        "präsentkorb",
+        "praesentkorb",
+        "präsent",
+        "praesent",
+        "probierbox",
+        "probierset",
+        "mystery",
+        "überraschungsbox",
+        "snackbox",
+        "candy box",
+        "tasting box",
+        "sortiment",
+        "geschenk"
+      ],
+      "top": [
+        "mystery",
+        "box",
+        "geschenk",
+        "probier",
+        "präsent"
+      ]
     },
     {
       "id": "klassiker",
@@ -284,6 +338,12 @@
         "tafel",
         "mozartkugel",
         "merci"
+      ],
+      "top": [
+        "präsent",
+        "geschenk",
+        "praline",
+        "trüffel"
       ]
     },
     {
@@ -302,6 +362,12 @@
         "konfetti",
         "regenbogen",
         "rainbow"
+      ],
+      "top": [
+        "geburtstag",
+        "birthday",
+        "konfetti",
+        "party"
       ]
     },
     {

@@ -57,6 +57,13 @@ const ID = /awinaffid=3111189|[?&]a=3111189/;
         const c = await band.evaluate(e => e.scrollLeft);
         if (await band.evaluate(e => e.scrollWidth > e.clientWidth + 10) && !(c !== a)) fails.push(`${dev} ${path}: Laufband steht still`);
       }
+      // 3b) "… weitere zeigen" klappt wirklich Karten auf
+      for (const btn of await p.$$('[data-expand]')) {
+        const gid = await btn.getAttribute('data-expand');
+        const cnt = () => p.$$eval('#' + gid + ' > *', a => a.filter(x => x.offsetParent).length);
+        const a = await cnt(); await btn.scrollIntoViewIfNeeded(); await btn.click(); await p.waitForTimeout(250);
+        if (!((await cnt()) > a)) fails.push(`${dev} ${path}: Knopf "mehr zeigen" (#${gid}) zeigt nichts Neues`);
+      }
       // 4) Jeder Werbelink trägt die Publisher-ID
       const bad = await p.$$eval('a[rel~=sponsored]', (as, src) => as.map(a => a.href).filter(h => !new RegExp(src).test(h)), ID.source);
       if (bad.length) fails.push(`${dev} ${path}: ${bad.length} Werbelinks ohne Publisher-ID`);
