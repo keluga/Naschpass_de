@@ -275,12 +275,15 @@ def order_products():
     for p in sorted(products, key=lambda x: sc[id(x)], reverse=True):
         buckets.setdefault((p.get("shop", ""), ar[id(p)]), []).append(p)
     queues = list(buckets.values())
+    used = {}
+    eff = lambda q: sc[id(q[0])] - 1.5 * used.get(id(q), 0)  # jede Wahl aus demselben Topf zählt weniger -> Abwechslung
     out, last = [], (None, None)
     while queues:
-        queues.sort(key=lambda q: -sc[id(q[0])])
+        queues.sort(key=lambda q: -eff(q))
         pick = (next((q for q in queues if q[0].get("shop") != last[0] and ar[id(q[0])] != last[1]), None)
                 or next((q for q in queues if q[0].get("shop") != last[0]), queues[0]))
         p = pick.pop(0)
+        used[id(pick)] = used.get(id(pick), 0) + 1
         out.append(p)
         last = (p.get("shop"), ar[id(p)])
         if not pick:

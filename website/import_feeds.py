@@ -167,8 +167,18 @@ ART_KERN = re.compile(r"schoko|choco|praline|trüffel|fruchtgummi|gummi|bonbon|l
 _BRAND_RX = re.compile(r"(?<![\w])(" + "|".join(re.escape(k) for k in sorted(BRANDS, key=len, reverse=True) if len(k) >= 3) + r")(?![\w])", re.I) if BRANDS else None
 _BRAND_LC = {k.lower(): k for k in BRANDS}
 _STRONG = re.compile(r"\b(japan|japanisch\w*|korea|koreanisch\w*|usa|amerikanisch\w*|mexikanisch\w*|italienisch\w*|thailändisch\w*|chinesisch\w*|"
-                     r"türkisch\w*|griechisch\w*|arabisch\w*|indisch\w*|französisch\w*|spanisch\w*|englisch\w*|britisch\w*|schwedisch\w*|"
+                     r"türkisch\w*|griechisch\w*|arabisch\w*|indisch\w*|französisch\w*|spanisch\w*|englisch\w*|britisch\w*|schwedisch\w*|matcha|sakura|yuzu|wasabi|"
                      r"finnisch\w*|norwegisch\w*|dänisch\w*|österreichisch\w*|schweizer|belgisch\w*|holländisch\w*|asiatisch\w*)\b", re.I)
+
+
+FERN = {"usa", "japan", "korea", "mexiko", "asien", "orient", "uk"}
+WELT_BONUS = {**{w: 4 for w in FERN}, **{w: 1 for w in ("oesterreich", "schweiz", "italien", "frankreich", "benelux", "spanien", "skandinavien", "osteuropa")}}
+_GENERIC = re.compile(r"^(nahrungsmittel, getränke & tabak|food, beverages & tobacco|lebensmittel|food items|food)$", re.I)
+
+
+def _cat_tail(c):
+    parts = [x.strip() for x in re.split(r"\s*>\s*", c) if x.strip() and not _GENERIC.match(x.strip())]
+    return " ".join(parts[-2:])
 
 
 def brand_of(name, brand, shop=""):
@@ -277,15 +287,17 @@ def main():
                         stats["doppelt"] += 1
                         continue
                     seen.update({key, url, norm(name)})
+                    # Feed-Kategorie ohne Oberbegriffe wie "Nahrungsmittel, Getränke & Tabak" (sonst wird alles zum Getränk)
+                    fc = " ".join(_cat_tail(x) for x in (mcat, cat) if x)
                     p = {"name": name[:120], "url": url, "image": img, "shop": a.get("shop") or col(row, "merchant_name"),
-                         "brand": brand, "feed_category": " ".join(x for x in (mcat, cat) if x)[:160], "source": "awin", "advertiser": int(mid)}
+                         "brand": brand, "feed_category": fc[:160], "source": "awin", "advertiser": int(mid)}
                     w = welt_of(name, brand, f"{mcat} {cat}")
                     if w:
                         p["land"] = w
                     if a.get("themen"):
                         p["themen"] = a["themen"]
                     # Punkte für die Reihenfolge: Exoten, klassisches Naschen und Partner-Bonus nach vorn
-                    p["score"] = (a.get("boost", 0) + (3 if w and w != "deutschland" else 0)
+                    p["score"] = (a.get("boost", 0) + WELT_BONUS.get(w, 0)
                                   + (3 if ART_KERN.search(hay) else 0) + (1 if binfo else 0))
                     result.append(p)
         except Exception as ex:
