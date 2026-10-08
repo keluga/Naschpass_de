@@ -163,8 +163,23 @@ def sources():
     out = []
     if os.environ.get("AWIN_FEED_FILE"):
         out.append(("Datei", os.environ["AWIN_FEED_FILE"], False))
+    try:
+        conf = json.loads(CONF.read_text(encoding="utf-8"))
+        want = [str(x["fid"]) for x in conf.get("advertisers", []) if x.get("active") and str(x.get("fid", "")).isdigit()]
+    except Exception:
+        want = []
+    template_used = False
     for i, k in enumerate(["AWIN_FEED_URL"] + [f"AWIN_FEED_URL_{n}" for n in range(2, 10)], 1):
         for part in (os.environ.get(k) or "").split():
+            m = re.search(r"/fid/([^/]+)/", part)
+            ids = m.group(1).split(",") if m else []
+            if want and not template_used and m and any(x.isdigit() for x in ids):
+                # Awin-Format-Link als Vorlage: Feed-IDs kommen aus feeds.json (aktive Partner), nicht aus dem Link
+                template_used = True
+                part = part[:m.start(1)] + ",".join(want) + part[m.end(1):]
+                log(f"Feed #{i}: als Vorlage genutzt für Feeds {', '.join(want)}")
+            elif template_used and m and all(x.isdigit() for x in ids):
+                continue  # weitere Awin-Links sind durch die Vorlage schon abgedeckt
             out += split_feed(part, f"#{i}")
     return out
 
