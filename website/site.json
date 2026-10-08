@@ -57,6 +57,22 @@
       ]
     },
     {
+      "id": "adventskalender",
+      "name": "Adventskalender",
+      "season": [
+        "10-01",
+        "12-24"
+      ],
+      "teaser": "24 Türchen mit Süßigkeiten aus aller Welt.",
+      "text": "Adventskalender mit Süßigkeiten, Snacks oder Schokolade aus aller Welt. Wir zeigen sie schon ab Oktober, damit du in Ruhe aussuchen kannst.",
+      "keywords": [
+        "adventskalender",
+        "adventkalender",
+        "advent calendar",
+        "adventsbox"
+      ]
+    },
+    {
       "id": "weihnachten",
       "name": "Weihnachten & Geschenke",
       "teaser": "Adventskalender, Lebkuchen, Panettone und Pralinen zum Verschenken.",

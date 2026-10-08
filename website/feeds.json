@@ -10,7 +10,7 @@
     {
       "id": 11652,
       "shop": "REWE",
-      "active": false,
+      "active": true,
       "only": "Süßwaren|Suesswaren|Schokolade|Fruchtgummi|Kekse|Gebäck|Chips|Knabber|Getränke|Getraenke|Limonade|Bonbon",
       "themen": [
         "klassiker"
@@ -44,7 +44,7 @@
     {
       "id": 14403,
       "shop": "GOURVITA",
-      "active": false,
+      "active": true,
       "only": "Süß|Suess|Schokolade|Pralinen|Gebäck|Geschenk"
     },
     {
@@ -84,7 +84,7 @@
     {
       "id": 127807,
       "shop": "SugarGang",
-      "active": false
+      "active": true
     },
     {
       "id": 129755,
@@ -105,7 +105,7 @@
     {
       "id": 79456,
       "shop": "Piccantino",
-      "active": false,
+      "active": true,
       "only": "Schokolade|Süß|Suess|Snacks|Chips|Bonbon"
     },
     {
@@ -117,10 +117,11 @@
     {
       "id": 42806,
       "shop": "Sodapop",
-      "active": false,
+      "active": true,
       "themen": [
         "getraenke"
-      ]
+      ],
+      "only": "Sirup|Syrup|Limo|Getränk|Getraenk|Soda|Cola|Mix"
     },
     {
       "id": 11746,
@@ -131,7 +132,7 @@
     {
       "id": 115505,
       "shop": "Burghardt Delicious",
-      "active": false
+      "active": true
     }
   ]
 }

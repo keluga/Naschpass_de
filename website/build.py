@@ -34,6 +34,34 @@ if _ff.exists() and not os.environ.get("PRODUCTS_FILE"):
                            if re.sub(r"[^a-z0-9]+", " ", p.get("name", "").lower()).strip() not in _have]
 if DEMO and not os.environ.get("PRODUCTS_FILE"):  # Vorschau: echte Produkte zuerst, dann Beispiele
     products = json.loads((HERE / "products.json").read_text(encoding="utf-8"))["products"] + products
+
+# ---------- Affiliate-Wächter ----------
+# Jeder Produkt-Link MUSS über AWIN mit Kevs Publisher-ID laufen, sonst gibt es keine Provision.
+# Links ohne die ID fliegen raus (Build-Log zeigt sie). Formate: cread.php?...awinaffid=ID  oder  pclick.php?...a=ID
+AWIN_ID = str(site.get("awin_publisher_id", "3111189"))
+
+
+def affiliate_ok(url):
+    from urllib.parse import urlparse, parse_qs
+    try:
+        u = urlparse(url)
+    except ValueError:
+        return False
+    if u.scheme != "https" or not (u.hostname or "").endswith("awin1.com"):
+        return False
+    q = parse_qs(u.query)
+    return AWIN_ID in q.get("awinaffid", []) + q.get("a", [])
+
+
+if not DEMO:
+    for _p in products:  # AWIN-Feeds liefern manchmal http:// -> sicher auf https umstellen
+        if _p.get("url", "").startswith("http://www.awin1.com/"):
+            _p["url"] = "https://" + _p["url"][7:]
+    _bad = [p for p in products if not affiliate_ok(p.get("url", ""))]
+    products = [p for p in products if affiliate_ok(p.get("url", ""))]
+    print(f"[Affiliate-Check] {len(products)} Produkte mit Publisher-ID {AWIN_ID}"
+          + (f", {len(_bad)} aussortiert: " + "; ".join(p.get("name", "?")[:40] for p in _bad[:10]) if _bad else ", alles ok"))
+
 posts = json.loads((ROOT / "generator" / "posts.json").read_text(encoding="utf-8"))["posts"]
 
 BASE = f"https://{site['domain']}"
@@ -298,7 +326,7 @@ STICKERS["italien"] = ('<clipPath id="ci"><rect width="64" height="64" rx="14"/>
                        '<rect x="21" width="22" height="64" fill="#fff"/><rect x="42" width="22" height="64" fill="#D8263A"/></g>')
 STICKERS["schweiz"] = ('<rect width="64" height="64" rx="14" fill="#D8263A"/><rect x="27" y="14" width="10" height="36" fill="#fff"/>'
                        '<rect x="14" y="27" width="36" height="10" fill="#fff"/>')
-for _k, (_bg, _em) in {"halloween": ("#FF8A3D", "🎃"), "weihnachten": ("#2FAE7E", "🎄"), "schokolade": ("#B07A55", "🍫"), "getraenke": ("#9FD3FF", "🥤"), "snacks": ("#FFD966", "🥜"),
+for _k, (_bg, _em) in {"halloween": ("#FF8A3D", "🎃"), "weihnachten": ("#2FAE7E", "🎄"), "adventskalender": ("#E8505B", "📅"), "schokolade": ("#B07A55", "🍫"), "getraenke": ("#9FD3FF", "🥤"), "snacks": ("#FFD966", "🥜"),
                        "klassiker": ("#FF8FB1", "🛒")}.items():
     STICKERS[_k] = (f'<rect width="64" height="64" rx="14" fill="{_bg}"/>'
                     f'<text x="32" y="44" font-size="34" text-anchor="middle">{_em}</text>')
@@ -362,6 +390,7 @@ h3{font-size:17px;line-height:1.25;margin:0}
 .bgrid:not(.clip)>.bmore{display:none}
 .chip.off{opacity:.45;cursor:default}
 .mrow{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media(min-width:980px){.hgrid .mrow{grid-template-columns:repeat(3,1fr)}.hgrid .minis .head{margin-top:0!important}}
 .mini{display:flex;flex-direction:column;gap:6px;background:#fff;border-radius:14px;padding:8px;text-decoration:none;color:var(--fg);box-shadow:var(--sh)}
 .mini .mp{aspect-ratio:1;border-radius:10px;background:var(--bg2);display:grid;place-items:center;overflow:hidden}
 .mini .mp img{width:100%;height:100%;object-fit:cover}.mini .mp .stk{width:60%;height:auto}
@@ -371,7 +400,7 @@ h3{font-size:17px;line-height:1.25;margin:0}
 .mini.slot b{color:var(--vio)}.prod.pslot h3{color:var(--vio)}
 .prod.pslot .cta span{background:transparent;color:var(--vio);border:2px solid var(--vio2)}
 .mini.slot:hover,.prod.pslot:hover{border-style:solid}
-@media(max-width:520px){.mrow{grid-template-columns:repeat(4,minmax(72px,1fr));overflow-x:auto}}.ddp a.chip{text-decoration:none}
+@media(max-width:520px){.mrow{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:4px}.mrow .mini{flex:0 0 86px;scroll-snap-align:start}}.ddp a.chip{text-decoration:none}
 .bc.off{opacity:.45;box-shadow:none;background:rgba(255,255,255,.6);cursor:default}.bc.off:hover{outline:0}
 .bmore{border:2px dashed var(--line);background:transparent;box-shadow:none;cursor:pointer;font:inherit;color:var(--fg);font-weight:800}
 .bmore .emo{background:#fff}
@@ -523,11 +552,12 @@ section{padding:34px 0 6px}
 .v-list .prod .cta span{display:inline-block;padding:7px 12px;font-size:13.5px}
 .wl{font-size:13px;color:var(--mut);margin:10px 0 0}
 .xi{display:contents}.xi.ok .stk{display:none}
-.imgbar{position:fixed;left:12px;right:12px;bottom:12px;z-index:40;max-width:560px;margin:0 auto;background:var(--fg);color:#fff;border-radius:18px;
-padding:14px 14px 12px;box-shadow:0 12px 40px rgba(43,35,80,.35);font-size:14.5px;line-height:1.4}
-.imgbar p{margin:0 0 10px}.imgbar a{color:var(--mint)}
-.imgbar .row{display:flex;gap:8px;flex-wrap:wrap}
-.imgbar button{border:0;border-radius:12px;font-weight:800;font-size:15px;padding:10px 16px;cursor:pointer}
+.imgbar{position:fixed;left:10px;right:10px;bottom:10px;z-index:40;max-width:560px;margin:0 auto;background:var(--fg);color:#fff;border-radius:14px;
+padding:8px 8px 8px 14px;box-shadow:0 10px 30px rgba(43,35,80,.3);font-size:13px;line-height:1.35;display:flex;align-items:center;gap:10px}
+.imgbar[hidden]{display:none}
+.imgbar p{margin:0;flex:1}.imgbar a{color:var(--mint)}
+.imgbar .row{display:flex;gap:6px;flex:none}
+.imgbar button{border:0;border-radius:10px;font-weight:800;font-size:14px;padding:8px 12px;cursor:pointer}
 .imgbar .yes{background:var(--mint);color:var(--fg)}.imgbar .no{background:transparent;color:#fff;border:2px solid rgba(255,255,255,.4)}
 .linkbtn{border:0;background:none;color:var(--mut);text-decoration:underline;cursor:pointer;font-size:14px;padding:0}
 .clip>[data-more]{display:none}
@@ -669,8 +699,8 @@ def page(title, body, desc=None, path="/", og_img=None, script="", stamp=""):
 <footer><div class="wrap"><a href="/advent/">Adventskalender</a><a href="/geschenk/">Geschenk-Finder</a><a href="/quiz/">Snack-Typ-Quiz</a><a href="/ueber/">Über Naschpass</a><a href="/ueber/#partner">Für Partner</a><a href="/impressum/">Impressum</a><a href="/datenschutz/">Datenschutz</a>
 <button class="linkbtn" type="button" data-imgpref hidden>Foto-Einstellung</button>
 <span>Keine Cookies, kein Tracking.</span></div></footer>
-<div class="imgbar" id="imgbar" role="region" aria-label="Produktfotos" hidden><p>Einige Produktfotos kommen direkt vom Shop. Dabei bekommt der Shop deine IP-Adresse. <a href="/datenschutz/#fotos">Mehr zum Datenschutz</a></p>
-<div class="row"><button class="yes" type="button" data-img="1">Fotos anzeigen</button><button class="no" type="button" data-img="0">Nein danke</button></div></div>
+<div class="imgbar" id="imgbar" role="region" aria-label="Produktfotos" hidden><p>Shop-Fotos laden? Der Shop sieht dann deine IP-Adresse. <a href="/datenschutz/#fotos">Mehr</a></p>
+<div class="row"><button class="yes" type="button" data-img="1">Ja</button><button class="no" type="button" data-img="0">Nein</button></div></div>
 {SEARCH_DIALOG}
 <script>{COMMON_JS}</script><script type="module">{SEARCH_JS}</script>{script}</body></html>"""
 
@@ -1701,14 +1731,16 @@ def build():
                      f'<span class="mp">{pic_html(p, 200, p["name"], p.get("category", ""))}</span><b>{e(p["name"])}*</b></a>')
     while len(minis) < 4:
         minis.append('<a class="mini slot" href="/ueber/#partner"><span class="mp"><span class="emo">🤝</span></span><b>Hier könnte dein Produkt stehen</b></a>')
-    browse_html += (f'<div class="minis"><div class="head" style="margin:18px 0 8px"><h2 style="font:800 15px Inter,sans-serif;text-transform:none;'
+    minis_html = (f'<div class="minis"><div class="head" style="margin:18px 0 8px"><h2 style="font:800 15px Inter,sans-serif;text-transform:none;'
                     f'letter-spacing:0;color:var(--mut);margin:0">Gerade im Shop</h2><a class="more" href="/shop/#alle">Alle ansehen</a></div>'
                     f'<div class="mrow">{"".join(minis)}</div>' + ('<p class="wl" style="margin-top:6px">* Werbelink</p>' if products else '') + '</div>')
-    season_html = "".join(
-        f'<section style="padding-top:22px"><a class="cat" style="--c:{cat_color[c["id"]]}" href="/kategorie/{c["id"]}/">{sticker(c["id"])}'
+    season_html = '<section class="seasons" style="padding-top:22px"><div class="cats">' + "".join(
+        f'<a class="cat" style="--c:{cat_color[c["id"]]}" href="/kategorie/{c["id"]}/">{sticker(c["id"])}'
         f'<h3>{e(c["name"])}</h3><p>{e(c["teaser"])}</p>'
         + (f'<span class="n">{len(cat_items(c))} {"Sorte" if len(cat_items(c)) == 1 else "Sorten"}</span>' if cat_items(c) else '<span class="n soon">Jetzt Saison</span>')
-        + '</a></section>' for c in cats if in_season(c))
+        + '</a>' for c in cats if in_season(c)) + '</div></section>'
+    if 'class="cat"' not in season_html:
+        season_html = ""
     # Themenwelten: erst 8, Rest aufklappbar
     ordered = cats_sorted()
     tcells = [cat_tile(c) if i < 8 else cat_tile(c).replace("<a ", "<a data-more ", 1) for i, c in enumerate(ordered)]
@@ -1744,8 +1776,8 @@ def build():
     home = (f'<section class="hero hgrid">{SPRINKLES}<div class="hl"><h1>Süßes aus <span class="acc">aller Welt</span></h1>'
             f'<p class="lead" style="max-width:36ch">{e(site["intro"])}</p>{how}'
             f'<button class="fake" type="button" data-open-search>{ICON_SEARCH}<span>Snacks, Länder, Marken suchen …</span></button>{browse_html}</div>'
-            f'<div class="hr">{spin_html(live)}</div></section>{explore_html()}'
-            f'{season_html}{advent_teaser}{home_prods}{map_html()}{pass_html()}{band_html}{posts_html}{about_box}{jump}')
+            f'<div class="hr">{minis_html}</div></section>'
+            f'{season_html}{advent_teaser}{home_prods}{explore_html()}{spin_html(live)}{map_html()}{pass_html()}{band_html}{posts_html}{about_box}{jump}')
     write("index.html", page("Naschpass – Süßigkeiten aus aller Welt", home, script=SPIN_JS + SHARE_JS + PASS_SHARE_JS))
 
     # --- Über Naschpass / Für Partner (ehrlich: neuer Kanal, keine Reichweitenzahlen)
