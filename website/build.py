@@ -66,9 +66,9 @@ posts = json.loads((ROOT / "generator" / "posts.json").read_text(encoding="utf-8
 
 BASE = f"https://{site['domain']}"
 ON_NETLIFY = os.environ.get("NETLIFY") == "true"
-ON_CF = os.environ.get("CF_PAGES") == "1" or os.environ.get("IMG_LOCAL") == "1"  # Cloudflare Pages: Bilder selbst verkleinert
+ON_CF = os.environ.get("CF_PAGES") == "1" or os.environ.get("WORKERS_CI") == "1" or os.environ.get("IMG_LOCAL") == "1"  # Cloudflare Pages: Bilder selbst verkleinert
 PREVIEW = os.environ.get("CONTEXT") == "deploy-preview" or (os.environ.get("CF_PAGES") == "1" and os.environ.get("CF_PAGES_BRANCH", "main") != "main") \
-    or os.environ.get("PRUEFEN") == "1"
+    or (os.environ.get("WORKERS_CI") == "1" and os.environ.get("WORKERS_CI_BRANCH", "main") != "main") or os.environ.get("PRUEFEN") == "1"
 THUMBS = set()  # Folienbilder, die beim Build verkleinert werden (Cloudflare)
 FUSE = "/static/vendor/fuse-7.5.0.basic.min.mjs"
 

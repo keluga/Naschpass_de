@@ -35,11 +35,12 @@ _toml = (HERE.parent / "netlify.toml").read_text(encoding="utf-8")
 _m = re.search(r"remote_images\s*=\s*\[(.*?)\]", _toml, re.S)
 REMOTE_OK = [re.compile(x) for x in re.findall(r"'([^']+)'", _m.group(1))] if _m else []
 # Nur in Netlify-Vorschauen: Rohdaten (ohne Links) zum Entwickeln der Sortierung ablegen
-DUMP = os.environ.get("CONTEXT") == "deploy-preview" or os.environ.get("FEED_DUMP") == "1"
+DUMP = os.environ.get("CONTEXT") == "deploy-preview" or os.environ.get("FEED_DUMP") == "1" \
+    or (os.environ.get("WORKERS_CI") == "1" and os.environ.get("WORKERS_CI_BRANCH", "main") != "main")
 DUMP_ROWS = []
 # Cloudflare Pages (oder IMG_LOCAL=1): Produktbilder beim Build einmal klein herunterladen und selbst ausliefern.
 # Kein Bild-CDN nötig, keine Verbindung der Besucher zu den Shops (kein Cookie-Banner), Traffic bei Cloudflare kostenlos.
-IMG_LOCAL = os.environ.get("CF_PAGES") == "1" or os.environ.get("IMG_LOCAL") == "1"
+IMG_LOCAL = os.environ.get("CF_PAGES") == "1" or os.environ.get("WORKERS_CI") == "1" or os.environ.get("IMG_LOCAL") == "1"
 IMG_DIR = HERE / "img_cache"
 
 
