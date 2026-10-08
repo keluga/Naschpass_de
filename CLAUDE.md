@@ -34,6 +34,7 @@ Content-Repo für den Kanal **@naschpass_de** (TikTok, Instagram, Pinterest): Ka
 ```
 
 ## Website
+- **Hosting ab Livegang: Cloudflare Worker `naschpass`** (Workers Builds, baut bei jedem Push auf `main`, kostenlos; Vorschau je Branch unter `<branch>-naschpass.kevin-88e.workers.dev`). Variablen (z. B. `AWIN_FEED_URL`) in Cloudflare: Workers & Pages → naschpass → Settings → Build → Variables. Täglicher Neubau per GitHub-Action (leerer Commit). Netlify-Regeln unten gelten nur bis zum Umzug.
 - Quelle: `website/` (`site.json` = Texte, Socials, Impressum; `products.json` = Produkte mit Affiliate-Links; `build.py` baut nach `website/dist/`).
 - Netlify-Projekt `naschpass` (Site-ID `8c5b425f-4aa1-493b-929e-d394728481dc`) baut automatisch bei jedem Push auf `main` (`netlify.toml`). Ziel-Domain: `naschpass.oneflowsolution.de`.
 - Jeder Post bekommt automatisch eine Seite `/p/<id>/`. Produkte zu einem Post: in `products.json` mit `"post": "<id>"` und `"category"` eintragen – nur echte Affiliate-Links aus freigeschalteten Programmen, Bilder nur aus dem Partner-Feed.
