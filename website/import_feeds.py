@@ -366,6 +366,9 @@ def main():
                     fc = " ".join(_cat_tail(x) for x in (mcat, cat) if x)
                     p = {"name": name[:120], "url": url, "image": img, "shop": a.get("shop") or col(row, "merchant_name"),
                          "brand": brand, "feed_category": fc[:160], "source": "awin", "advertiser": int(mid)}
+                    vm = re.search(r"variant(?:%3D|=)(\d{6,})", url) or re.search(r"variant=(\d{6,})", row.get("link") or "")
+                    if vm:
+                        p["vid"] = vm.group(1)  # Shopify-Variante: erlaubt einen Sammel-Warenkorb beim Shop
                     pr = parse_price(col(row, "sale")) or parse_price(col(row, "price"))
                     if pr:
                         p["price"] = round(pr, 2)

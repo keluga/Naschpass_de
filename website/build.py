@@ -540,6 +540,8 @@ header .wrap{display:flex;align-items:center;gap:10px;height:60px}
 .logo img{width:38px;height:38px;border-radius:50%}
 header nav{display:flex;gap:2px}
 header nav a{color:var(--fg);text-decoration:none;font-weight:700;font-size:15px;padding:8px 11px;border-radius:999px}
+@media(max-width:430px){.logo{font-size:20px;gap:7px}.logo img{width:32px;height:32px}header nav a{padding:8px 8px;font-size:14.5px}}
+@media(max-width:360px){.logo{font-size:0;gap:0}}
 header nav a:hover{background:#fff}
 @media(max-width:420px){.hide-s{display:none}}
 .sbtn{display:grid;place-items:center;width:42px;height:42px;border-radius:50%;border:0;background:var(--fg);color:#fff;cursor:pointer}
@@ -655,7 +657,22 @@ font-size:26px;line-height:1;cursor:pointer;box-shadow:0 4px 14px rgba(43,35,80,
 @media(min-width:620px){.prods.v-big{grid-template-columns:repeat(2,1fr)}.prods.v-small{grid-template-columns:repeat(3,1fr)}.prods.v-list{grid-template-columns:repeat(2,1fr)}}
 @media(min-width:960px){.prods.v-big{grid-template-columns:repeat(3,1fr)}.prods.v-small{grid-template-columns:repeat(4,1fr)}}
 .favlink{white-space:nowrap;color:#E8457A!important}.mrow2 .btn{background:var(--vio);color:#fff;border-radius:12px;text-decoration:none;font-weight:800}
-.pcw{position:relative;display:flex}.pcw>.prod{flex:1;min-width:0}
+.pcw{position:relative;display:flex}.pcw .pi,.pcw h3{cursor:zoom-in}
+.qv{border:0;border-radius:22px 22px 0 0;padding:0;width:100%;max-width:640px;max-height:88vh;margin:auto auto 0;background:var(--bg);color:var(--fg)}
+@media(min-width:700px){.qv{border-radius:22px;margin:auto}}
+.qv::backdrop{background:rgba(43,35,80,.5)}
+.qvi{padding:18px 16px 22px;overflow-y:auto;max-height:88vh;position:relative}
+.qx{position:absolute;right:10px;top:8px;border:0;background:#fff;width:36px;height:36px;border-radius:50%;font-size:22px;cursor:pointer;box-shadow:var(--sh)}
+.qtop{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap}
+.qimg{width:150px;aspect-ratio:1;background:#fff;border-radius:16px;display:grid;place-items:center;overflow:hidden;flex:none}
+.qimg img{max-width:100%;max-height:100%;object-fit:contain}
+.qtx{flex:1;min-width:180px}.qtx h2{font:800 19px/1.25 Inter,sans-serif;text-transform:none;letter-spacing:0;margin:4px 34px 6px 0}
+.qpr{font-weight:800;font-size:20px;margin:0}.qsh{color:var(--mut);margin:2px 0 10px;font-size:14px}
+.qacts{display:flex;gap:8px;align-items:center}.qacts .fav{position:static}
+.qv h3{font:800 16px Inter,sans-serif;margin:18px 0 8px}
+.qmore{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none}
+.qm{flex:0 0 120px;border:0;background:#fff;border-radius:14px;padding:8px;text-align:left;cursor:pointer;box-shadow:var(--sh);display:flex;flex-direction:column;gap:4px;color:var(--fg)}
+.qm img{width:100%;aspect-ratio:1;object-fit:contain}.qm b{font-size:12px;line-height:1.25;max-height:2.5em;overflow:hidden}.qm span{font-size:12px;font-weight:800}.pcw>.prod{flex:1;min-width:0}
 .fav{position:absolute;right:8px;top:8px;width:34px;height:34px;border-radius:50%;border:0;background:#fff;color:#E8457A;font-size:19px;line-height:1;cursor:pointer;box-shadow:0 2px 8px rgba(43,35,80,.15);z-index:2}
 .fav[aria-pressed=true]{background:#E8457A;color:#fff}
 .v-list .fav{top:auto;bottom:8px;right:8px;width:30px;height:30px;font-size:16px}
@@ -832,10 +849,12 @@ def page(title, body, desc=None, path="/", og_img=None, script="", stamp=""):
 <div class="imgbar" id="imgbar" role="region" aria-label="Produktfotos" hidden><p>Shop-Fotos laden? Der Shop sieht dann deine IP-Adresse. <a href="/datenschutz/#fotos">Mehr</a></p>
 <div class="row"><button class="yes" type="button" data-img="1">Ja</button><button class="no" type="button" data-img="0">Nein</button></div></div>
 {SEARCH_DIALOG}
+<dialog id="qv" class="qv" aria-label="Produkt-Schnellansicht"><div class="qvi"></div></dialog>
 <script>{COMMON_JS}</script><script type="module">{SEARCH_JS}</script>{script}</body></html>"""
 
 
 REGION_NOTE = {"REWE": "Lieferung je nach Wohnort, sonst Abholung im Markt"}
+CART_SHOPS = {"SugarGang": {"base": "https://sugargang.com/cart/", "mid": "127807"}}  # Shopify: /cart/<variante>:<menge>,...
 WL = f"* Werbelink · Preise vom {TODAY.strftime('%d.%m.')}, maßgeblich ist der Shop"
 
 
@@ -845,8 +864,12 @@ def euro(x):
 
 def fav_data(p):
     i = prod_img(p, 200)
-    return html.escape(json.dumps({"u": p["url"], "n": p["name"], "s": p.get("shop", ""),
-                                   "i": i[1] if i and i[0] == "own" else ""}, ensure_ascii=False), quote=True)
+    d = {"u": p["url"], "n": p["name"], "s": p.get("shop", ""), "i": i[1] if i and i[0] == "own" else ""}
+    if p.get("vid"):
+        d["v"] = p["vid"]
+    if p.get("price"):
+        d["p"] = euro(p["price"])
+    return html.escape(json.dumps(d, ensure_ascii=False), quote=True)
 
 
 def prod_card(p):
@@ -964,7 +987,7 @@ document.querySelectorAll('.band').forEach(function(b){
  function tick(){if(Date.now()>pause&&!document.hidden){x+=.45;if(x>=half)x-=half;b.scrollLeft=x}else{x=b.scrollLeft}requestAnimationFrame(tick)}
  requestAnimationFrame(tick)});
 /* Wisch-Reihen: am PC Pfeile + Ziehen mit der Maus, Verlauf am Rand zeigt "geht weiter". Gilt für ALLE horizontalen Reihen. */
-window.npHS=function(root){(root||document).querySelectorAll('.band,.trow,.stickers,.explore,.mrow,.chips,.cats.row').forEach(function(r){
+window.npHS=function(root){(root||document).querySelectorAll('.band,.trow,.stickers,.explore,.mrow,.chips,.cats.row,.qmore').forEach(function(r){
  if(r.dataset.hs||r.closest('.ddp'))return;var cs=getComputedStyle(r);if(cs.overflowX!=='auto'&&cs.overflowX!=='scroll')return;r.dataset.hs=1;
  var w=document.createElement('div');w.className='hsw';r.parentNode.insertBefore(w,r);w.appendChild(r);
  var L=document.createElement('button'),R=document.createElement('button');L.type=R.type='button';L.className='hsb l';R.className='hsb r';
@@ -1016,7 +1039,7 @@ if(fl){var grid=document.getElementById(fl.dataset.grid),PAGE=24,shown=48,sel={}
   return sel[k].some(function(v){return h.indexOf(' '+v+' ')>=0})})}
  function esc2(x){return String(x).replace(/[&<>"']/g,function(c){return'&#'+c.charCodeAt(0)+';'})}
  function card(i){var im=i.img||(i.ext&&window.npImgOK&&window.npImgOK()?i.ext:'');var sh=(i.sub||'').split(' · ')[0];
-  var fav=esc2(JSON.stringify({u:i.url,n:i.title,s:sh,i:i.img||''}));
+  var fav=esc2(JSON.stringify({u:i.url,n:i.title,s:sh,i:i.img||'',v:i.v||'',p:i.pr||''}));
   return '<div class="pcw"><a class="prod" href="'+esc2(i.url)+'" rel="sponsored noopener" target="_blank"><div class="pi">'
    +(im?'<img src="'+esc2(im)+'" alt="'+esc2(i.title)+'" loading="lazy">':'<span class="svgw">'+(i.svg||'')+'</span>')+'</div><div class="pb"><h3>'+esc2(i.title)+'</h3>'
    +(i.pr?'<span class="pr">'+esc2(i.pr)+'</span>':'')+(sh?'<span class="shop">bei '+esc2(sh)+'</span>':'')+(i.reg?'<span class="reg">'+esc2(i.reg)+'</span>':'')
@@ -1069,6 +1092,29 @@ if(f){var inp=f.querySelector('input'),msg=f.querySelector('.msg'),st=f.querySel
   setTimeout(function(){location.href='/p/'+n+'/'},reduce?0:480)})}
 window.npToast=function(msg){var t=document.createElement('div');t.className='toast';t.setAttribute('role','status');t.textContent=msg;
  document.body.appendChild(t);setTimeout(function(){t.classList.add('on')},30);setTimeout(function(){t.classList.remove('on')},2200);setTimeout(function(){t.remove()},2800)};
+/* Schnellansicht: Tipp auf Bild oder Name öffnet das Produkt bei uns, mit "Mehr von <Shop>". Kauf-Knopf führt direkt zum Shop. */
+var qv=document.getElementById('qv'),SP=null;
+function sdata(){return SP||(SP=fetch('/search.json').then(function(r){return r.json()}).then(function(j){return j.items.filter(function(i){return i.type==='product'})}))}
+function qesc(x){return String(x==null?'':x).replace(/[&<>"']/g,function(c){return'&#'+c.charCodeAt(0)+';'})}
+function qopen(d){if(!qv)return;var box=qv.querySelector('.qvi');
+ box.innerHTML='<button class="qx" type="button" aria-label="Schließen">×</button><div class="qtop"><div class="qimg">'+(d.i?'<img src="'+qesc(d.i)+'" alt="">':'<span class="emo">🍬</span>')+'</div>'
+  +'<div class="qtx"><h2>'+qesc(d.n)+'</h2>'+(d.p?'<p class="qpr">'+qesc(d.p)+'</p>':'')+'<p class="qsh">bei '+qesc(d.s)+'</p>'
+  +'<div class="qacts"><a class="btn dark" href="'+qesc(d.u)+'" rel="sponsored noopener" target="_blank">Bei '+qesc(d.s)+' ansehen*</a>'
+  +'<button class="fav qfav" type="button" aria-pressed="false" aria-label="Merken" data-fav="'+qesc(JSON.stringify(d))+'">♡</button></div>'
+  +'<small class="wl">* Werbelink. Ein Klick genügt: Was du danach im Shop kaufst, unterstützt Naschpass.</small></div></div>'
+  +'<h3>Mehr von '+qesc(d.s)+'</h3><div class="qmore"><span class="wl">Lädt …</span></div>';
+ if(!qv.open)qv.showModal();window.npFavSync(qv);
+ sdata().then(function(all){var m=all.filter(function(i){return (i.sub||'').split(' · ')[0]===d.s&&i.url!==d.u}).slice(0,12);
+  var el=box.querySelector('.qmore');if(!el)return;
+  el.innerHTML=m.length?m.map(function(i){var x={u:i.url,n:i.title,s:d.s,i:i.img||'',p:i.pr||'',v:i.v||''};
+   return '<button type="button" class="qm" data-q="'+qesc(JSON.stringify(x))+'">'+(x.i?'<img src="'+qesc(x.i)+'" alt="" loading="lazy">':'<span class="emo">🍬</span>')
+    +'<b>'+qesc(x.n)+'</b>'+(x.p?'<span>'+qesc(x.p)+'</span>':'')+'</button>'}).join(''):'<span class="wl">Keine weiteren Produkte.</span>';
+  if(window.npHS)window.npHS(box)})}
+if(qv){qv.addEventListener('click',function(ev){if(ev.target===qv||ev.target.closest('.qx')){qv.close();return}
+  var m=ev.target.closest('[data-q]');if(m){qopen(JSON.parse(m.dataset.q));qv.querySelector('.qvi').scrollTop=0}});
+ document.addEventListener('click',function(ev){var hit=ev.target.closest('.pcw .pi, .pcw h3');if(!hit)return;
+  var w=hit.closest('.pcw'),f=w&&w.querySelector('.fav');if(!f)return;ev.preventDefault();
+  try{qopen(JSON.parse(f.dataset.fav))}catch(e){}})}
 /* Merkliste: nur nach Klick auf ♡, nur im Browser (localStorage), wird nie übertragen */
 var FK='np_merk';function fget(){try{return JSON.parse(localStorage.getItem(FK)||'[]')}catch(e){return[]}}
 function fset(v){try{if(v.length)localStorage.setItem(FK,JSON.stringify(v));else localStorage.removeItem(FK)}catch(e){}}
@@ -1660,21 +1706,27 @@ MERK_HTML = ('<section class="hero" style="padding-bottom:0"><h1>Deine <span cla
              '<p class="sub">Gekauft wird immer direkt im jeweiligen Shop. Darum steht hier alles nach Shop sortiert: '
              'einen Shop öffnen, Sachen in den Warenkorb, fertig.</p></section><section id="merk"></section>'
              '<p class="wl">* Werbelink</p>')
-MERK_JS = r"""<script>(function(){var K='np_merk',box=document.getElementById('merk');
+MERK_JS = r"""<script>(function(){var K='np_merk',box=document.getElementById('merk'),CART=__CART__;
 function get(){try{return JSON.parse(localStorage.getItem(K)||'[]')}catch(e){return[]}}
 function set(v){try{if(v.length)localStorage.setItem(K,JSON.stringify(v));else localStorage.removeItem(K)}catch(e){}}
 function esc(x){return String(x).replace(/[&<>"']/g,function(c){return'&#'+c.charCodeAt(0)+';'})}
 function draw(){var l=get();if(!l.length){box.innerHTML='<div class="empty"><strong>Noch nichts gemerkt.</strong><br>Tipp im Shop auf das ♡ bei einem Produkt.</div><p><a class="btn" href="/shop/">Zum Shop</a></p>';return}
  var g={};l.forEach(function(x){(g[x.s||'Shop']=g[x.s||'Shop']||[]).push(x)});
  box.innerHTML=Object.keys(g).map(function(s){return '<div class="mgrp"><h2>'+esc(s)+' <small>'+g[s].length+'</small></h2>'+g[s].map(function(x){
-  return '<div class="mrow2">'+(x.i?'<img src="'+esc(x.i)+'" alt="">':'<span class="ph">🍬</span>')+'<b>'+esc(x.n)+'</b>'
-  +'<a class="btn" href="'+esc(x.u)+'" rel="sponsored noopener" target="_blank">Ansehen*</a><button type="button" class="linkbtn" data-del="'+esc(x.u)+'">Entfernen</button></div>'}).join('')+'</div>'}).join('')
+  return '<div class="mrow2">'+(x.i?'<img src="'+esc(x.i)+'" alt="">':'<span class="ph">🍬</span>')+'<b>'+esc(x.n)+(x.p?' <small>'+esc(x.p)+'</small>':'')+'</b>'
+  +'<a class="btn" href="'+esc(x.u)+'" rel="sponsored noopener" target="_blank">Ansehen*</a><button type="button" class="linkbtn" data-del="'+esc(x.u)+'">Entfernen</button></div>'}).join('')
+  +(function(){var c=CART[s],v=g[s].filter(function(x){return x.v});if(!c||v.length<1)return'';
+    var url='https://www.awin1.com/cread.php?awinmid='+c.mid+'&awinaffid=3111189&ued='+encodeURIComponent(c.base+v.map(function(x){return x.v+':1'}).join(','));
+    return '<a class="btn dark cartbtn" href="'+esc(url)+'" rel="sponsored noopener" target="_blank">Alle '+v.length+' in den Warenkorb bei '+esc(s)+'*</a>'})()+'</div>'}).join('')
   +'<p style="margin-top:16px"><button type="button" class="linkbtn" data-clear>Merkliste leeren</button></p>'}
 box.addEventListener('click',function(ev){var d=ev.target.closest('[data-del]');if(d){set(get().filter(function(x){return x.u!==d.dataset.del}));draw()}
  if(ev.target.closest('[data-clear]')){set([]);draw()}});draw()})();</script>
 <style>.mgrp{background:#fff;border-radius:18px;padding:14px;margin:14px 0;box-shadow:var(--sh)}.mgrp h2{margin:0 0 8px;font-size:20px}.mgrp small{font:700 14px Inter,sans-serif;color:var(--mut)}
 .mrow2{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)}.mrow2 img,.mrow2 .ph{width:52px;height:52px;object-fit:contain;border-radius:10px;background:var(--bg2);flex:none;display:grid;place-items:center}
-.mrow2 b{flex:1;font-size:14px;line-height:1.3}.mrow2 .btn{padding:8px 12px;font-size:14px}</style>"""
+.mrow2 b{flex:1;font-size:14px;line-height:1.3}.mrow2 small{color:var(--mut);font-weight:700}.cartbtn{display:block;text-align:center;margin-top:12px}.mrow2 .btn{padding:8px 12px;font-size:14px}</style>"""
+
+
+MERK_JS = MERK_JS.replace("__CART__", json.dumps(CART_SHOPS))
 
 
 def cat_tile(c):
@@ -1721,7 +1773,7 @@ def search_index(live):
                       "alt": translit(p["name"]), "tags": " ".join([cname, cid] + p.get("tags", [])),
                       "text": p.get("note", ""),
                       "f": " ".join(f"{g}:{i}" for g, v in facets(p).items() for i in sorted(v)),
-                      "th": " ".join(themes_of(p)), "pr": euro(p.get("price")), **({"reg": REGION_NOTE[p.get("shop")]} if p.get("shop") in REGION_NOTE else {})})
+                      "th": " ".join(themes_of(p)), "pr": euro(p.get("price")), "v": p.get("vid", ""), **({"reg": REGION_NOTE[p.get("shop")]} if p.get("shop") in REGION_NOTE else {})})
     for c in cats:
         items.append({"type": "cat", "title": c["name"], "url": f"/kategorie/{c['id']}/", "svg": sticker(c["id"], 52),
                       "sub": c["teaser"], "alt": translit(c["name"]), "tags": c["id"].replace("-", " "), "text": c["teaser"]})
