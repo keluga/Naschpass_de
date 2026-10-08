@@ -580,6 +580,13 @@ section{padding:34px 0 6px}
 
 /* Empfehlungs-Band */
 .recs{padding-top:26px}
+.hsw{position:relative}
+.hsb{display:none;position:absolute;top:50%;transform:translateY(-50%);z-index:5;width:40px;height:40px;border-radius:50%;border:0;background:#fff;color:var(--fg);
+font-size:26px;line-height:1;cursor:pointer;box-shadow:0 4px 14px rgba(43,35,80,.22)}
+.hsb.l{left:-6px}.hsb.r{right:-6px}.hsb:hover{background:var(--vio);color:#fff}
+@media(hover:hover) and (pointer:fine){.hsw.more-r>.hsb.r,.hsw.more-l>.hsb.l{display:block}}
+.hsw.scrolls.more-r::after{content:"";position:absolute;top:0;bottom:0;right:-16px;width:36px;pointer-events:none;background:linear-gradient(90deg,rgba(234,246,241,0),var(--bg))}
+.drag{cursor:grabbing!important;user-select:none}.drag a{pointer-events:none}
 .band{display:flex;gap:12px;overflow-x:auto;padding:4px 16px 14px;margin:0 -16px;scrollbar-width:none;cursor:grab}
 .band::-webkit-scrollbar{display:none}
 .ri{flex:none;width:168px;background:#fff;border-radius:18px;overflow:hidden;text-decoration:none;color:var(--fg);box-shadow:var(--sh)}
@@ -916,11 +923,28 @@ document.querySelectorAll('.band[data-shuffle]').forEach(function(b){
 document.querySelectorAll('.band').forEach(function(b){
  if(reduce||b.scrollWidth<=b.clientWidth+10)return;
  var half=b.scrollWidth/2,pause=0,x=b.scrollLeft;
- function hold(){pause=Date.now()+2500}
+ function hold(){pause=Date.now()+2500;x=b.scrollLeft}
  ['pointerdown','touchstart','wheel','focusin','mouseenter'].forEach(function(ev){b.addEventListener(ev,hold,{passive:true})});
  b.addEventListener('mousemove',hold,{passive:true});
- function tick(){if(Date.now()>pause&&!document.hidden){x=b.scrollLeft+.45;if(x>=half)x-=half;b.scrollLeft=x}requestAnimationFrame(tick)}
+ /* x zählt in Kommastellen weiter; scrollLeft wird vom Browser gerundet und darf nicht zurückgelesen werden */
+ function tick(){if(Date.now()>pause&&!document.hidden){x+=.45;if(x>=half)x-=half;b.scrollLeft=x}else{x=b.scrollLeft}requestAnimationFrame(tick)}
  requestAnimationFrame(tick)});
+/* Wisch-Reihen: am PC Pfeile + Ziehen mit der Maus, Verlauf am Rand zeigt "geht weiter". Gilt für ALLE horizontalen Reihen. */
+window.npHS=function(root){(root||document).querySelectorAll('.band,.trow,.stickers,.explore,.mrow,.chips,.cats.row').forEach(function(r){
+ if(r.dataset.hs||r.closest('.ddp'))return;var cs=getComputedStyle(r);if(cs.overflowX!=='auto'&&cs.overflowX!=='scroll')return;r.dataset.hs=1;
+ var w=document.createElement('div');w.className='hsw';r.parentNode.insertBefore(w,r);w.appendChild(r);
+ var L=document.createElement('button'),R=document.createElement('button');L.type=R.type='button';L.className='hsb l';R.className='hsb r';
+ L.setAttribute('aria-label','Zurück');R.setAttribute('aria-label','Weiter');L.textContent='‹';R.textContent='›';w.appendChild(L);w.appendChild(R);
+ function upd(){var m=r.scrollWidth-r.clientWidth;w.classList.toggle('more-r',r.scrollLeft<m-4);w.classList.toggle('more-l',r.scrollLeft>4);w.classList.toggle('scrolls',m>4)}
+ function go(k){r.scrollBy({left:k*Math.max(160,r.clientWidth*.8),behavior:reduce?'auto':'smooth'})}
+ L.addEventListener('click',function(){go(-1)});R.addEventListener('click',function(){go(1)});
+ r.addEventListener('scroll',function(){requestAnimationFrame(upd)},{passive:true});addEventListener('resize',upd);
+ var down=null,moved=0;r.addEventListener('pointerdown',function(ev){if(ev.pointerType!=='mouse')return;down={x:ev.clientX,s:r.scrollLeft};moved=0});
+ addEventListener('pointermove',function(ev){if(!down)return;var d=ev.clientX-down.x;moved=Math.max(moved,Math.abs(d));if(moved>5){r.scrollLeft=down.s-d;r.classList.add('drag')}});
+ addEventListener('pointerup',function(){down=null;setTimeout(function(){r.classList.remove('drag')},0)});
+ r.addEventListener('click',function(ev){if(moved>5){ev.preventDefault();ev.stopPropagation();moved=0}},true);
+ upd();setTimeout(upd,600)})};
+window.npHS();
 /* Mehr zeigen */
 document.querySelectorAll('[data-expand]').forEach(function(b){b.addEventListener('click',function(){
  var g=document.getElementById(b.dataset.expand);g.classList.remove('clip');b.remove();
