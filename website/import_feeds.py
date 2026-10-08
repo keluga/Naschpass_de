@@ -418,6 +418,15 @@ def main():
     log("Zeilen je Feed: " + ", ".join(f"{k} {v}" for k, v in per_src.items()))
     log(f"{len(result)} Produkte übernommen: " + ", ".join(f"{k} {v}" for k, v in sorted(shops.items())))
     log("Welten: " + ", ".join(f"{k} {v}" for k, v in sorted(welten.items(), key=lambda x: -x[1])))
+    leer = [a.get("name", k) for k, a in adv.items() if not any(str(p.get("advertiser")) == k or p.get("shop") == a.get("name") for p in result)]
+    if leer:
+        log("WARNUNG: keine Produkte von " + ", ".join(leer) + " (Feed down oder Programm pausiert?)")
+    # Schutz: Liefert AWIN kaum etwas (Ausfall, Schlüssel ungültig), bricht der Build ab.
+    # Cloudflare lässt dann einfach die letzte gute Version online, statt einen leeren Shop zu zeigen.
+    mindest = int(os.environ.get("FEED_MIN", "1500"))
+    if (os.environ.get("WORKERS_CI") or os.environ.get("CF_PAGES")) and len(result) < mindest:
+        log(f"ABBRUCH: nur {len(result)} Produkte (Minimum {mindest}). Alte Seite bleibt online.")
+        sys.exit(1)
     log("Aussortiert: " + ", ".join(f"{k} {v}" for k, v in stats.items()))
 
 

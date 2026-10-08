@@ -1158,6 +1158,12 @@ document.addEventListener('click',function(ev){var b=ev.target.closest('.fav');i
  if(k>=0)l.splice(k,1);else l.push(d);fset(l);window.npFavSync(document);fbadge();
  if(window.npToast)window.npToast(k>=0?'Von der Merkliste entfernt':'Auf der Merkliste ♥')});
 window.npFavSync(document);fbadge();
+/* Verlauf: nur wenn selbst eingeschaltet (Merkliste-Seite oder unter dem Rad), nur im Browser, max. 30 Einträge */
+var HK='np_verlauf';window.npHistOn=function(){try{return localStorage.getItem(HK)!==null}catch(e){return false}};
+window.npHist=function(d,w){if(!d||!d.u||!window.npHistOn())return;try{var l=JSON.parse(localStorage.getItem(HK)||'[]').filter(function(x){return x.u!==d.u});
+ d.w=w||'';l.unshift(d);localStorage.setItem(HK,JSON.stringify(l.slice(0,30)))}catch(e){}};
+document.addEventListener('click',function(ev){var a=ev.target.closest('.pcw a[rel~=sponsored]');if(!a)return;
+ var b=a.closest('.pcw').querySelector('.fav');try{window.npHist(JSON.parse(b.dataset.fav),'Angeklickt')}catch(e){}},true);
 })();
 """
 
@@ -1262,7 +1268,7 @@ def spin_items(live):
         seen.add(st)
         a = next((x for x in ART_COLORS if x in arts), "")
         items.append({"t": p["name"], "u": p["url"], "k": "p", "c": ART_COLORS.get(a, "#9C94C7"), "l": art_name.get(a, "Süßigkeit"),
-                      "img": i[1] if i[0] == "own" else "", "ext": i[1] if i[0] == "ext" else "", "svg": ""})
+                      "s": p.get("shop", ""), "img": i[1] if i[0] == "own" else "", "ext": i[1] if i[0] == "ext" else "", "svg": ""})
     if len(items) < 6:  # noch wenige Produkte: Posts und Themenwelten mit ins Rad
         for p in live:
             items.append({"t": f"#{p['id']} {plain(p.get('short', ''))}", "u": f"/p/{p['id']}/", "k": "post", "c": "#FF4D8D",
@@ -1382,7 +1388,7 @@ function pool(m){var toks=SD.m[m]||[],out=[],seen={};
   if(toks.length?!toks.some(has):SD.skip.some(function(a){return has('art:'+a)}))return;
   if(m!=='trinken'&&has('art:getraenke'))return;var k=stem(i.title);if(seen[k])return;seen[k]=1;
   var a=Object.keys(SD.a).filter(function(x){return has('art:'+x)})[0],c=a?SD.a[a]:['Süßigkeit','#9C94C7'];
-  out.push({t:i.title,u:i.url,k:'p',c:c[1],l:c[0],img:i.img,ext:i.ext})});return out}
+  out.push({t:i.title,u:i.url,k:'p',c:c[1],l:c[0],img:i.img,ext:i.ext,s:(i.sub||'').split(' · ')[0]})});return out}
 root.querySelectorAll('[data-mood]').forEach(function(b){b.addEventListener('click',function(){if(busy)return;
  root.querySelectorAll('[data-mood]').forEach(function(x){x.setAttribute('aria-pressed',x===b)});var m=b.dataset.mood;
  function go(){var p=m==='alles'?base:pool(m);items=p.length>=3?p:base;
@@ -1412,16 +1418,19 @@ function confetti(color){var r=reel.getBoundingClientRect(),b=box.getBoundingCli
   c.style.left=(r.left-b.left+r.width/2)+'px';c.style.top=(r.top-b.top+r.height/2)+'px';
   c.style.setProperty('--x',(Math.random()*420-210)+'px');c.style.setProperty('--y',(Math.random()*-220-20)+'px');
   c.style.setProperty('--r',(Math.random()*720)+'deg');box.appendChild(c);setTimeout(c.remove.bind(c),1300)}}
-function show(i){var ext=i.k==='p',lbl=i.k==='p'?'Zum Shop*':(i.k==='post'?'Zum Post':'Zur Themenwelt');
+function show(i){if(i.k==='p'&&window.npHist)window.npHist({u:i.u,n:i.t,s:i.s||'',i:i.img||'',v:'',p:''},'Am Rad gedreht');var ext=i.k==='p',lbl=i.k==='p'?'Zum Shop*':(i.k==='post'?'Zum Post':'Zur Themenwelt');
  res.style.setProperty('--c',i.c);res.classList.add('has');
  res.innerHTML='<div class="ri2">'+pic(i)+'</div><div><small>Dein Zufalls-Vorschlag · '+esc(i.l)+'</small><h3>'+esc(i.t)+'</h3><div class="acts">'
   +'<a class="btn dark" href="'+esc(i.u)+'"'+(ext?' rel="sponsored noopener" target="_blank"':'')+'>'+lbl+'</a>'
   +'<button class="btn" type="button" data-share style="border:2px solid var(--fg)">Teilen</button>'
-  +(ext?'<small style="align-self:center">* Werbelink</small>':'')+'</div></div>';
+  +(ext?'<small style="align-self:center">* Werbelink</small>':'')+'</div>'
+  +(window.npHistOn&&!window.npHistOn()?'<small><button type="button" class="linkbtn" data-histon>Verlauf einschalten</button> (Gedrehtes wiederfinden, nur in deinem Browser)</small>':'')+'</div>';
  res.querySelector('[data-share]').addEventListener('click',function(ev){var b=ev.currentTarget,
   d={title:'Naschpass',text:'Mein Naschpass-Rad sagt: '+i.t+' 🍬 Was zeigt es dir?',url:location.origin+'/#zufall'};
   if(navigator.share){navigator.share(d).catch(function(){})}
-  else{try{navigator.clipboard.writeText(d.text+' '+d.url);b.textContent='Kopiert!'}catch(e){}}})}
+  else{try{navigator.clipboard.writeText(d.text+' '+d.url);b.textContent='Kopiert!'}catch(e){}}})
+ var ho=res.querySelector('[data-histon]');if(ho)ho.addEventListener('click',function(){try{localStorage.setItem('np_verlauf','[]')}catch(e){}
+  window.npHist({u:i.u,n:i.t,s:i.s||'',i:i.img||'',v:'',p:''},'Am Rad gedreht');ho.parentNode.textContent='Verlauf ist an. Du findest ihn auf der Merkliste.'})}
 /* Ablauf wie beim Case-Opening: kurz ausholen, schnell los, lange sanft auslaufen,
    knapp an der Kante liegen bleiben, kurze Pause, dann in die Mitte rutschen und aufdecken */
 function spin(){if(busy)return;busy=true;audio();btn.disabled=true;btn.textContent='…';res.classList.add('dim');
@@ -1791,7 +1800,7 @@ root.addEventListener('click',function(ev){var b=ev.target.closest('.qopt');if(!
 MERK_HTML = ('<section class="hero" style="padding-bottom:0"><h1>Deine <span class="acc">Merkliste</span></h1>'
              '<p class="sub">Gekauft wird immer direkt im jeweiligen Shop. Darum steht hier alles nach Shop sortiert: '
              'einen Shop öffnen, Sachen in den Warenkorb, fertig.</p></section><section id="merk"></section>'
-             '<p class="wl">* Werbelink</p>')
+             '<section id="verlauf"></section><p class="wl">* Werbelink</p>')
 MERK_JS = r"""<script>(function(){var K='np_merk',box=document.getElementById('merk'),CART=__CART__;
 function get(){try{return JSON.parse(localStorage.getItem(K)||'[]')}catch(e){return[]}}
 function set(v){try{if(v.length)localStorage.setItem(K,JSON.stringify(v));else localStorage.removeItem(K)}catch(e){}}
@@ -1806,7 +1815,23 @@ function draw(){var l=get();if(!l.length){box.innerHTML='<div class="empty"><str
     return '<a class="btn dark cartbtn" href="'+esc(url)+'" rel="sponsored noopener" target="_blank">Alle '+v.length+' in den Warenkorb bei '+esc(s)+'*</a>'})()+'</div>'}).join('')
   +'<p style="margin-top:16px"><button type="button" class="linkbtn" data-clear>Merkliste leeren</button></p>'}
 box.addEventListener('click',function(ev){var d=ev.target.closest('[data-del]');if(d){set(get().filter(function(x){return x.u!==d.dataset.del}));draw()}
- if(ev.target.closest('[data-clear]')){set([]);draw()}});draw()})();</script>
+ if(ev.target.closest('[data-clear]')){set([]);draw()}});draw();
+var vb=document.getElementById('verlauf'),HK='np_verlauf';
+function hget(){try{var v=localStorage.getItem(HK);return v===null?null:JSON.parse(v)}catch(e){return null}}
+function hdraw(){var l=hget();
+ if(l===null){vb.innerHTML='<div class="mgrp"><h2>Verlauf</h2><p>Willst du wiederfinden, was du am Rad gedreht oder im Shop angeklickt hast? Der Verlauf bleibt nur in deinem Browser und wird nie übertragen.</p><button type="button" class="btn" data-hon>Verlauf einschalten</button></div>';return}
+ vb.innerHTML='<div class="mgrp"><h2>Zuletzt angeschaut <small>'+l.length+'</small></h2>'+(l.length?l.map(function(x){
+  var fav=esc(JSON.stringify({u:x.u,n:x.n,s:x.s||'',i:x.i||'',v:x.v||'',p:x.p||''}));
+  return '<div class="mrow2">'+(x.i?'<img src="'+esc(x.i)+'" alt="">':'<span class="ph">🍬</span>')+'<b>'+esc(x.n)+' <small>'+esc(x.w||'')+'</small></b>'
+  +'<a class="btn" href="'+esc(x.u)+'" rel="sponsored noopener" target="_blank">Ansehen*</a><button class="fav" type="button" aria-pressed="false" aria-label="Merken" data-fav="'+fav+'">♡</button></div>'}).join('')
+  :'<p>Noch leer. Dreh am Rad oder klick dich durch den Shop.</p>')
+  +'<p style="margin-top:12px"><button type="button" class="linkbtn" data-hclr>Verlauf leeren</button> · <button type="button" class="linkbtn" data-hoff>Verlauf ausschalten</button></p></div>';
+ if(window.npFavSync)window.npFavSync(vb)}
+vb.addEventListener('click',function(ev){try{if(ev.target.closest('[data-hon]'))localStorage.setItem(HK,'[]');
+ if(ev.target.closest('[data-hclr]'))localStorage.setItem(HK,'[]');if(ev.target.closest('[data-hoff]'))localStorage.removeItem(HK)}catch(e){}
+ if(ev.target.closest('[data-hon],[data-hclr],[data-hoff]'))hdraw()});
+document.addEventListener('click',function(ev){if(ev.target.closest('#verlauf .fav'))setTimeout(draw,0)});hdraw()})();</script>
+<style>.mrow2 .fav{position:static;flex:none}</style>
 <style>.mgrp{background:#fff;border-radius:18px;padding:14px;margin:14px 0;box-shadow:var(--sh)}.mgrp h2{margin:0 0 8px;font-size:20px}.mgrp small{font:700 14px Inter,sans-serif;color:var(--mut)}
 .mrow2{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)}.mrow2 img,.mrow2 .ph{width:52px;height:52px;object-fit:contain;border-radius:10px;background:var(--bg2);flex:none;display:grid;place-items:center}
 .mrow2 b{flex:1;font-size:14px;line-height:1.3}.mrow2 small{color:var(--mut);font-weight:700}.cartbtn{display:block;text-align:center;margin-top:12px}.mrow2 .btn{padding:8px 12px;font-size:14px}</style>"""
@@ -2249,14 +2274,29 @@ Vollständige Angaben im <a href="/impressum/">Impressum</a>.</p></section>"""
 <h2>Verbraucherstreitbeilegung</h2><p>Ich bin nicht bereit und nicht verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.</p>
 </section>""", "Impressum"))
 
+    HOST_NAME = "Cloudflare" if ON_CF else "Netlify"
+    HOST_TEXT = (("Die Website wird bei Cloudflare, Inc., 101 Townsend St, San Francisco, CA 94107, USA gehostet (Cloudflare Workers). "
+                  "Beim Aufruf verarbeitet Cloudflare technisch notwendige Daten (z. B. IP-Adresse, Datum und Uhrzeit, aufgerufene Seite, Browser), "
+                  "um die Seite auszuliefern und vor Angriffen zu schützen. Produktbilder liegen dabei auf unserem eigenen Speicher bei Cloudflare. "
+                  "Details: <a href=\"https://www.cloudflare.com/privacypolicy/\" rel=\"noopener\" target=\"_blank\">cloudflare.com/privacypolicy</a>")
+                 if ON_CF else
+                 ("Die Website wird bei Netlify, Inc., 101 2nd Street, San Francisco, CA 94105, USA gehostet. Beim Aufruf verarbeitet Netlify "
+                  "technisch notwendige Daten (z. B. IP-Adresse, Datum und Uhrzeit, aufgerufene Seite, Browser) in Server-Logfiles, um die Seite "
+                  "auszuliefern und die Sicherheit zu gewährleisten. Details: <a href=\"https://www.netlify.com/privacy/\" rel=\"noopener\" "
+                  "target=\"_blank\">netlify.com/privacy</a>"))
+    HOST_TEXT += (" Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einem sicheren und stabilen Betrieb). "
+                  "Dabei können Daten in die USA übermittelt werden; die Übermittlung erfolgt auf Grundlage des EU-US Data Privacy Framework "
+                  "(soweit der Anbieter dort zertifiziert ist) bzw. der EU-Standardvertragsklauseln. Mit dem Anbieter besteht ein Vertrag zur Auftragsverarbeitung.")
     write("datenschutz/index.html", page("Datenschutz – Naschpass", f"""<section class="legal"><h1>Datenschutz&shy;erklärung</h1>
 <h2>1. Verantwortlicher</h2><p>{e(im["name"])}, {e(im["firma"])}, Anschrift siehe <a href="/impressum/">Impressum</a>, E-Mail: {e(im["email"])}</p>
 <h2>2. Kurz gesagt</h2><p>Diese Website setzt keine Cookies, nutzt keine Analyse- oder Tracking-Tools und lädt Inhalte von Drittanbietern nur, wenn du es ausdrücklich erlaubst (Produktfotos, siehe Abschnitt 4b). Schriften und unsere eigenen Bilder liegen auf unserem eigenen Server.</p>
-<h2>3. Hosting</h2><p>Die Website wird bei Netlify, Inc., 101 2nd Street, San Francisco, CA 94105, USA gehostet. Beim Aufruf verarbeitet Netlify technisch notwendige Daten (z. B. IP-Adresse, Datum und Uhrzeit, aufgerufene Seite, Browser) in Server-Logfiles, um die Seite auszuliefern und die Sicherheit zu gewährleisten. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einem sicheren und stabilen Betrieb). Dabei können Daten in die USA übermittelt werden; die Übermittlung erfolgt auf Grundlage der EU-Standardvertragsklauseln bzw. des EU-US Data Privacy Framework, soweit der Anbieter dort zertifiziert ist. Mit Netlify besteht ein Vertrag zur Auftragsverarbeitung. Details: <a href="https://www.netlify.com/privacy/" rel="noopener" target="_blank">netlify.com/privacy</a></p>
-<h2>4. Werbelinks (Affiliate)</h2><p>Einige Links führen zu Online-Shops und sind mit einer Partnerkennung versehen (z. B. über das Netzwerk Awin). Erst wenn du einen solchen Link anklickst, verlässt du diese Website; der Shop bzw. das Partnernetzwerk kann dann auf seiner eigenen Seite Cookies setzen, um den Kauf zuzuordnen. Dafür ist der jeweilige Anbieter verantwortlich. Auf dieser Website selbst wird dabei nichts gespeichert. Produktbilder aus den Datenfeeds der Partner-Shops werden über unseren Hoster Netlify ausgeliefert; dein Browser baut dabei keine Verbindung zu den Shops auf. Ausnahme: Abschnitt 4b.</p>
+<h2>3. Hosting</h2><p>{HOST_TEXT}</p>
+
+<h2>4. Werbelinks (Affiliate)</h2><p>Einige Links führen zu Online-Shops und sind mit einer Partnerkennung versehen (z. B. über das Netzwerk Awin). Erst wenn du einen solchen Link anklickst, verlässt du diese Website; der Shop bzw. das Partnernetzwerk kann dann auf seiner eigenen Seite Cookies setzen, um den Kauf zuzuordnen. Dafür ist der jeweilige Anbieter verantwortlich. Auf dieser Website selbst wird dabei nichts gespeichert. Produktbilder aus den Datenfeeds der Partner-Shops werden über unseren Hoster {HOST_NAME} ausgeliefert; dein Browser baut dabei keine Verbindung zu den Shops auf. Ausnahme: Abschnitt 4b.</p>
 {fotos_html()}
 <h2>4c. Dein Naschpass (Stempel)</h2><p>Wenn du auf der Startseite „Pass starten“ drückst, speichern wir im lokalen Speicher deines Browsers, welche Länder-Themenwelten du besucht hast. Das passiert nur auf deinen Wunsch (§ 25 Abs. 2 Nr. 2 TDDDG), wird nie an uns übertragen und lässt sich mit „Pass zurücksetzen“ jederzeit löschen.</p>
 <h2>4d. Merkliste</h2><p>Tippst du bei einem Produkt auf ♡, speichern wir Name, Shop und Link im lokalen Speicher deines Browsers, damit du deine Auswahl später wiederfindest. Das passiert nur auf deinen Wunsch (§ 25 Abs. 2 Nr. 2 TDDDG), wird nie an uns übertragen und lässt sich auf der Seite „Merkliste“ jederzeit löschen.</p>
+<h2>4e. Verlauf</h2><p>Nur wenn du den Verlauf selbst einschaltest, speichern wir im lokalen Speicher deines Browsers, welche Produkte du am Glücksrad gedreht oder angeklickt hast (Name, Link, Bild), höchstens 30 Einträge. Auch das passiert nur auf deinen Wunsch (§ 25 Abs. 2 Nr. 2 TDDDG), wird nie an uns übertragen und lässt sich auf der Seite „Merkliste“ jederzeit leeren oder ausschalten. Die gewählte Lautstärke des Glücksrads merkt sich dein Browser ebenfalls lokal.</p>
 <h2>4a. Suche</h2><p>Die Suche läuft komplett in deinem Browser. Deine Suchbegriffe werden nicht übertragen und nicht gespeichert.</p>
 <h2>5. Social-Media-Links</h2><p>Links zu Instagram, TikTok und Pinterest sind einfache Verlinkungen, keine eingebetteten Inhalte. Daten werden erst übertragen, wenn du den Link anklickst und die jeweilige Plattform besuchst; dort gelten deren Datenschutzbestimmungen.</p>
 <h2>6. Kontakt per E-Mail</h2><p>Schreibst du uns eine E-Mail, verarbeiten wir deine Angaben nur, um deine Anfrage zu beantworten (Art. 6 Abs. 1 lit. b bzw. f DSGVO), und löschen sie, wenn sie nicht mehr benötigt werden.</p>
