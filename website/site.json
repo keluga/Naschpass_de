@@ -225,6 +225,98 @@
       "name": "Supermarkt-Klassiker",
       "teaser": "Die bekannten Marken, bequem online bestellt.",
       "text": "Die bekannten Marken aus dem Supermarkt, bequem online bestellt. Damit findest du hier neben Exoten auch die Klassiker."
+    },
+    {
+      "id": "filmabend",
+      "name": "Filmabend",
+      "teaser": "Chips, Popcorn, Gummi und was zum Trinken – alles fürs Sofa.",
+      "text": "Chips, Popcorn, Gummi und was zum Trinken – alles fürs Sofa.",
+      "group": "anlass",
+      "keywords": [
+        "chips",
+        "popcorn",
+        "nacho",
+        "tortilla",
+        "flips",
+        "erdnussflips",
+        "fruchtgummi",
+        "gummi",
+        "cola",
+        "limo",
+        "cracker",
+        "brezel"
+      ]
+    },
+    {
+      "id": "party",
+      "name": "Party & Teilen",
+      "teaser": "Große Tüten, Mixe und Sachen zum Teilen.",
+      "text": "Große Tüten, Mixe und Sachen zum Teilen.",
+      "group": "anlass",
+      "keywords": [
+        "party",
+        "mix",
+        "xxl",
+        "1000g",
+        "1kg",
+        "family",
+        "großpackung",
+        "teilen",
+        "sour",
+        "sauer"
+      ]
+    },
+    {
+      "id": "mitbringsel",
+      "name": "Mitbringsel & Danke",
+      "teaser": "Kleine Geschenke, die immer gut ankommen.",
+      "text": "Kleine Geschenke, die immer gut ankommen.",
+      "group": "anlass",
+      "keywords": [
+        "praline",
+        "pralinen",
+        "trüffel",
+        "präsent",
+        "praesent",
+        "geschenk",
+        "box",
+        "dose",
+        "tafel",
+        "mozartkugel",
+        "merci"
+      ]
+    },
+    {
+      "id": "geburtstag",
+      "name": "Geburtstag",
+      "teaser": "Süßes zum Feiern und Verschenken.",
+      "text": "Süßes zum Feiern und Verschenken.",
+      "group": "anlass",
+      "keywords": [
+        "geburtstag",
+        "birthday",
+        "party",
+        "kuchen",
+        "geschenk",
+        "box",
+        "konfetti",
+        "regenbogen",
+        "rainbow"
+      ]
+    },
+    {
+      "id": "naschkatzen",
+      "name": "Für Naschkatzen",
+      "teaser": "Exotisches und Ausgefallenes für alle, die schon alles kennen.",
+      "text": "Exotisches und Ausgefallenes für alle, die schon alles kennen.",
+      "group": "anlass",
+      "facets": [
+        "land:usa",
+        "land:japan",
+        "land:korea",
+        "land:mexiko",
+        "land:asien"
+      ]
     }
   ],
   "partner_shops": {
@@ -408,6 +500,81 @@
           ]
         },
         {
+          "id": "oesterreich",
+          "name": "Österreich",
+          "icon": "flag",
+          "keywords": [
+            "österreich",
+            "oesterreich",
+            "wien",
+            "mozart",
+            "steirisch",
+            "tirol"
+          ]
+        },
+        {
+          "id": "frankreich",
+          "name": "Frankreich",
+          "icon": "flag",
+          "keywords": [
+            "frankreich",
+            "französisch",
+            "macaron",
+            "bretagne"
+          ]
+        },
+        {
+          "id": "spanien",
+          "name": "Spanien",
+          "icon": "flag",
+          "keywords": [
+            "spanien",
+            "spanisch",
+            "turrón",
+            "churro"
+          ]
+        },
+        {
+          "id": "benelux",
+          "name": "Belgien & Niederlande",
+          "icon": "flag",
+          "keywords": [
+            "belgisch",
+            "belgien",
+            "niederlande",
+            "holland",
+            "stroopwafel",
+            "speculoos"
+          ]
+        },
+        {
+          "id": "orient",
+          "name": "Orient & Türkei",
+          "icon": "flag",
+          "keywords": [
+            "orient",
+            "türkisch",
+            "arabisch",
+            "griechisch",
+            "baklava",
+            "halva",
+            "lokum",
+            "dattel"
+          ]
+        },
+        {
+          "id": "osteuropa",
+          "name": "Osteuropa",
+          "icon": "flag",
+          "keywords": [
+            "polnisch",
+            "russisch",
+            "ukrainisch",
+            "tschechisch",
+            "ungarisch"
+          ]
+        },
+        {
           "id": "europa",
           "name": "Europa",
           "icon": "flag",
@@ -425,7 +592,12 @@
             "skandinavien",
             "deutschland",
             "italien",
-            "schweiz"
+            "schweiz",
+            "oesterreich",
+            "frankreich",
+            "spanien",
+            "benelux",
+            "osteuropa"
           ]
         }
       ]
@@ -696,8 +868,12 @@
             "ramune",
             "energy",
             "dose",
-            "tee",
-            "tea"
+            "sirup",
+            "saft",
+            "schorle",
+            "eistee",
+            "limonade",
+            "wasser"
           ]
         },
         {
@@ -715,6 +891,61 @@
           ],
           "categories": [
             "boxen"
+          ]
+        },
+        {
+          "id": "tee",
+          "name": "Tee, Kaffee & Kakao",
+          "icon": "☕",
+          "keywords": [
+            "tee",
+            "tea",
+            "teebeutel",
+            "kakao",
+            "trinkschokolade",
+            "chai",
+            "matcha",
+            "kaffee",
+            "espresso",
+            "cappuccino"
+          ]
+        },
+        {
+          "id": "feinkost",
+          "name": "Aufstriche & Feinkost",
+          "icon": "🍯",
+          "keywords": [
+            "aufstrich",
+            "schoko-creme",
+            "nougatcreme",
+            "nutella",
+            "konfitüre",
+            "konfituere",
+            "marmelade",
+            "fruchtaufstrich",
+            "honig",
+            "feinkost",
+            "dip",
+            "pesto",
+            "chutney",
+            "sirup"
+          ]
+        },
+        {
+          "id": "eis",
+          "name": "Eis & Desserts",
+          "icon": "🍨",
+          "keywords": [
+            "eiscreme",
+            "speiseeis",
+            "cremissimo",
+            "magnum",
+            "ben & jerry",
+            "cornetto",
+            "pudding",
+            "dessert",
+            "mousse",
+            "eis am stiel"
           ]
         }
       ]

@@ -11,8 +11,8 @@ Quelle:
 Regeln (siehe WEBSITE_VISION.md, Abschnitt 5):
 - Nur Advertiser aus website/feeds.json mit "active": true.
 - Raus: nicht vorrätig, Alkohol, Non-Food, ohne AWIN-Bild, Dubletten.
-- Große Feeds nur über "only" (Regex auf Kategorie/Name).
-- Pro Shop höchstens "max" (Standard 120), insgesamt "max_total"; Shops und Kategorien werden gemischt.
+- Welche Zeilen passen: "include"/"include_name"/"exclude_name" je Shop in feeds.json.
+- Keine Mengen-Kappung. Herkunft ("Welt") aus brands.json + Hinweisen, "score" für die Reihenfolge.
 Der Build scheitert nie an diesem Skript: Bei Fehlern wird ohne Feed weitergebaut.
 """
 import csv
@@ -138,6 +138,71 @@ def norm(s):
     return re.sub(r"[^a-z0-9]+", " ", s.lower()).strip()
 
 
+BRANDS = json.loads((HERE / "brands.json").read_text(encoding="utf-8")).get("brands", {}) if (HERE / "brands.json").exists() else {}
+_BAD_BRANDS = sorted((k for k, v in BRANDS.items() if v.get("alkohol") or v.get("tier")), key=len, reverse=True)
+TIER = re.compile(r"\b(katze\w*|hund\w*|kitten|welpe\w*|tierfutter|katzenfutter|hundefutter|nassfutter|trockenfutter|leckerli\w*|kauknochen|vogelfutter)\b", re.I)
+# Welt-Hinweise aus Kategorie/Name, wenn die Marke nichts verrät (es geht um die Idee, nicht um die Fabrik)
+WELT_HINTS = [
+    (r"\bjapan|japanisch|matcha|mochi|pocky|ramune|hi-?chew|wasabi|yuzu", "japan"),
+    (r"\bkorea|koreanisch|kimchi|buldak|gochujang|pepero", "korea"),
+    (r"asiatisch|thailand|thai\b|thailändisch|china|chinesisch|vietnam|indonesi|indisch|indien|ayurved|masala|chai\b", "asien"),
+    (r"mexikan|mexiko|mexico|jalape|tortilla|nacho|chipotle|tajin|takis", "mexiko"),
+    (r"\busa\b|amerikan|american|peanut butter|marshmallow fluff|pop-?tarts", "usa"),
+    (r"italien|italia|panettone|pandoro|cantucci|amaretti|torrone|grissini|taralli|piemont|sizilian", "italien"),
+    (r"griechisch|arabisch|orient|türkisch|tuerkisch|persisch|baklava|halva|helva|lokum|dattel|pistazien-?creme|persisch", "orient"),
+    (r"englisch|british|britisch|scottish|schottisch|shortbread|irish", "uk"),
+    (r"schwedisch|norwegisch|finnisch|dänisch|skandinav|lakritz|salmiak", "skandinavien"),
+    (r"französisch|france|francais|macaron|crêpe|bretagne|provence", "frankreich"),
+    (r"spanisch|españa|turrón|turron|churro|iberico", "spanien"),
+    (r"österreich|oesterreich|steiri|tirol|wiener|mozart|vulgo|kärnt", "oesterreich"),
+    (r"schweiz|swiss|suisse", "schweiz"),
+    (r"belgisch|holländ|niederländ|stroopwafel|speculoos|spekulatius", "benelux"),
+]
+WELT_HINTS = [(re.compile(r, re.I), w) for r, w in WELT_HINTS]
+ART_KERN = re.compile(r"schoko|choco|praline|trüffel|fruchtgummi|gummi|bonbon|lolli|kaugummi|lakritz|marshmallow|chips|cracker|popcorn|"
+                      r"keks|cookie|waffel|riegel|nüss|nuss|mandel|cashew|snack|sour|sauer|candy|sweets|zuckerl|brause|nougat|marzipan|"
+                      r"adventskalender|soda|limo|cola|sirup|ramune|mochi|pocky", re.I)
+
+
+_BRAND_RX = re.compile(r"(?<![\w])(" + "|".join(re.escape(k) for k in sorted(BRANDS, key=len, reverse=True) if len(k) >= 3) + r")(?![\w])", re.I) if BRANDS else None
+_BRAND_LC = {k.lower(): k for k in BRANDS}
+_STRONG = re.compile(r"\b(japan|japanisch\w*|korea|koreanisch\w*|usa|amerikanisch\w*|mexikanisch\w*|italienisch\w*|thailändisch\w*|chinesisch\w*|"
+                     r"türkisch\w*|griechisch\w*|arabisch\w*|indisch\w*|französisch\w*|spanisch\w*|englisch\w*|britisch\w*|schwedisch\w*|"
+                     r"finnisch\w*|norwegisch\w*|dänisch\w*|österreichisch\w*|schweizer|belgisch\w*|holländisch\w*|asiatisch\w*)\b", re.I)
+
+
+def brand_of(name, brand, shop=""):
+    """Marke bestimmen. Händler schreiben oft ihren eigenen Namen ins Marken-Feld (z. B. "SugarGang" bei Kinder-Produkten),
+    dann wird die Marke im Produktnamen gesucht."""
+    b = (brand or "").replace("&amp;", "&").strip()
+    reseller = not b or b.lower() in (shop or "").lower() or (shop or "").lower() in b.lower()
+    if b in BRANDS and not reseller:
+        return b
+    if _BRAND_RX:
+        m = _BRAND_RX.search(name)
+        if m:
+            return _BRAND_LC.get(m.group(1).lower(), b)
+    if reseller and b and b.lower() not in name.lower():
+        return ""  # Händlername ist keine Marke dieses Produkts
+    return b
+
+
+def welt_of(name, brand, cats):
+    hay = f"{name} {cats}"
+    m = _STRONG.search(hay)  # ausdrückliches Land im Namen/Kategorie schlägt die Marke ("KitKat Matcha Japan")
+    if m:
+        for r, w in WELT_HINTS:
+            if r.search(m.group(0)):
+                return w
+    b = BRANDS.get(brand, {})
+    if b.get("welt"):
+        return b["welt"]
+    for r, w in WELT_HINTS:
+        if r.search(hay):
+            return w
+    return None
+
+
 def main():
     srcs = sources()
     if not srcs:
@@ -150,16 +215,21 @@ def main():
         log("Kein Advertiser in feeds.json aktiv, übersprungen.")
         OUT.unlink(missing_ok=True)
         return
-    only = {k: re.compile(a["only"], re.I) for k, a in adv.items() if a.get("only")}
+    rx = lambda v: re.compile(v, re.I) if v else None
+    inc = {k: rx(a.get("include")) for k, a in adv.items()}
+    inc_name = {k: rx(a.get("include_name")) for k, a in adv.items()}
+    exc_name = {k: rx(a.get("exclude_name")) for k, a in adv.items()}
     manual = json.loads((HERE / "products.json").read_text(encoding="utf-8")).get("products", [])
     seen = {norm(p.get("name", "")) for p in manual} | {p.get("url", "") for p in manual}
 
-    buckets = {}  # shop -> kategorie -> [produkte]
-    stats = {"zeilen": 0, "inaktiv": 0, "lager": 0, "alkohol": 0, "nonfood": 0, "kategorie": 0, "ohne_bild": 0, "doppelt": 0}
+    result = []
+    stats = {"zeilen": 0, "inaktiv": 0, "lager": 0, "alkohol": 0, "tier": 0, "nonfood": 0, "thema": 0, "ohne_bild": 0, "doppelt": 0}
+    per_src = {}
     for label, src, is_url in srcs:
         path = download(src, label) if is_url else src
         if not path:
             continue
+        n0 = stats["zeilen"]
         try:
             with open_feed(path) as fh:
                 first = fh.readline()
@@ -173,6 +243,7 @@ def main():
                         stats["inaktiv"] += 1
                         continue
                     name, url, img = col(row, "name"), col(row, "url"), col(row, "image")
+                    name = name.replace("&amp;", "&")
                     if DUMP:
                         DUMP_ROWS.append([a.get("shop", ""), name[:120], col(row, "mcat")[:80], col(row, "cat")[:80],
                                           col(row, "brand")[:40], col(row, "desc")[:160], col(row, "stock")[:12], 1 if img else 0])
@@ -181,16 +252,22 @@ def main():
                     if col(row, "stock").lower() in NO:
                         stats["lager"] += 1
                         continue
-                    mcat, cat, brand = col(row, "mcat"), col(row, "cat"), col(row, "brand")
+                    mcat, cat = col(row, "mcat"), col(row, "cat")
+                    brand = brand_of(name, col(row, "brand"), a.get("shop", ""))
+                    binfo = BRANDS.get(brand, {})
                     hay = f"{name} {mcat} {cat}"
-                    if ALKOHOL.search(hay):
+                    if binfo.get("alkohol") or ALKOHOL.search(hay) or re.search(r"alkoholische getränke|\bwein\b|spirituos|\bbier\b", f"{mcat} {cat}", re.I):
                         stats["alkohol"] += 1
                         continue
-                    if NONFOOD.search(hay):
+                    if binfo.get("tier") or TIER.search(hay) or re.search(r"tierbedarf|tiernahrung", mcat, re.I):
+                        stats["tier"] += 1
+                        continue
+                    if NONFOOD.search(name) or re.search(r"heim & garten|küche & esszimmer|drogerie|baby & klein|haushalt", f"{mcat} {cat}", re.I):
                         stats["nonfood"] += 1
                         continue
-                    if mid in only and not only[mid].search(hay):
-                        stats["kategorie"] += 1
+                    ok = (inc[mid] is None or inc[mid].search(f"{mcat} || {cat}")) or (inc_name[mid] and inc_name[mid].search(name))
+                    if not ok or (exc_name[mid] and exc_name[mid].search(name)):
+                        stats["thema"] += 1
                         continue
                     if not img or not any(r.match(img) for r in REMOTE_OK):
                         stats["ohne_bild"] += 1
@@ -199,34 +276,24 @@ def main():
                     if key in seen or norm(name) in seen or url in seen:
                         stats["doppelt"] += 1
                         continue
-                    seen.update({key, url})
-                    shop = a.get("shop") or col(row, "merchant_name")
-                    p = {"name": name[:120], "url": url, "image": img, "shop": shop, "brand": brand,
-                         "feed_category": " ".join(x for x in (mcat, cat) if x)[:160], "source": "awin", "advertiser": int(mid)}
+                    seen.update({key, url, norm(name)})
+                    p = {"name": name[:120], "url": url, "image": img, "shop": a.get("shop") or col(row, "merchant_name"),
+                         "brand": brand, "feed_category": " ".join(x for x in (mcat, cat) if x)[:160], "source": "awin", "advertiser": int(mid)}
+                    w = welt_of(name, brand, f"{mcat} {cat}")
+                    if w:
+                        p["land"] = w
                     if a.get("themen"):
                         p["themen"] = a["themen"]
-                    buckets.setdefault(shop, {}).setdefault(mcat or cat or "-", []).append(p)
+                    # Punkte für die Reihenfolge: Exoten, klassisches Naschen und Partner-Bonus nach vorn
+                    p["score"] = (a.get("boost", 0) + (3 if w and w != "deutschland" else 0)
+                                  + (3 if ART_KERN.search(hay) else 0) + (1 if binfo else 0))
+                    result.append(p)
         except Exception as ex:
             log(f"Feed {label}: konnte nicht gelesen werden ({type(ex).__name__}). Weiter ohne diesen Feed.")
         finally:
             if is_url and path:
                 os.unlink(path)
-
-    # Pro Shop über die Kategorien mischen, dann Shops reihum mischen
-    per_shop = {}
-    for shop, cats in buckets.items():
-        lim = next((a.get("max", 40000) for a in adv.values() if a.get("shop") == shop), 40000)
-        lists, picked = list(cats.values()), []
-        while len(picked) < lim and any(lists):
-            for l in lists:
-                if l and len(picked) < lim:
-                    picked.append(l.pop(0))
-        per_shop[shop] = picked
-    total, result = conf.get("max_total", 1200), []
-    while len(result) < total and any(per_shop.values()):
-        for l in per_shop.values():
-            if l and len(result) < total:
-                result.append(l.pop(0))
+        per_src[label] = stats["zeilen"] - n0
 
     if DUMP and DUMP_ROWS:
         d = HERE / "static" / "_dump"
@@ -236,10 +303,13 @@ def main():
         log(f"Vorschau-Dump: {len(DUMP_ROWS)} Zeilen")
     OUT.write_text(json.dumps({"generated": datetime.now(timezone.utc).isoformat(timespec="seconds"),
                                "products": result}, ensure_ascii=False), encoding="utf-8")
-    shops = {}
+    shops, welten = {}, {}
     for p in result:
         shops[p["shop"]] = shops.get(p["shop"], 0) + 1
+        welten[p.get("land", "-")] = welten.get(p.get("land", "-"), 0) + 1
+    log("Zeilen je Feed: " + ", ".join(f"{k} {v}" for k, v in per_src.items()))
     log(f"{len(result)} Produkte übernommen: " + ", ".join(f"{k} {v}" for k, v in sorted(shops.items())))
+    log("Welten: " + ", ".join(f"{k} {v}" for k, v in sorted(welten.items(), key=lambda x: -x[1])))
     log("Aussortiert: " + ", ".join(f"{k} {v}" for k, v in stats.items()))
 
 

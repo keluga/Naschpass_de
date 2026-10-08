@@ -152,7 +152,18 @@ def _kw_re(k):
 _KW = {(g["id"], o["id"]): [_kw_re(k) for k in o.get("keywords", [])] for g in FILTER for o in g["options"]}
 
 
+_FACET_CACHE = {}
+
+
 def facets(p):
+    """Ordnet ein Produkt automatisch zu (gecacht, bei tausenden Feed-Produkten wichtig)."""
+    k = id(p)
+    if k not in _FACET_CACHE:
+        _FACET_CACHE[k] = _facets(p)
+    return _FACET_CACHE[k]
+
+
+def _facets(p):
     """Ordnet ein Produkt automatisch zu (oder per Hand über p['land'|'geschmack'|'art'])."""
     text = translit(" ".join([p.get("name", ""), p.get("note", ""), p.get("feed_category", ""), p.get("brand", "")]
                              + p.get("tags", [])))
@@ -218,8 +229,63 @@ def in_cat(p, c):
     return False
 
 
+_CAT_CACHE = {}
+
+
 def cat_items(c):
-    return [p for p in products if in_cat(p, c)]
+    if c["id"] not in _CAT_CACHE:
+        _CAT_CACHE[c["id"]] = [p for p in products if in_cat(p, c)]
+    return _CAT_CACHE[c["id"]]
+
+
+_THEME_SETS = {}
+
+
+def themes_of(p):
+    if not _THEME_SETS:
+        for c in cats:
+            _THEME_SETS[c["id"]] = {id(x) for x in cat_items(c)}
+    return [c["id"] for c in cats if id(p) in _THEME_SETS[c["id"]]]
+
+
+ART_ORDER = ["schokolade", "gummi", "chips", "getraenke", "pralinen", "bonbons", "kekse", "snacks", "boxen", "eis", "feinkost", "tee"]
+
+
+def order_products():
+    """Reihenfolge "Entdecken": Punkte (Exoten, Naschen, Saison, Handauswahl) und dann mischen,
+    damit nie lange Strecken vom selben Shop oder derselben Art kommen."""
+    season = [c for c in cats if in_season(c)]
+    def art(p):
+        a = facets(p).get("art", set())
+        return next((x for x in ART_ORDER if x in a), "sonst")
+    def score(p):
+        s = p.get("score", 6 if p.get("source") != "awin" else 0)  # Handeinträge zählen als gute Auswahl
+        if p.get("post"):
+            s += 3
+        a = art(p)
+        if a in ("tee", "feinkost"):
+            s -= 3
+        return s
+    in_seas = {id(x) for c in season for x in cat_items(c)}
+    sc, ar = {}, {}
+    for p in products:
+        ar[id(p)] = art(p)
+        sc[id(p)] = score(p) + (2 if id(p) in in_seas else 0)
+    buckets = {}
+    for p in sorted(products, key=lambda x: sc[id(x)], reverse=True):
+        buckets.setdefault((p.get("shop", ""), ar[id(p)]), []).append(p)
+    queues = list(buckets.values())
+    out, last = [], (None, None)
+    while queues:
+        queues.sort(key=lambda q: -sc[id(q[0])])
+        pick = (next((q for q in queues if q[0].get("shop") != last[0] and ar[id(q[0])] != last[1]), None)
+                or next((q for q in queues if q[0].get("shop") != last[0]), queues[0]))
+        p = pick.pop(0)
+        out.append(p)
+        last = (p.get("shop"), ar[id(p)])
+        if not pick:
+            queues.remove(pick)
+    products[:] = out
 
 
 def cats_sorted():
@@ -322,6 +388,26 @@ STICKERS = {
 
 
 STICKERS["europa"] = STICKERS["verboten"]
+
+
+def _stripes(cid, cols, vertical=False):
+    n, w = len(cols), 64 / len(cols)
+    r = "".join((f'<rect x="{i * w:.2f}" width="{w + .5:.2f}" height="64" fill="{c}"/>' if vertical
+                 else f'<rect y="{i * w:.2f}" width="64" height="{w + .5:.2f}" fill="{c}"/>') for i, c in enumerate(cols))
+    return f'<clipPath id="c{cid}"><rect width="64" height="64" rx="14"/></clipPath><g clip-path="url(#c{cid})">{r}</g>'
+
+
+STICKERS["oesterreich"] = _stripes("at", ["#C8102E", "#fff", "#C8102E"])
+STICKERS["frankreich"] = _stripes("fr", ["#0055A4", "#fff", "#EF4135"], True)
+STICKERS["spanien"] = _stripes("es", ["#AA151B", "#F1BF00", "#F1BF00", "#AA151B"])
+STICKERS["benelux"] = _stripes("nl", ["#AE1C28", "#fff", "#21468B"])
+STICKERS["osteuropa"] = _stripes("oe", ["#fff", "#0039A6", "#D52B1E"])
+STICKERS["orient"] = ('<rect width="64" height="64" rx="14" fill="#E30A17"/><circle cx="27" cy="32" r="13" fill="#fff"/>'
+                      '<circle cx="31" cy="32" r="10.5" fill="#E30A17"/><path d="M42 32l7-3-4 6v-7l4 6z" fill="#fff"/>')
+for _k, (_bg, _em) in {"filmabend": ("#7C5CFF", "🍿"), "party": ("#FF6FA8", "🎉"), "mitbringsel": ("#FFB547", "🎁"),
+                       "geburtstag": ("#5FD3A8", "🎂"), "naschkatzen": ("#2B2350", "🐱")}.items():
+    STICKERS[_k] = (f'<rect width="64" height="64" rx="14" fill="{_bg}"/>'
+                    f'<text x="32" y="44" font-size="34" text-anchor="middle">{_em}</text>')
 STICKERS["italien"] = ('<clipPath id="ci"><rect width="64" height="64" rx="14"/></clipPath><g clip-path="url(#ci)"><rect width="22" height="64" fill="#1F8A4C"/>'
                        '<rect x="21" width="22" height="64" fill="#fff"/><rect x="42" width="22" height="64" fill="#D8263A"/></g>')
 STICKERS["schweiz"] = ('<rect width="64" height="64" rx="14" fill="#D8263A"/><rect x="27" y="14" width="10" height="36" fill="#fff"/>'
@@ -531,6 +617,12 @@ section{padding:34px 0 6px}
 .prods.v-list{grid-template-columns:1fr;gap:10px}
 @media(min-width:620px){.prods.v-big{grid-template-columns:repeat(2,1fr)}.prods.v-small{grid-template-columns:repeat(3,1fr)}.prods.v-list{grid-template-columns:repeat(2,1fr)}}
 @media(min-width:960px){.prods.v-big{grid-template-columns:repeat(3,1fr)}.prods.v-small{grid-template-columns:repeat(4,1fr)}}
+.favlink{white-space:nowrap;color:#E8457A!important}.mrow2 .btn{background:var(--vio);color:#fff;border-radius:12px;text-decoration:none;font-weight:800}
+.pcw{position:relative;display:flex}.pcw>.prod{flex:1;min-width:0}
+.fav{position:absolute;right:8px;top:8px;width:34px;height:34px;border-radius:50%;border:0;background:#fff;color:#E8457A;font-size:19px;line-height:1;cursor:pointer;box-shadow:0 2px 8px rgba(43,35,80,.15);z-index:2}
+.fav[aria-pressed=true]{background:#E8457A;color:#fff}
+.v-list .fav{top:auto;bottom:8px;right:8px;width:30px;height:30px;font-size:16px}
+.prod .reg{font-size:11.5px;color:var(--mut);line-height:1.3}
 .prod{display:flex;flex-direction:column;background:#fff;border-radius:18px;overflow:hidden;text-decoration:none;color:var(--fg);box-shadow:var(--sh)}
 .prod .pi{position:relative;background:var(--bg2);aspect-ratio:1;display:grid;place-items:center;padding:12px}
 .prod .pi img{max-height:100%;object-fit:contain}
@@ -690,7 +782,7 @@ def page(title, body, desc=None, path="/", og_img=None, script="", stamp=""):
 <style>{CSS}{SPIN_CSS}{EXTRA_CSS}{EXTRA_CSS2}</style></head><body{stamp_attr(stamp)}>
 <div class="ad">{AD}</div>{'<div class="ad" style="background:#FFB547;color:#2B2350;font-weight:700">VORSCHAU mit Beispielprodukten – nicht live</div>' if DEMO else ''}
 <header><div class="wrap"><a class="logo" href="/"><img src="/static/logo-96.png" alt="" width="38" height="38">NASCHPASS</a>
-<nav aria-label="Hauptmenü"><a href="/shop/">Shop</a><a href="/posts/">Posts</a><a href="/ueber/" class="hide-s">Über uns</a></nav>
+<nav aria-label="Hauptmenü"><a href="/shop/">Shop</a><a href="/posts/">Posts</a><a href="/ueber/" class="hide-s">Über uns</a><a href="/merkliste/" class="favlink" hidden aria-label="Merkliste">♥ <span></span></a></nav>
 <button class="sbtn" type="button" data-open-search aria-label="Suche öffnen">{ICON_SEARCH}</button></div></header>
 <main class="wrap">
 {body}
@@ -705,18 +797,30 @@ def page(title, body, desc=None, path="/", og_img=None, script="", stamp=""):
 <script>{COMMON_JS}</script><script type="module">{SEARCH_JS}</script>{script}</body></html>"""
 
 
+REGION_NOTE = {"REWE": "Lieferung je nach Wohnort, sonst Abholung im Markt"}
+
+
+def fav_data(p):
+    i = prod_img(p, 200)
+    return html.escape(json.dumps({"u": p["url"], "n": p["name"], "s": p.get("shop", ""),
+                                   "i": i[1] if i and i[0] == "own" else ""}, ensure_ascii=False), quote=True)
+
+
 def prod_card(p):
     cid = p.get("category", "")
     cname = cat_by_id.get(cid, {}).get("name", "")
     pic = pic_html(p, 480, p["name"], cid)
     shop = p.get("shop", "")
     btn = f"Bei {e(shop)} ansehen*" if shop else "Zum Shop*"
-    return (f'<a class="prod" href="{e(p["url"])}" rel="sponsored noopener" target="_blank" data-cat="{e(cid)}"{facet_attrs(p)} style="--c:{cat_color.get(cid, "#CFE7DD")}">'
+    reg = REGION_NOTE.get(shop)
+    return (f'<div class="pcw" data-cat="{e(cid)}"{facet_attrs(p)}><a class="prod" href="{e(p["url"])}" rel="sponsored noopener" target="_blank" style="--c:{cat_color.get(cid, "#CFE7DD")}">'
             f'<div class="pi">{pic}' + (f'<span class="pc"><i></i>{e(cname)}</span>' if cname else "") + '</div>'
             f'<div class="pb"><h3>{e(p["name"])}</h3>'
             + (f'<p class="note">{e(p["note"])}</p>' if p.get("note") else "")
             + (f'<span class="shop">bei {e(shop)}</span>' if shop else "")
-            + f'<div class="cta"><span><em class="l">{btn}</em><em class="s">Zum Shop*</em></span></div></div></a>')
+            + (f'<span class="reg">{e(reg)}</span>' if reg else "")
+            + f'<div class="cta"><span><em class="l">{btn}</em><em class="s">Zum Shop*</em></span></div></div></a>'
+            f'<button class="fav" type="button" aria-pressed="false" aria-label="Merken" data-fav="{fav_data(p)}">♡</button></div>')
 
 
 def partner_card():
@@ -841,19 +945,37 @@ document.querySelectorAll('[role=tab]').forEach(function(t){t.addEventListener('
  n.querySelectorAll('[data-panel]').forEach(function(p){p.hidden=p.dataset.panel!==t.dataset.tab})})});
 /* Shop-Filter: innerhalb einer Gruppe ODER, zwischen Gruppen UND; Zustand steht in der Adresse (teilbar) */
 var fl=document.getElementById('flt');
-if(fl){var grid=document.getElementById(fl.dataset.grid),cards=[].slice.call(grid.children),PAGE=24,shown=PAGE,sel={};
+if(fl){var grid=document.getElementById(fl.dataset.grid),PAGE=24,shown=48,sel={},data=null,loading=false;
  var cnt=document.getElementById('fcount'),rst=document.getElementById('freset'),more=document.getElementById('fmore'),emp=document.getElementById('fempty');
+ var total=+grid.dataset.total||grid.children.length;
  fl.querySelectorAll('[data-g]').forEach(function(b){sel[b.dataset.g]=[]});
  var u=new URLSearchParams(location.search);Object.keys(sel).forEach(function(k){var v=u.get(k);if(v)sel[k]=v.split(',')});
- function ok(c){return Object.keys(sel).every(function(k){if(!sel[k].length)return true;var h=' '+(c.dataset[k]||'')+' ';
+ function any(){return Object.keys(sel).some(function(k){return sel[k].length})}
+ function okD(d){return Object.keys(sel).every(function(k){if(!sel[k].length)return true;var h=' '+(d[k]||'')+' ';
   return sel[k].some(function(v){return h.indexOf(' '+v+' ')>=0})})}
- function apply(){var n=0;cards.forEach(function(c){var m=ok(c);if(m)n++;c.hidden=!m||n>shown});
+ function esc2(x){return String(x).replace(/[&<>"']/g,function(c){return'&#'+c.charCodeAt(0)+';'})}
+ function card(i){var im=i.img||(i.ext&&window.npImgOK&&window.npImgOK()?i.ext:'');var sh=(i.sub||'').split(' · ')[0];
+  var fav=esc2(JSON.stringify({u:i.url,n:i.title,s:sh,i:i.img||''}));
+  return '<div class="pcw"><a class="prod" href="'+esc2(i.url)+'" rel="sponsored noopener" target="_blank"><div class="pi">'
+   +(im?'<img src="'+esc2(im)+'" alt="'+esc2(i.title)+'" loading="lazy">':'<span class="svgw">'+(i.svg||'')+'</span>')+'</div><div class="pb"><h3>'+esc2(i.title)+'</h3>'
+   +(sh?'<span class="shop">bei '+esc2(sh)+'</span>':'')+(i.reg?'<span class="reg">'+esc2(i.reg)+'</span>':'')
+   +'<div class="cta"><span><em class="l">'+(sh?'Bei '+esc2(sh)+' ansehen*':'Zum Shop*')+'</em><em class="s">Zum Shop*</em></span></div></div></a>'
+   +'<button class="fav" type="button" aria-pressed="false" aria-label="Merken" data-fav="'+fav+'">♡</button></div>'}
+ function load(cb){if(data){cb();return}if(loading)return;loading=true;
+  fetch('/search.json').then(function(r){return r.json()}).then(function(j){data=j.items.filter(function(i){return i.type==='product'}).map(function(i){
+   var o={i:i};(i.f||'').split(' ').forEach(function(x){var kv=x.split(':');if(kv[1])o[kv[0]]=(o[kv[0]]?o[kv[0]]+' ':'')+kv[1]});o.t=(i.th||'');return o});cb()})}
+ function apply(){
+  if(!data&&(any()||shown>48)){cnt.textContent='Lädt …';load(apply);return}
+  var n;
+  if(data){var hits=data.filter(okD);n=hits.length;grid.innerHTML=hits.slice(0,shown).map(function(d){return card(d.i)}).join('');
+   if(window.npFavSync)window.npFavSync(grid)}
+  else{n=total}
   fl.querySelectorAll('[data-g]').forEach(function(b){b.setAttribute('aria-pressed',sel[b.dataset.g].indexOf(b.dataset.v)>=0)});
   fl.querySelectorAll('[data-badge]').forEach(function(x){var k=sel[x.dataset.badge].length;x.textContent=k;x.hidden=!k});
   var act=[];fl.querySelectorAll('[data-g][aria-pressed=true]').forEach(function(b){act.push('<button type="button" data-rm="'+b.dataset.g+':'+b.dataset.v+'" aria-label="'+b.dataset.n+' entfernen">'+b.dataset.n+' ×</button>')});
   document.getElementById('factive').innerHTML=act.join('');
   cnt.textContent=n+' Treffer';more.hidden=n<=shown;more.textContent='Mehr zeigen ('+(n-shown)+')';emp.hidden=n>0;
-  var any=Object.keys(sel).some(function(k){return sel[k].length});rst.hidden=!any;
+  rst.hidden=!any();
   var q=Object.keys(sel).filter(function(k){return sel[k].length}).map(function(k){return k+'='+sel[k].join(',')}).join('&');
   history.replaceState(null,'',location.pathname+(q?'?'+q:'')+location.hash)}
  function closeAll(x){fl.querySelectorAll('.dd.open').forEach(function(d){if(d!==x){d.classList.remove('open');d.querySelector('.ddb').setAttribute('aria-expanded','false')}})}
@@ -861,10 +983,10 @@ if(fl){var grid=document.getElementById(fl.dataset.grid),cards=[].slice.call(gri
   closeAll(d);d.classList.toggle('open',o);t.setAttribute('aria-expanded',o)})});
  document.addEventListener('click',function(ev){if(!ev.target.closest('.dd'))closeAll()});
  document.addEventListener('keydown',function(ev){if(ev.key==='Escape')closeAll()});
- fl.addEventListener('click',function(ev){var r=ev.target.closest('[data-rm]');if(r){var kv=r.dataset.rm.split(':'),a2=sel[kv[0]];a2.splice(a2.indexOf(kv[1]),1);shown=PAGE;apply();return}
+ fl.addEventListener('click',function(ev){var r=ev.target.closest('[data-rm]');if(r){var kv=r.dataset.rm.split(':'),a2=sel[kv[0]];a2.splice(a2.indexOf(kv[1]),1);shown=48;apply();return}
   var b=ev.target.closest('[data-g]');if(!b)return;var a=sel[b.dataset.g],i=a.indexOf(b.dataset.v);
-  if(i>=0)a.splice(i,1);else a.push(b.dataset.v);shown=PAGE;apply()});
- rst.addEventListener('click',function(){Object.keys(sel).forEach(function(k){sel[k]=[]});shown=PAGE;apply()});
+  if(i>=0)a.splice(i,1);else a.push(b.dataset.v);shown=48;apply()});
+ rst.addEventListener('click',function(){Object.keys(sel).forEach(function(k){sel[k]=[]});shown=48;apply()});
  more.addEventListener('click',function(){shown+=PAGE;apply()});
  apply()}
 /* Folien-Galerie */
@@ -884,6 +1006,19 @@ if(f){var inp=f.querySelector('input'),msg=f.querySelector('.msg'),st=f.querySel
   if(ids.indexOf(n)<0){msg.textContent='Post #'+n+' gibt es noch nicht. Schau mal bei allen Posts.';return}
   msg.textContent='';st.textContent='#'+n;st.classList.remove('go');void st.offsetWidth;st.classList.add('go');
   setTimeout(function(){location.href='/p/'+n+'/'},reduce?0:480)})}
+window.npToast=function(msg){var t=document.createElement('div');t.className='toast';t.setAttribute('role','status');t.textContent=msg;
+ document.body.appendChild(t);setTimeout(function(){t.classList.add('on')},30);setTimeout(function(){t.classList.remove('on')},2200);setTimeout(function(){t.remove()},2800)};
+/* Merkliste: nur nach Klick auf ♡, nur im Browser (localStorage), wird nie übertragen */
+var FK='np_merk';function fget(){try{return JSON.parse(localStorage.getItem(FK)||'[]')}catch(e){return[]}}
+function fset(v){try{if(v.length)localStorage.setItem(FK,JSON.stringify(v));else localStorage.removeItem(FK)}catch(e){}}
+function fbadge(){var n=fget().length;document.querySelectorAll('.favlink').forEach(function(a){a.hidden=!n;var c=a.querySelector('span');if(c)c.textContent=n})}
+window.npFavSync=function(root){var l=fget().map(function(x){return x.u});(root||document).querySelectorAll('.fav').forEach(function(b){
+ try{var d=JSON.parse(b.dataset.fav);var on=l.indexOf(d.u)>=0;b.setAttribute('aria-pressed',on);b.textContent=on?'♥':'♡';b.setAttribute('aria-label',on?'Gemerkt – entfernen':'Merken')}catch(e){}})};
+document.addEventListener('click',function(ev){var b=ev.target.closest('.fav');if(!b)return;ev.preventDefault();ev.stopPropagation();
+ var d;try{d=JSON.parse(b.dataset.fav)}catch(e){return}var l=fget(),k=l.findIndex(function(x){return x.u===d.u});
+ if(k>=0)l.splice(k,1);else l.push(d);fset(l);window.npFavSync(document);fbadge();
+ if(window.npToast)window.npToast(k>=0?'Von der Merkliste entfernt':'Auf der Merkliste ♥')});
+window.npFavSync(document);fbadge();
 })();
 """
 
@@ -959,7 +1094,10 @@ ART_COLORS = {"schokolade": "#8B5A3C", "pralinen": "#C2185B", "gummi": "#FF4D8D"
 def spin_items(live):
     items = []
     art_name = {o["id"]: o["name"] for g in FILTER if g["id"] == "art" for o in g["options"]}
-    for p in products:
+    # Rad: höchstens 60 Sorten aus der vorderen "Entdecken"-Liste (ohne Tee/Feinkost), sonst wird die Startseite riesig
+    pool = [p for p in products[:900] if not facets(p).get("art", set()) & {"tee", "feinkost"}]
+    step = max(1, len(pool) // 60)
+    for p in pool[::step][:60]:
         arts = [a for a in ART_COLORS if a in facets(p).get("art", set())]
         a = arts[0] if arts else ""
         i = prod_img(p, 240)
@@ -1460,6 +1598,27 @@ root.addEventListener('click',function(ev){var b=ev.target.closest('.qopt');if(!
 </script>"""
 
 
+MERK_HTML = ('<section class="hero" style="padding-bottom:0"><h1>Deine <span class="acc">Merkliste</span></h1>'
+             '<p class="sub">Gekauft wird immer direkt im jeweiligen Shop. Darum steht hier alles nach Shop sortiert: '
+             'einen Shop öffnen, Sachen in den Warenkorb, fertig.</p></section><section id="merk"></section>'
+             '<p class="wl">* Werbelink</p>')
+MERK_JS = r"""<script>(function(){var K='np_merk',box=document.getElementById('merk');
+function get(){try{return JSON.parse(localStorage.getItem(K)||'[]')}catch(e){return[]}}
+function set(v){try{if(v.length)localStorage.setItem(K,JSON.stringify(v));else localStorage.removeItem(K)}catch(e){}}
+function esc(x){return String(x).replace(/[&<>"']/g,function(c){return'&#'+c.charCodeAt(0)+';'})}
+function draw(){var l=get();if(!l.length){box.innerHTML='<div class="empty"><strong>Noch nichts gemerkt.</strong><br>Tipp im Shop auf das ♡ bei einem Produkt.</div><p><a class="btn" href="/shop/">Zum Shop</a></p>';return}
+ var g={};l.forEach(function(x){(g[x.s||'Shop']=g[x.s||'Shop']||[]).push(x)});
+ box.innerHTML=Object.keys(g).map(function(s){return '<div class="mgrp"><h2>'+esc(s)+' <small>'+g[s].length+'</small></h2>'+g[s].map(function(x){
+  return '<div class="mrow2">'+(x.i?'<img src="'+esc(x.i)+'" alt="">':'<span class="ph">🍬</span>')+'<b>'+esc(x.n)+'</b>'
+  +'<a class="btn" href="'+esc(x.u)+'" rel="sponsored noopener" target="_blank">Ansehen*</a><button type="button" class="linkbtn" data-del="'+esc(x.u)+'">Entfernen</button></div>'}).join('')+'</div>'}).join('')
+  +'<p style="margin-top:16px"><button type="button" class="linkbtn" data-clear>Merkliste leeren</button></p>'}
+box.addEventListener('click',function(ev){var d=ev.target.closest('[data-del]');if(d){set(get().filter(function(x){return x.u!==d.dataset.del}));draw()}
+ if(ev.target.closest('[data-clear]')){set([]);draw()}});draw()})();</script>
+<style>.mgrp{background:#fff;border-radius:18px;padding:14px;margin:14px 0;box-shadow:var(--sh)}.mgrp h2{margin:0 0 8px;font-size:20px}.mgrp small{font:700 14px Inter,sans-serif;color:var(--mut)}
+.mrow2{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)}.mrow2 img,.mrow2 .ph{width:52px;height:52px;object-fit:contain;border-radius:10px;background:var(--bg2);flex:none;display:grid;place-items:center}
+.mrow2 b{flex:1;font-size:14px;line-height:1.3}.mrow2 .btn{padding:8px 12px;font-size:14px}</style>"""
+
+
 def cat_tile(c):
     items = cat_items(c)
     n = f'<span class="n">{len(items)} {"Sorte" if len(items) == 1 else "Sorten"}</span>' if items else '<span class="n soon">Produkte folgen</span>'
@@ -1503,7 +1662,8 @@ def search_index(live):
                       "sub": " · ".join(x for x in (p.get("shop", ""), cname) if x),
                       "alt": translit(p["name"]), "tags": " ".join([cname, cid] + p.get("tags", [])),
                       "text": p.get("note", ""),
-                      "f": " ".join(f"{g}:{i}" for g, v in facets(p).items() for i in sorted(v))})
+                      "f": " ".join(f"{g}:{i}" for g, v in facets(p).items() for i in sorted(v)),
+                      "th": " ".join(themes_of(p)), **({"reg": REGION_NOTE[p.get("shop")]} if p.get("shop") in REGION_NOTE else {})})
     for c in cats:
         items.append({"type": "cat", "title": c["name"], "url": f"/kategorie/{c['id']}/", "svg": sticker(c["id"], 52),
                       "sub": c["teaser"], "alt": translit(c["name"]), "tags": c["id"].replace("-", " "), "text": c["teaser"]})
@@ -1530,12 +1690,16 @@ def build():
     if DEMO:
         shutil.copytree(HERE / "demo", DIST / "static" / "demo")
     live = [p for p in posts if (ROOT / "fertige_posts" / post_folder(p)).exists()]
+    order_products()
+    _CAT_CACHE.clear()  # Themenwelten in der neuen Reihenfolge
 
     # --- Kategorie-Seiten
     for c in cats:
         items = cat_items(c)
-        inner = (f'<div class="tools"><span></span>{view_toggle("g-cat", ["big", "small", "list"], "small")}</div>'
-                 + prod_grid(items, "g-cat")) if items else (
+        more_link = (f'<div class="morebar"><a class="morebtn" href="/shop/?t={c["id"]}#alle">Alle {len(items)} {e(c["name"])}-Sorten im Shop</a></div>'
+                     if len(items) > 48 else "")
+        inner = (f'<div class="tools"><span>{len(items)} Sorten</span>{view_toggle("g-cat", ["big", "small", "list"], "small")}</div>'
+                 + prod_grid(items[:48], "g-cat") + more_link) if items else (
             f'<div class="slots"><div class="slot main"><span class="emo">🤝</span><div><strong>Partner-Platz frei</strong>'
             f'<p>Hier erscheinen Produkte zum Thema {e(c["name"])}, sobald ein passender Partner-Shop freigeschaltet ist.'
             + (' Bis dahin findest du unten die passenden Posts.' if c.get("posts") else '')
@@ -1632,7 +1796,8 @@ def build():
     empty_shop = ('<div class="empty"><strong>Die ersten Sorten kommen bald.</strong><br>'
                   'Wir suchen gerade Shops aus, bei denen du die Sachen aus den Posts in Deutschland bekommst.</div>')
 
-    # --- Shop-Seite: alle Länder/Themen + alle Produkte
+    # --- Shop-Seite: alle Länder/Themen + alle Produkte (48 sofort, Rest lädt nach)
+    SHOP_STATIC = 48
     def _n(c):
         return len(cat_items(c))
     theme_row = "".join(
@@ -1651,10 +1816,13 @@ def build():
                     + "".join(f'<button class="chip" type="button" data-g="{g["id"]}" data-v="{o["id"]}" data-n="{e(o["name"])}" aria-pressed="false">'
                               f'{facet_icon(g["id"], o)}{e(o["name"])} <small>{counts[(g["id"], o["id"])]}</small></button>' for o in opts)
                     + '</div></div></div>')
+    fgroups += ('<div class="dd" hidden><div class="chips">' + "".join(
+        f'<button class="chip" type="button" data-g="t" data-v="{c["id"]}" data-n="{e(c["name"])}" aria-pressed="false">{e(c["name"])}</button>'
+        for c in cats) + '</div></div>')
     shop_all = (f'<div class="filters" id="flt" data-grid="g-all"><div class="fbtns">{fgroups}</div><div class="active" id="factive"></div></div>'
                 f'<div class="fbar"><b id="fcount" aria-live="polite"></b><button class="linkbtn" type="button" id="freset" hidden>Filter zurücksetzen</button>'
                 f'<span style="margin-left:auto">{view_toggle("g-all", ["big", "small", "list"], "small")}</span></div>'
-                f'<div class="grid prods v-small" id="g-all">{"".join(fill_slots([prod_card(p) for p in reversed(products)], 8 if len(products) < 8 else 0))}</div>'
+                f'<div class="grid prods v-small" id="g-all" data-total="{len(products)}">{"".join(fill_slots([prod_card(p) for p in products[:SHOP_STATIC]], 8 if len(products) < 8 else 0))}</div>'
                 f'<div class="empty" id="fempty" hidden><strong>Keine Treffer mit dieser Kombination.</strong> Nimm einen Filter raus oder probier die Suche.</div>'
                 f'<div class="morebar"><button class="morebtn" type="button" id="fmore" hidden>Mehr zeigen</button></div>'
                 f'<p class="wl">* Werbelink</p>') if products else empty_shop
@@ -1688,8 +1856,8 @@ def build():
         link = f'<a class="btn dark" href="{href}">{label}</a>' if total > SHOW else ""
         return f'<div class="morebar">{btn}{link}</div>' if (btn or link) else ""
 
-    new_prods = list(reversed(products))[:LIMIT]
-    home_prods = (f'<section id="neu"><div class="head"><h2>Neu im Shop</h2>{view_toggle("g-new", ["big", "small", "list"], "small")}</div>'
+    new_prods = products[:LIMIT]
+    home_prods = (f'<section id="neu"><div class="head"><h2>Zum Entdecken</h2>{view_toggle("g-new", ["big", "small", "list"], "small")}</div>'
                   f'{clip_grid(fill_slots([prod_card(p) for p in new_prods], 4), "g-new", "prods")}<p class="wl">* Werbelink</p>'
                   f'{more_bar("g-new", len(new_prods), len(products), "/shop/", f"Alle {len(products)} im Shop")}</section>'
                   ) if products else ""
@@ -1726,7 +1894,19 @@ def build():
             f'<div class="ddp"><div class="chips">{tchips}</div></div></div>')
     browse_html = f'<nav class="fbtns ddnav" aria-label="Stöbern" style="margin-top:14px">{dds}</nav>'
     minis = []
-    for p in list(reversed(products))[:6]:
+    # "Gerade im Shop": je eine Art, damit jeder sofort Verschiedenes sieht (Exoten zuerst)
+    pick, seen_art = [], set()
+    for want in ["exot", "schokolade", "gummi", "chips", "getraenke", "pralinen", "kekse", "snacks", "boxen"]:
+        for p in products:
+            f = facets(p)
+            hit = (bool(f.get("land", set()) - {"deutschland", "europa"}) and p not in pick) if want == "exot" else (want in f.get("art", set()) and p not in pick)
+            if hit:
+                pick.append(p)
+                break
+        if len(pick) >= 6:
+            break
+    pick += [p for p in products if p not in pick][:max(0, 6 - len(pick))]
+    for p in pick[:6]:
         minis.append(f'<a class="mini" href="{e(p["url"])}" rel="sponsored noopener" target="_blank" style="--c:{cat_color.get(p.get("category", ""), "#CFE7DD")}">'
                      f'<span class="mp">{pic_html(p, 200, p["name"], p.get("category", ""))}</span><b>{e(p["name"])}*</b></a>')
     while len(minis) < 4:
@@ -1808,7 +1988,28 @@ Vollständige Angaben im <a href="/impressum/">Impressum</a>.</p></section>"""
     write("ueber/index.html", page("Über Naschpass & für Partner", about,
                                    "Was Naschpass ist, wie wir arbeiten und was Partner-Shops bei uns bekommen.", "/ueber/"))
 
-    write("search.json", json.dumps(search_index(live), ensure_ascii=False, separators=(",", ":")))
+    si = search_index(live)
+    for it in si["items"]:  # leere Felder und doppelte Schreibweisen weglassen (Datei bleibt kleiner)
+        if it.get("alt") == it.get("title", "").lower():
+            it.pop("alt")
+        for k in [k for k, v in it.items() if v in ("", None)]:
+            it.pop(k)
+    write("search.json", json.dumps(si, ensure_ascii=False, separators=(",", ":")))
+    write("merkliste/index.html", page("Merkliste – Naschpass", MERK_HTML, "Deine gemerkten Süßigkeiten, sortiert nach Shop.",
+                                       "/merkliste/", script=MERK_JS))
+    if os.environ.get("CONTEXT") == "deploy-preview" or os.environ.get("PRUEFEN") == "1":
+        rows = "".join(
+            f'<tr><td>{k + 1}</td><td><a href="{e(p["url"])}" rel="sponsored noopener" target="_blank">{e(p["name"])}</a></td><td>{e(p.get("shop", ""))}</td>'
+            f'<td>{e(p.get("brand", ""))}</td><td>{e(" ".join(sorted(facets(p).get("land", set()))))}</td>'
+            f'<td>{e(" ".join(sorted(facets(p).get("art", set()))))}</td><td>{e(" ".join(themes_of(p)))}</td><td>{e(p.get("feed_category", "")[:60])}</td></tr>'
+            for k, p in enumerate(products))
+        write("pruefen/index.html", page("Prüfen – Naschpass (nur Vorschau)",
+              f'<section class="prose" style="max-width:none"><h1>Prüfliste ({len(products)} Produkte)</h1>'
+              '<p>Nur in der Vorschau sichtbar. Reihenfolge = „Entdecken“. Strg+F zum Suchen. Schreib Claude die Nummern, die raus oder anders sollen.</p>'
+              '<div style="overflow-x:auto"><table class="pt"><thead><tr><th>#</th><th>Produkt</th><th>Shop</th><th>Marke</th><th>Welt</th><th>Art</th>'
+              f'<th>Themen</th><th>Feed-Kategorie</th></tr></thead><tbody>{rows}</tbody></table></div></section>'
+              '<style>.pt{border-collapse:collapse;font-size:12.5px;width:100%}.pt td,.pt th{border-bottom:1px solid var(--line);padding:4px 6px;text-align:left;vertical-align:top}</style>',
+              "Prüfliste", "/pruefen/"))
     write("geschenk/index.html", page("Geschenk-Finder – Naschpass", finder_page(),
                                       "Drei Fragen, passende Süßigkeiten zum Verschenken.", "/geschenk/", script=FINDER_JS))
     write("quiz/index.html", page("Welcher Snack-Typ bist du? – Naschpass", quiz_page(),
@@ -1848,6 +2049,7 @@ Vollständige Angaben im <a href="/impressum/">Impressum</a>.</p></section>"""
 <h2>4. Werbelinks (Affiliate)</h2><p>Einige Links führen zu Online-Shops und sind mit einer Partnerkennung versehen (z. B. über das Netzwerk Awin). Erst wenn du einen solchen Link anklickst, verlässt du diese Website; der Shop bzw. das Partnernetzwerk kann dann auf seiner eigenen Seite Cookies setzen, um den Kauf zuzuordnen. Dafür ist der jeweilige Anbieter verantwortlich. Auf dieser Website selbst wird dabei nichts gespeichert. Produktbilder aus den Datenfeeds der Partner-Shops werden über unseren Hoster Netlify ausgeliefert; dein Browser baut dabei keine Verbindung zu den Shops auf. Ausnahme: Abschnitt 4b.</p>
 {fotos_html()}
 <h2>4c. Dein Naschpass (Stempel)</h2><p>Wenn du auf der Startseite „Pass starten“ drückst, speichern wir im lokalen Speicher deines Browsers, welche Länder-Themenwelten du besucht hast. Das passiert nur auf deinen Wunsch (§ 25 Abs. 2 Nr. 2 TDDDG), wird nie an uns übertragen und lässt sich mit „Pass zurücksetzen“ jederzeit löschen.</p>
+<h2>4d. Merkliste</h2><p>Tippst du bei einem Produkt auf ♡, speichern wir Name, Shop und Link im lokalen Speicher deines Browsers, damit du deine Auswahl später wiederfindest. Das passiert nur auf deinen Wunsch (§ 25 Abs. 2 Nr. 2 TDDDG), wird nie an uns übertragen und lässt sich auf der Seite „Merkliste“ jederzeit löschen.</p>
 <h2>4a. Suche</h2><p>Die Suche läuft komplett in deinem Browser. Deine Suchbegriffe werden nicht übertragen und nicht gespeichert.</p>
 <h2>5. Social-Media-Links</h2><p>Links zu Instagram, TikTok und Pinterest sind einfache Verlinkungen, keine eingebetteten Inhalte. Daten werden erst übertragen, wenn du den Link anklickst und die jeweilige Plattform besuchst; dort gelten deren Datenschutzbestimmungen.</p>
 <h2>6. Kontakt per E-Mail</h2><p>Schreibst du uns eine E-Mail, verarbeiten wir deine Angaben nur, um deine Anfrage zu beantworten (Art. 6 Abs. 1 lit. b bzw. f DSGVO), und löschen sie, wenn sie nicht mehr benötigt werden.</p>
