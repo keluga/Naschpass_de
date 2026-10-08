@@ -53,3 +53,13 @@ Vier Einstiege: **Art · Länder · Anlass/Saison · Marken** (Marken neu). Sais
 4. Ranking + gemischte Startseite.
 5. Prüfseite, dann Kev schaut drüber.
 6. Shop-Seite seitenweise laden, Marken-Einstieg.
+
+## 5. Entscheidungen Kev (08.10.) und Umsetzung
+- **Mehr statt streng:** alles, was zum Gefühl „Naschen & Genießen“ passt (auch Feinkost, Tee, Aufstriche, Eis), raus nur Alkohol, Tierfutter, Non-Food/Geräte, Grundnahrung. Keine Mengen-Kappung → 6.533 Produkte (Vorschau 4).
+- **Welt = Idee, nicht Fabrik:** `website/brands.json` (von Claude geschätzt, ~1.250 Marken) + Namens-Hinweise (Matcha → Japan). Filter heißt „Woher“, 86 % zugeordnet.
+- **Reihenfolge „Entdecken“:** Punkte (Exoten fern +4, Nachbarn +1, Naschen +3, Partner-Boost SugarGang +4, Saison +2, Post +3, Tee/Feinkost −3), dann gemischt: nie zweimal derselbe Shop/Art hintereinander, jeder Topf verliert pro Wahl an Gewicht.
+- **Anlässe:** Filmabend, Party, Mitbringsel, Geburtstag, Für Naschkatzen (locker per Stichwort).
+- **Bündeln:** geht bei Affiliate nicht als gemeinsamer Warenkorb → **Merkliste** (♡, nach Shop sortiert). Später evtl. SugarGang-Sammel-Warenkorb (Shopify-Cart-Link).
+- **REWE:** Hinweis „Lieferung je nach Wohnort, sonst Abholung im Markt“ an jeder Karte; Eis bleibt drin, aber nicht vorn.
+- **Technik:** Shop zeigt 48 sofort, Rest kommt aus `search.json`; Themen-Filter `/shop/?t=<id>`; Kategorie-Seiten 48 + Link in den Shop; `/pruefen/` nur in Vorschauen.
+- **Später:** zweite Seite/Domain mit denselben Feeds (Cloudflare, kostenlos), Bewerbungsrunde 2 nach Livegang.

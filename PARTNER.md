@@ -11,7 +11,7 @@ Technik dazu: `website/feeds.json` (welche Shops aktiv sind) und Netlify-Variabl
 | GOURVITA | 14403 | Awin | 54723 | ~3.000 | `AWIN_FEED_URL` | nur Süßes/Geschenke (Filter in feeds.json) |
 | Piccantino | 79456 | Awin | 93446 | ~9.200 | `AWIN_FEED_URL` | Feed zuletzt 15.05.26 aktualisiert, evtl. veraltet; nur Süßes/Snacks |
 | REWE | 11652 | Awin | 41437 (Lieferservice Overall) | ~7.500 | `AWIN_FEED_URL` | 8 % Neukunden, 4 % Bestand, 30 Tage Cookie. Feed 26025 (Angebote) weglassen, wechselt wöchentlich |
-| SugarGang | 127807 | **Google** | F4010 | ~120 | `AWIN_FEED_URL_2` | anderes Format, eigener Link. Adventskalender! |
+| SugarGang | 127807 | **Google** | F4010 | ~120 | `AWIN_FEED_URL_2` ✅ | anderes Format, eigener Link, läuft. Exoten-Kern (Boost +4) |
 | Sodapop | 42806 | Awin | 95717 (Default CSV) | ~80 | `AWIN_FEED_URL` | nur Sirupe/Getränke. Feed 82227 (XML) ist derselbe Inhalt, weglassen |
 | my-choco-world | 16944 | kein Feed | – | 2 per Hand | `products.json` | Fotos nur nach Einwilligung |
 
