@@ -82,19 +82,10 @@ def open_feed(path):
 
 def download(url, n):
     """Lädt einen Feed in eine temporäre Datei. Die URL wird nie ausgegeben."""
-    # Google-Format-Feeds (IDs wie "F4010") lassen sich nicht mit Awin-Format-Feeds in einem Link mischen
-    # (AWIN antwortet dann mit HTTP 400). Solche IDs hier rausnehmen; sie brauchen einen eigenen Link.
-    m = re.search(r"/fid/([^/]+)/", url)
-    if m:
-        ids = m.group(1).split(",")
-        keep = [x for x in ids if x.isdigit()]
-        if keep and len(keep) < len(ids):
-            log(f"Feed {n}: Google-Format-Feed(s) {', '.join(x for x in ids if not x.isdigit())} übersprungen (brauchen eigenen Link).")
-            url = url[:m.start(1)] + ",".join(keep) + url[m.end(1):]
     tmp = tempfile.NamedTemporaryFile(prefix="awin_", suffix=".feed", delete=False)
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "naschpass-build"})
-        with urllib.request.urlopen(req, timeout=180) as r, tmp:
+        with urllib.request.urlopen(req, timeout=420) as r, tmp:
             while True:
                 chunk = r.read(1 << 20)
                 if not chunk:
@@ -114,8 +105,24 @@ def sources():
         out.append(("Datei", os.environ["AWIN_FEED_FILE"], False))
     for i, k in enumerate(["AWIN_FEED_URL"] + [f"AWIN_FEED_URL_{n}" for n in range(2, 10)], 1):
         for part in (os.environ.get(k) or "").split():
-            out.append((f"#{i}", part, True))
+            out += split_feed(part, f"#{i}")
     return out
+
+
+def split_feed(url, label):
+    """Ein AWIN-Link mit mehreren Feed-IDs wird in einen Abruf pro Feed zerlegt.
+    Grund: AWIN baut die Datei beim Abruf zusammen; ein großer Sammel-Link läuft in den Timeout.
+    Die Kategorie-Liste (/cid/...) fällt weg, gefiltert wird ohnehin hier im Skript.
+    Google-Format-IDs (z. B. F4010) gehen nicht im selben Link und werden übersprungen."""
+    url = re.sub(r"/cid/[^/]+", "", url)
+    m = re.search(r"/fid/([^/]+)/", url)
+    if not m:
+        return [(label, url, True)]
+    ids = m.group(1).split(",")
+    bad = [x for x in ids if not x.isdigit()]
+    if bad:
+        log(f"Feed {label}: Google-Format-Feed(s) {', '.join(bad)} übersprungen (brauchen eigenen Link).")
+    return [(f"{label}/{x}", url[:m.start(1)] + x + url[m.end(1):], True) for x in ids if x.isdigit()]
 
 
 def norm(s):
