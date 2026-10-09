@@ -65,29 +65,93 @@ def small_img(url, w=320):
     return url
 
 
+def _is_placeholder(data, final_url=""):
+    """AWINs Bildserver liefert 'noimage.gif' (70x70), wenn er das Shop-Bild nicht abrufen kann."""
+    if "noimage" in final_url or len(data) < 300 or data[:3] == b"GIF":
+        return True
+    try:
+        from PIL import Image
+        import io
+        with Image.open(io.BytesIO(data)) as im:
+            return im.width < 100 or im.height < 100
+    except Exception:
+        return False
+
+
+def _shrink(data, w=320):
+    """Großes Shop-Originalbild auf w x w (weißer Rand) verkleinern, damit die Seite schnell bleibt."""
+    try:
+        from PIL import Image
+        import io
+        im = Image.open(io.BytesIO(data))
+        if im.mode in ("RGBA", "LA", "P"):
+            im = im.convert("RGBA")
+            bg = Image.new("RGB", im.size, "white")
+            bg.paste(im, mask=im.split()[-1])
+            im = bg
+        else:
+            im = im.convert("RGB")
+        im.thumbnail((w, w))
+        out = Image.new("RGB", (w, w), "white")
+        out.paste(im, ((w - im.width) // 2, (w - im.height) // 2))
+        buf = io.BytesIO()
+        out.save(buf, "JPEG", quality=82, optimize=True)
+        return buf.getvalue()
+    except Exception:
+        return None
+
+
+def _get(url):
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (naschpass-build)", "Accept": "image/*"})
+    with urllib.request.urlopen(req, timeout=30) as r:
+        return r.read(), r.geturl()
+
+
+IMG_STATS = {"awin": 0, "shop": 0, "weg": 0}
+
+
 def fetch_images(prods):
+    """Bild zuerst vom AWIN-Bildserver. Liefert der nur den Platzhalter (z. B. bei GOURVITA),
+    wird das Originalbild direkt vom Shop geholt (steht im Feed als merchant_image_url).
+    Ohne echtes Bild fliegt das Produkt raus: lieber kein Produkt als ein graues Kästchen."""
     import hashlib
     from concurrent.futures import ThreadPoolExecutor
     IMG_DIR.mkdir(exist_ok=True)
     def one(p):
+        mimg = p.pop("mimg", "")
         name = hashlib.sha1(p["image"].encode()).hexdigest()[:16] + ".jpg"
         dest = IMG_DIR / name
+        if dest.exists() and _is_placeholder(dest.read_bytes()):
+            dest.unlink()
         if not dest.exists():
+            data = None
             try:
-                req = urllib.request.Request(small_img(p["image"]), headers={"User-Agent": "naschpass-build"})
-                with urllib.request.urlopen(req, timeout=30) as r:
-                    data = r.read()
-                if len(data) < 300:
-                    return None
-                dest.write_bytes(data)
+                d, final = _get(small_img(p["image"]))
+                if not _is_placeholder(d, final):
+                    data = d
+                    IMG_STATS["awin"] += 1
             except Exception:
+                pass
+            if data is None and mimg.startswith("http"):
+                try:
+                    d, final = _get(mimg)
+                    if not _is_placeholder(d, final):
+                        data = _shrink(d)
+                        if data:
+                            IMG_STATS["shop"] += 1
+                except Exception:
+                    pass
+            if data is None:
+                IMG_STATS["weg"] += 1
                 return None
+            dest.write_bytes(data)
         p["image"] = "/i/" + name
         p["imgkb"] = round(dest.stat().st_size / 1024, 1)  # für die Reihenfolge: sehr kleine Bilder sind meist schwach
         return p
     with ThreadPoolExecutor(max_workers=24) as ex:
         out = [p for p in ex.map(one, prods) if p]
-    log(f"Bilder: {len(out)} von {len(prods)} geladen")
+    log(f"Bilder: {len(out)} von {len(prods)} geladen (AWIN {IMG_STATS['awin']}, direkt vom Shop {IMG_STATS['shop']}, "
+        f"ohne Bild aussortiert {IMG_STATS['weg']}, Rest aus Cache)")
     return out
 
 ALKOHOL = re.compile(
@@ -116,6 +180,7 @@ ALIASES = {
     "desc": ["description", "product_short_description"],
     "url": ["aw_deep_link", "deep_link", "link"],
     "image": ["aw_image_url", "aw_thumb_url", "image_link"],
+    "mimage": ["merchant_image_url", "large_image", "image_link"],
     "price": ["search_price", "display_price", "price", "store_price"],
     "sale": ["sale_price"],
     "merchant_id": ["merchant_id", "advertiser_id"],
@@ -398,6 +463,9 @@ def main():
                     fc = " ".join(_cat_tail(x) for x in (mcat, cat) if x)
                     p = {"name": name[:120], "url": url, "image": img, "shop": a.get("shop") or col(row, "merchant_name"),
                          "brand": brand, "feed_category": fc[:160], "source": "awin", "advertiser": int(mid)}
+                    mi = col(row, "mimage")
+                    if IMG_LOCAL and mi.startswith("http") and mi != img:
+                        p["mimg"] = mi  # Original beim Shop: Ersatz, falls AWINs Bildserver nur den Platzhalter liefert
                     vm = re.search(r"variant(?:%3D|=)(\d{6,})", url) or re.search(r"variant=(\d{6,})", row.get("link") or "")
                     if vm:
                         p["vid"] = vm.group(1)
