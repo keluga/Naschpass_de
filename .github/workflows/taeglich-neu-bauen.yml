@@ -1,0 +1,23 @@
+# Baut die Seite jeden Morgen neu (frische Produkte und Preise aus den AWIN-Feeds).
+# Trick ohne Schlüssel: ein leerer Commit auf main. Cloudflare (Workers Builds) baut bei jedem Push auf main neu (kostenlos).
+# Fällt der Feed aus, bricht der Build ab und die alte Seite bleibt online (siehe import_feeds.py, FEED_MIN).
+name: Täglich neu bauen
+on:
+  schedule:
+    - cron: "17 4 * * *"   # 04:17 UTC = 06:17 Uhr deutscher Sommerzeit
+  workflow_dispatch: {}
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Leeren Commit pushen (stößt Cloudflare-Build an)
+        run: |
+          git config user.name "naschpass-bot"
+          git config user.email "naschpass-bot@users.noreply.github.com"
+          git commit --allow-empty -m "Täglicher Neubau (Feeds und Preise)"
+          git push origin main

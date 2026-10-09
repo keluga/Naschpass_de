@@ -1,0 +1,3935 @@
+{
+ "_hinweis": "Marke -> Welt (Idee, nicht Fabrik). alkohol/tier = Produkte dieser Marke nie zeigen. Von Claude geschätzt, Kev darf korrigieren.",
+ "brands": {
+  "Rinatura": {
+   "welt": "deutschland"
+  },
+  "Alnatura": {
+   "welt": "deutschland"
+  },
+  "REWE Beste Wahl": {
+   "welt": "deutschland"
+  },
+  "REWE Bio": {
+   "welt": "deutschland"
+  },
+  "ja!": {
+   "welt": "deutschland"
+  },
+  "Eilles": {
+   "welt": "deutschland"
+  },
+  "Kölln": {
+   "welt": "deutschland"
+  },
+  "Birkmann": {
+   "welt": "deutschland"
+  },
+  "dr. oetker": {
+   "welt": "deutschland"
+  },
+  "HiPP": {
+   "welt": "deutschland"
+  },
+  "RAPUNZEL": {
+   "welt": "deutschland"
+  },
+  "BioKing": {
+   "welt": "deutschland"
+  },
+  "TEEKANNE": {
+   "welt": "deutschland"
+  },
+  "Teekanne": {
+   "welt": "deutschland"
+  },
+  "Schwartau": {
+   "welt": "deutschland"
+  },
+  "Hussel": {
+   "welt": "deutschland"
+  },
+  "Ankerkraut": {
+   "welt": "deutschland"
+  },
+  "Stay Spiced!": {
+   "welt": "deutschland"
+  },
+  "SugarGang": {
+   "welt": "deutschland"
+  },
+  "Greenomic": {
+   "welt": "deutschland"
+  },
+  "Gewürzmühle": {
+   "welt": "deutschland"
+  },
+  "Vivess": {
+   "welt": "deutschland"
+  },
+  "Arche Naturküche": {
+   "welt": "deutschland"
+  },
+  "Herbaria": {
+   "welt": "deutschland"
+  },
+  "Zwergenwiese": {
+   "welt": "deutschland"
+  },
+  "Demmers Teehaus": {
+   "welt": "deutschland"
+  },
+  "Ölmühle Solling": {
+   "welt": "deutschland"
+  },
+  "Hofmann": {
+   "welt": "deutschland"
+  },
+  "REWE Feine Welt": {
+   "welt": "deutschland"
+  },
+  "Knorr": {
+   "welt": "deutschland"
+  },
+  "Sodapop": {
+   "welt": "deutschland"
+  },
+  "Freche Freunde": {
+   "welt": "deutschland"
+  },
+  "Allos": {
+   "welt": "deutschland"
+  },
+  "Floragold": {
+   "welt": "deutschland"
+  },
+  "Ostmann": {
+   "welt": "deutschland"
+  },
+  "Bake Affair": {
+   "welt": "deutschland"
+  },
+  "Emil®": {
+   "welt": "deutschland"
+  },
+  "KoRo": {
+   "welt": "deutschland"
+  },
+  "Seeberger": {
+   "welt": "deutschland"
+  },
+  "Brezzo": {
+   "welt": "deutschland"
+  },
+  "Nivea": {
+   "welt": "deutschland"
+  },
+  "Haribo": {
+   "welt": "deutschland"
+  },
+  "Iglo": {
+   "welt": "deutschland"
+  },
+  "KELOmat": {
+   "welt": "deutschland"
+  },
+  "OR TEA?": {
+   "welt": "deutschland"
+  },
+  "Dolfin": {
+   "welt": "deutschland"
+  },
+  "folkroll": {
+   "welt": "deutschland"
+  },
+  "Spice for Life": {
+   "welt": "deutschland"
+  },
+  "Mogli": {
+   "welt": "deutschland"
+  },
+  "FRUCHTBAR": {
+   "welt": "deutschland"
+  },
+  "Fruchtbar": {
+   "welt": "deutschland"
+  },
+  "FruchtBar": {
+   "welt": "deutschland"
+  },
+  "Doppelherz": {
+   "welt": "deutschland"
+  },
+  "biozentrale": {
+   "welt": "deutschland"
+  },
+  "Bambaw": {
+   "welt": "deutschland"
+  },
+  "Belberry": {
+   "welt": "deutschland"
+  },
+  "Frosch": {
+   "welt": "deutschland"
+  },
+  "Erasco": {
+   "welt": "deutschland"
+  },
+  "BLOCK": {
+   "welt": "deutschland"
+  },
+  "Fink's Delikatessen": {
+   "welt": "deutschland"
+  },
+  "HOYER": {
+   "welt": "deutschland"
+  },
+  "Bauck Mühle": {
+   "welt": "deutschland"
+  },
+  "Bauck": {
+   "welt": "deutschland"
+  },
+  "Wilhelm Brandenburg": {
+   "welt": "deutschland"
+  },
+  "Frosta": {
+   "welt": "deutschland"
+  },
+  "Kühne": {
+   "welt": "deutschland"
+  },
+  "Funny-frisch": {
+   "welt": "deutschland"
+  },
+  "Meßmer": {
+   "welt": "deutschland"
+  },
+  "Hengstenberg": {
+   "welt": "deutschland"
+  },
+  "Dantesmile": {
+   "welt": "deutschland"
+  },
+  "tea exclusive": {
+   "welt": "deutschland"
+  },
+  "Ritter Sport": {
+   "welt": "deutschland"
+  },
+  "Alnavit": {
+   "welt": "deutschland"
+  },
+  "Gourvita": {
+   "welt": "deutschland"
+  },
+  "Coppenrath & Wiese": {
+   "welt": "deutschland"
+  },
+  "Conditorei Coppenrath & Wiese": {
+   "welt": "deutschland"
+  },
+  "Coppenrath": {
+   "welt": "deutschland"
+  },
+  "REWE frei von": {
+   "welt": "deutschland"
+  },
+  "Andechser Natur": {
+   "welt": "deutschland"
+  },
+  "SoSo Factory": {
+   "welt": "deutschland"
+  },
+  "Frunix": {
+   "welt": "deutschland"
+  },
+  "pandoo": {
+   "welt": "deutschland"
+  },
+  "Gepa": {
+   "welt": "deutschland"
+  },
+  "Sodastream": {
+   "welt": "deutschland"
+  },
+  "Die Käsemacher": {
+   "welt": "deutschland"
+  },
+  "Birkengold": {
+   "welt": "deutschland"
+  },
+  "Altmüller": {
+   "welt": "deutschland"
+  },
+  "Rügenwalder Mühle": {
+   "welt": "deutschland"
+  },
+  "Followfood": {
+   "welt": "deutschland"
+  },
+  "Followfish": {
+   "welt": "deutschland"
+  },
+  "ESN": {
+   "welt": "deutschland"
+  },
+  "CORNY": {
+   "welt": "deutschland"
+  },
+  "Corny": {
+   "welt": "deutschland"
+  },
+  "Meybona": {
+   "welt": "deutschland"
+  },
+  "Farmer's Snack": {
+   "welt": "deutschland"
+  },
+  "LORENZ": {
+   "welt": "deutschland"
+  },
+  "Milupa": {
+   "welt": "deutschland"
+  },
+  "MAMA'S": {
+   "welt": "deutschland"
+  },
+  "BAF": {
+   "welt": "deutschland"
+  },
+  "Dallmayr": {
+   "welt": "deutschland"
+  },
+  "Chio": {
+   "welt": "deutschland"
+  },
+  "Bio Wagner": {
+   "welt": "deutschland"
+  },
+  "Schulte Feingebäck": {
+   "welt": "deutschland"
+  },
+  "Ültje": {
+   "welt": "deutschland"
+  },
+  "ültje": {
+   "welt": "deutschland"
+  },
+  "REWE to go": {
+   "welt": "deutschland"
+  },
+  "Alete": {
+   "welt": "deutschland"
+  },
+  "soulbottles": {
+   "welt": "deutschland"
+  },
+  "Weihenstephan": {
+   "welt": "deutschland"
+  },
+  "Melitta": {
+   "welt": "deutschland"
+  },
+  "Jacobs": {
+   "welt": "deutschland"
+  },
+  "Eisch": {
+   "welt": "deutschland"
+  },
+  "Granini": {
+   "welt": "deutschland"
+  },
+  "Katjes": {
+   "welt": "deutschland"
+  },
+  "Sagrotan": {
+   "welt": "deutschland"
+  },
+  "collini": {
+   "welt": "deutschland"
+  },
+  "Seitenbacher": {
+   "welt": "deutschland"
+  },
+  "Taifun": {
+   "welt": "deutschland"
+  },
+  "Leibniz": {
+   "welt": "deutschland"
+  },
+  "Popp": {
+   "welt": "deutschland"
+  },
+  "Original Wagner": {
+   "welt": "deutschland"
+  },
+  "Develey": {
+   "welt": "deutschland"
+  },
+  "Herta": {
+   "welt": "deutschland"
+  },
+  "Jean & Len": {
+   "welt": "deutschland"
+  },
+  "Hohes C": {
+   "welt": "deutschland"
+  },
+  "Ehrmann": {
+   "welt": "deutschland"
+  },
+  "Toppits": {
+   "welt": "deutschland"
+  },
+  "Nimm2": {
+   "welt": "deutschland"
+  },
+  "Feinkost Dittmann": {
+   "welt": "deutschland"
+  },
+  "WC Frisch": {
+   "welt": "deutschland"
+  },
+  "foodspring": {
+   "welt": "deutschland"
+  },
+  "Kaiser": {
+   "welt": "deutschland"
+  },
+  "Bahlsen": {
+   "welt": "deutschland"
+  },
+  "Oryza": {
+   "welt": "deutschland"
+  },
+  "Palmolive": {
+   "welt": "deutschland"
+  },
+  "Meica": {
+   "welt": "deutschland"
+  },
+  "Finish": {
+   "welt": "deutschland"
+  },
+  "Dr. Best": {
+   "welt": "deutschland"
+  },
+  "Thomas Henry": {
+   "welt": "deutschland"
+  },
+  "waterdrop": {
+   "welt": "deutschland"
+  },
+  "Dutchdeluxes": {
+   "welt": "benelux"
+  },
+  "Koawach": {
+   "welt": "deutschland"
+  },
+  "Merci": {
+   "welt": "deutschland"
+  },
+  "Milram": {
+   "welt": "deutschland"
+  },
+  "Gutfried": {
+   "welt": "deutschland"
+  },
+  "Kluth": {
+   "welt": "deutschland"
+  },
+  "Gerolsteiner": {
+   "welt": "deutschland"
+  },
+  "Byodo": {
+   "welt": "deutschland"
+  },
+  "Just Spices": {
+   "welt": "deutschland"
+  },
+  "Gustavo Gusto": {
+   "welt": "deutschland"
+  },
+  "Swirl": {
+   "welt": "deutschland"
+  },
+  "Müller's Mühle": {
+   "welt": "deutschland"
+  },
+  "Landliebe": {
+   "welt": "deutschland"
+  },
+  "Tempo": {
+   "welt": "deutschland"
+  },
+  "Mondamin": {
+   "welt": "deutschland"
+  },
+  "Zentis": {
+   "welt": "deutschland"
+  },
+  "Persil": {
+   "welt": "deutschland"
+  },
+  "taft": {
+   "welt": "deutschland"
+  },
+  "bloomix": {
+   "welt": "deutschland"
+  },
+  "Radatz": {
+   "welt": "deutschland"
+  },
+  "gnali & zani": {
+   "welt": "italien"
+  },
+  "SO Fröhlich": {
+   "welt": "deutschland"
+  },
+  "Kneipp": {
+   "welt": "deutschland"
+  },
+  "Happy Day": {
+   "welt": "deutschland"
+  },
+  "Maoam": {
+   "welt": "deutschland"
+  },
+  "True Fruits": {
+   "welt": "deutschland"
+  },
+  "Wiltmann": {
+   "welt": "deutschland"
+  },
+  "Pfanni": {
+   "welt": "deutschland"
+  },
+  "Axe": {
+   "welt": "deutschland"
+  },
+  "Little Lunch": {
+   "welt": "deutschland"
+  },
+  "Exquisa": {
+   "welt": "deutschland"
+  },
+  "Dokas": {
+   "welt": "deutschland"
+  },
+  "Tartex": {
+   "welt": "deutschland"
+  },
+  "Zewa": {
+   "welt": "deutschland"
+  },
+  "Ecover": {
+   "welt": "deutschland"
+  },
+  "Hammermühle": {
+   "welt": "deutschland"
+  },
+  "Valensina": {
+   "welt": "deutschland"
+  },
+  "More Nutrition": {
+   "welt": "deutschland"
+  },
+  "löwenzahn organics": {
+   "welt": "deutschland"
+  },
+  "Senseo": {
+   "welt": "deutschland"
+  },
+  "Hansaplast": {
+   "welt": "deutschland"
+  },
+  "sebamed": {
+   "welt": "deutschland"
+  },
+  "Penaten": {
+   "welt": "deutschland"
+  },
+  "KLOSTERFRAU": {
+   "welt": "deutschland"
+  },
+  "Bärenmarke": {
+   "welt": "deutschland"
+  },
+  "Vileda": {
+   "welt": "deutschland"
+  },
+  "Meridol": {
+   "welt": "deutschland"
+  },
+  "Mestemacher": {
+   "welt": "deutschland"
+  },
+  "Bad Reichenhaller": {
+   "welt": "deutschland"
+  },
+  "Glade": {
+   "welt": "deutschland"
+  },
+  "Bübchen": {
+   "welt": "deutschland"
+  },
+  "Cupper Tea": {
+   "welt": "deutschland"
+  },
+  "CUPPER": {
+   "welt": "deutschland"
+  },
+  "Dinkel Max": {
+   "welt": "deutschland"
+  },
+  "Spee": {
+   "welt": "deutschland"
+  },
+  "Brandt": {
+   "welt": "deutschland"
+  },
+  "Lisas Bio Kesselchips": {
+   "welt": "deutschland"
+  },
+  "hitschies": {
+   "welt": "deutschland"
+  },
+  "Febreze": {
+   "welt": "deutschland"
+  },
+  "Perwoll": {
+   "welt": "deutschland"
+  },
+  "yfood": {
+   "welt": "deutschland"
+  },
+  "Duschdas": {
+   "welt": "deutschland"
+  },
+  "Il Borgo del Balsamico": {
+   "welt": "deutschland"
+  },
+  "Henglein": {
+   "welt": "deutschland"
+  },
+  "Bünting Tee": {
+   "welt": "deutschland"
+  },
+  "o.b.": {
+   "welt": "deutschland"
+  },
+  "Leimer": {
+   "welt": "deutschland"
+  },
+  "Reis-Fit": {
+   "welt": "deutschland"
+  },
+  "Storck": {
+   "welt": "deutschland"
+  },
+  "Pely": {
+   "welt": "deutschland"
+  },
+  "HAK": {
+   "welt": "deutschland"
+  },
+  "Berchtesgadener Land": {
+   "welt": "deutschland"
+  },
+  "Alpecin": {
+   "welt": "deutschland"
+  },
+  "3 Glocken": {
+   "welt": "deutschland"
+  },
+  "Gliss": {
+   "welt": "deutschland"
+  },
+  "Knabe": {
+   "welt": "deutschland"
+  },
+  "BiFi": {
+   "welt": "deutschland"
+  },
+  "Paulberger": {
+   "welt": "deutschland"
+  },
+  "Hela": {
+   "welt": "deutschland"
+  },
+  "vly": {
+   "welt": "deutschland"
+  },
+  "Mazola": {
+   "welt": "deutschland"
+  },
+  "Huel": {
+   "welt": "deutschland"
+  },
+  "Drehmahl": {
+   "welt": "deutschland"
+  },
+  "Zum Dorfkrug": {
+   "welt": "deutschland"
+  },
+  "Rotbäckchen": {
+   "welt": "deutschland"
+  },
+  "Adelholzener": {
+   "welt": "deutschland"
+  },
+  "Krüger": {
+   "welt": "deutschland"
+  },
+  "Hakle": {
+   "welt": "deutschland"
+  },
+  "Fritz": {
+   "welt": "deutschland"
+  },
+  "Löwensenf": {
+   "welt": "deutschland"
+  },
+  "Hawesta": {
+   "welt": "deutschland"
+  },
+  "Tesa": {
+   "welt": "deutschland"
+  },
+  "Poliboy": {
+   "welt": "deutschland"
+  },
+  "Dreistern": {
+   "welt": "deutschland"
+  },
+  "Tante Fanny": {
+   "welt": "deutschland"
+  },
+  "Knoppers": {
+   "welt": "deutschland"
+  },
+  "Mirácoli": {
+   "welt": "deutschland"
+  },
+  "Surig": {
+   "welt": "deutschland"
+  },
+  "Balisto": {
+   "welt": "deutschland"
+  },
+  "Schogetten": {
+   "welt": "deutschland"
+  },
+  "Fruchtzwerge": {
+   "welt": "deutschland"
+  },
+  "Air Wick": {
+   "welt": "deutschland"
+  },
+  "Spreewaldhof": {
+   "welt": "deutschland"
+  },
+  "Mühlenkraft": {
+   "welt": "deutschland"
+  },
+  "Voelkel": {
+   "welt": "deutschland"
+  },
+  "Harvest Moon": {
+   "welt": "deutschland"
+  },
+  "Animonda": {
+   "welt": "deutschland",
+   "tier": true
+  },
+  "natürlich ECO": {
+   "welt": "deutschland"
+  },
+  "Grünländer": {
+   "welt": "deutschland"
+  },
+  "Pril": {
+   "welt": "deutschland"
+  },
+  "Lekka": {
+   "welt": "deutschland"
+  },
+  "mymuesli": {
+   "welt": "deutschland"
+  },
+  "Airwaves": {
+   "welt": "deutschland"
+  },
+  "Lillydoo": {
+   "welt": "deutschland"
+  },
+  "Küfferle": {
+   "welt": "deutschland"
+  },
+  "Rougette": {
+   "welt": "deutschland"
+  },
+  "LEMONAID": {
+   "welt": "deutschland"
+  },
+  "Lambertz": {
+   "welt": "deutschland"
+  },
+  "Pelikan": {
+   "welt": "deutschland"
+  },
+  "MM Extra": {
+   "welt": "deutschland"
+  },
+  "Garden Gourmet": {
+   "welt": "deutschland"
+  },
+  "Reinert": {
+   "welt": "deutschland"
+  },
+  "Wiesenhof": {
+   "welt": "deutschland"
+  },
+  "Bref Power": {
+   "welt": "deutschland"
+  },
+  "Mezzo Mix": {
+   "welt": "deutschland"
+  },
+  "Toffifee": {
+   "welt": "deutschland"
+  },
+  "Knack&Back": {
+   "welt": "deutschland"
+  },
+  "Bionade": {
+   "welt": "deutschland"
+  },
+  "Mühlhäuser": {
+   "welt": "deutschland"
+  },
+  "Rapsgold": {
+   "welt": "deutschland"
+  },
+  "Vanish": {
+   "welt": "deutschland"
+  },
+  "Schauma": {
+   "welt": "deutschland"
+  },
+  "Hitschler": {
+   "welt": "deutschland"
+  },
+  "Küchle": {
+   "welt": "deutschland"
+  },
+  "Landlust": {
+   "welt": "deutschland"
+  },
+  "Meister Proper": {
+   "welt": "deutschland"
+  },
+  "Bihophar": {
+   "welt": "deutschland"
+  },
+  "Schnitzer": {
+   "welt": "deutschland"
+  },
+  "De Beukelaer": {
+   "welt": "deutschland"
+  },
+  "Huober": {
+   "welt": "deutschland"
+  },
+  "Nabio": {
+   "welt": "deutschland"
+  },
+  "Borggreve": {
+   "welt": "deutschland"
+  },
+  "Ahoj-Brause": {
+   "welt": "deutschland"
+  },
+  "Fitini": {
+   "welt": "deutschland"
+  },
+  "Ferdi Fuchs": {
+   "welt": "deutschland"
+  },
+  "Red Band": {
+   "welt": "deutschland"
+  },
+  "Labello": {
+   "welt": "deutschland"
+  },
+  "Batiste": {
+   "welt": "deutschland"
+  },
+  "Bergader": {
+   "welt": "deutschland"
+  },
+  "Zott": {
+   "welt": "deutschland"
+  },
+  "Trüfrü": {
+   "welt": "deutschland"
+  },
+  "Humana": {
+   "welt": "deutschland"
+  },
+  "Sanotact": {
+   "welt": "deutschland"
+  },
+  "Steinhaus": {
+   "welt": "deutschland"
+  },
+  "Nucao": {
+   "welt": "deutschland"
+  },
+  "Dr. Karg's": {
+   "welt": "deutschland"
+  },
+  "Deli Reform": {
+   "welt": "deutschland"
+  },
+  "SANSIBAR": {
+   "welt": "deutschland"
+  },
+  "Ketofabrik": {
+   "welt": "deutschland"
+  },
+  "Bohlsener Mühle": {
+   "welt": "deutschland"
+  },
+  "Trumpf": {
+   "welt": "deutschland"
+  },
+  "Trolli": {
+   "welt": "deutschland"
+  },
+  "UHU": {
+   "welt": "deutschland"
+  },
+  "Pattex": {
+   "welt": "deutschland"
+  },
+  "Duniwell": {
+   "welt": "deutschland"
+  },
+  "Bergmilch": {
+   "welt": "deutschland"
+  },
+  "Poensgen": {
+   "welt": "deutschland"
+  },
+  "DanKlorix": {
+   "welt": "deutschland"
+  },
+  "Weideglück": {
+   "welt": "deutschland"
+  },
+  "Schwarzwaldmilch": {
+   "welt": "deutschland"
+  },
+  "Afri Cola": {
+   "welt": "deutschland"
+  },
+  "Aeroxon": {
+   "welt": "deutschland"
+  },
+  "Ravensburger": {
+   "welt": "deutschland"
+  },
+  "Rabenhorst": {
+   "welt": "deutschland"
+  },
+  "Panifactum": {
+   "welt": "deutschland"
+  },
+  "Grafschafter": {
+   "welt": "deutschland"
+  },
+  "DEXTRO ENERGY": {
+   "welt": "deutschland"
+  },
+  "Dickmann's": {
+   "welt": "deutschland"
+  },
+  "Hanuta": {
+   "welt": "deutschland"
+  },
+  "SilberQuelle": {
+   "welt": "deutschland"
+  },
+  "Berief": {
+   "welt": "deutschland"
+  },
+  "Hachez": {
+   "welt": "deutschland"
+  },
+  "Parodontax": {
+   "welt": "deutschland"
+  },
+  "Hochland": {
+   "welt": "deutschland"
+  },
+  "beckers bester": {
+   "welt": "deutschland"
+  },
+  "Kuchenmeister": {
+   "welt": "deutschland"
+  },
+  "Impresan": {
+   "welt": "deutschland"
+  },
+  "Schwip Schwap": {
+   "welt": "deutschland"
+  },
+  "Baiocchi": {
+   "welt": "italien"
+  },
+  "everdrop": {
+   "welt": "deutschland"
+  },
+  "Kaba": {
+   "welt": "deutschland"
+  },
+  "planted.": {
+   "welt": "deutschland"
+  },
+  "Milkana": {
+   "welt": "deutschland"
+  },
+  "Schaebens": {
+   "welt": "deutschland"
+  },
+  "Bauckhof": {
+   "welt": "deutschland"
+  },
+  "Mehlig & Heller": {
+   "welt": "deutschland"
+  },
+  "Mio Mio": {
+   "welt": "deutschland"
+  },
+  "Eszet": {
+   "welt": "deutschland"
+  },
+  "Corega": {
+   "welt": "deutschland"
+  },
+  "Küchenmeister": {
+   "welt": "deutschland"
+  },
+  "Allgroo": {
+   "welt": "deutschland"
+  },
+  "Griesson": {
+   "welt": "deutschland"
+  },
+  "Mikado": {
+   "welt": "deutschland"
+  },
+  "Fischers": {
+   "welt": "deutschland"
+  },
+  "Lörch": {
+   "welt": "deutschland"
+  },
+  "Sir Winston Tea": {
+   "welt": "deutschland"
+  },
+  "Sidolin": {
+   "welt": "deutschland"
+  },
+  "Odol-med3": {
+   "welt": "deutschland"
+  },
+  "Ovomaltine": {
+   "welt": "schweiz"
+  },
+  "Schwarzkopf": {
+   "welt": "deutschland"
+  },
+  "Gläserne Molkerei": {
+   "welt": "deutschland"
+  },
+  "Nordsee": {
+   "welt": "deutschland"
+  },
+  "Deutsche See": {
+   "welt": "deutschland"
+  },
+  "Hafervoll": {
+   "welt": "deutschland"
+  },
+  "Domestos": {
+   "welt": "deutschland"
+  },
+  "Softlan": {
+   "welt": "deutschland"
+  },
+  "Perfect Fit": {
+   "welt": "deutschland",
+   "tier": true
+  },
+  "Fuze Tea": {
+   "welt": "deutschland"
+  },
+  "Hitchcock": {
+   "welt": "deutschland"
+  },
+  "Lunter": {
+   "welt": "deutschland"
+  },
+  "Gut Böheim": {
+   "welt": "deutschland"
+  },
+  "Dr. Oetker": {
+   "welt": "deutschland"
+  },
+  "Frolic": {
+   "welt": "deutschland",
+   "tier": true
+  },
+  "Tee-Set": {
+   "welt": "deutschland"
+  },
+  "Tee-Bären": {
+   "welt": "deutschland"
+  },
+  "Geschenk-Kaffee": {
+   "welt": "deutschland"
+  },
+  "Kaffee-Adventskalender": {
+   "welt": "deutschland"
+  },
+  "Odenwald": {
+   "welt": "deutschland"
+  },
+  "Carissima": {
+   "welt": "deutschland"
+  },
+  "Buttinale": {
+   "welt": "deutschland"
+  },
+  "Zotter Schokoladenmanufaktur": {
+   "welt": "oesterreich"
+  },
+  "KOTÁNYI": {
+   "welt": "oesterreich"
+  },
+  "SONNENTOR": {
+   "welt": "oesterreich"
+  },
+  "STAUD‘S": {
+   "welt": "oesterreich"
+  },
+  "Manner": {
+   "welt": "oesterreich"
+  },
+  "Ölmühle Fandler": {
+   "welt": "oesterreich"
+  },
+  "Schalk Mühle": {
+   "welt": "oesterreich"
+  },
+  "Recheis": {
+   "welt": "oesterreich"
+  },
+  "Österreichische Bergkräuter": {
+   "welt": "oesterreich"
+  },
+  "Darbo": {
+   "welt": "oesterreich"
+  },
+  "Riess": {
+   "welt": "oesterreich"
+  },
+  "Bebivita": {
+   "welt": "oesterreich"
+  },
+  "Kelly´s": {
+   "welt": "oesterreich"
+  },
+  "Obsthof Neumeister": {
+   "welt": "oesterreich"
+  },
+  "WIBERG": {
+   "welt": "oesterreich"
+  },
+  "Rauch": {
+   "welt": "oesterreich"
+  },
+  "Frierss": {
+   "welt": "oesterreich"
+  },
+  "Gölles Manufaktur": {
+   "welt": "oesterreich"
+  },
+  "Steirerkraft": {
+   "welt": "oesterreich"
+  },
+  "Vulcano": {
+   "welt": "oesterreich"
+  },
+  "Hochgenuss": {
+   "welt": "oesterreich"
+  },
+  "Willi Dungl": {
+   "welt": "oesterreich"
+  },
+  "Hofladen Hirschmann": {
+   "welt": "oesterreich"
+  },
+  "Berghofer Mühle": {
+   "welt": "oesterreich"
+  },
+  "Wiberg Gewürze": {
+   "welt": "oesterreich"
+  },
+  "Obsthof Christandl": {
+   "welt": "oesterreich"
+  },
+  "Schadler": {
+   "welt": "oesterreich"
+  },
+  "Berghofer Josef": {
+   "welt": "oesterreich"
+  },
+  "VÖSLAUER": {
+   "welt": "oesterreich"
+  },
+  "Obsthof Retter": {
+   "welt": "oesterreich"
+  },
+  "ZAGLER MÜSLIBÄR": {
+   "welt": "oesterreich"
+  },
+  "iSi": {
+   "welt": "oesterreich"
+  },
+  "Obstbau Haas": {
+   "welt": "oesterreich"
+  },
+  "Pfanner": {
+   "welt": "oesterreich"
+  },
+  "Stöber Mühle": {
+   "welt": "oesterreich"
+  },
+  "Kürbishof Koller": {
+   "welt": "oesterreich"
+  },
+  "Raabauer Eisvogel": {
+   "welt": "oesterreich"
+  },
+  "Wegwartehof": {
+   "welt": "oesterreich"
+  },
+  "Peperita": {
+   "welt": "oesterreich"
+  },
+  "Ölz": {
+   "welt": "oesterreich"
+  },
+  "Honig Wurzinger": {
+   "welt": "oesterreich"
+  },
+  "SteirerReis Fuchs": {
+   "welt": "oesterreich"
+  },
+  "Naturprodukte Fuchs": {
+   "welt": "oesterreich"
+  },
+  "Berndorf": {
+   "welt": "oesterreich"
+  },
+  "Almdudler": {
+   "welt": "oesterreich"
+  },
+  "genusskoarl": {
+   "welt": "oesterreich"
+  },
+  "Salzl": {
+   "welt": "oesterreich"
+  },
+  "Mohr-Sederl Fruchtwelt": {
+   "welt": "oesterreich"
+  },
+  "Genussgut Krispel": {
+   "welt": "oesterreich"
+  },
+  "Austria Mozartkugeln": {
+   "welt": "oesterreich"
+  },
+  "Rudolf Lugitsch": {
+   "welt": "oesterreich"
+  },
+  "Distelberger Genuss-Bauernhof": {
+   "welt": "oesterreich"
+  },
+  "Wiener Zucker": {
+   "welt": "oesterreich"
+  },
+  "Kattus": {
+   "welt": "oesterreich",
+   "alkohol": true
+  },
+  "Wildalp": {
+   "welt": "oesterreich"
+  },
+  "D'arbo": {
+   "welt": "oesterreich"
+  },
+  "Jürgen Langbein": {
+   "welt": "oesterreich"
+  },
+  "Stastnik": {
+   "welt": "oesterreich"
+  },
+  "Bauernhof Jöbstl vulgo Stindl": {
+   "welt": "oesterreich"
+  },
+  "Farmer-Rabensteiner vulgo Graf": {
+   "welt": "oesterreich"
+  },
+  "Waldviertler Graumohn g.U.": {
+   "welt": "oesterreich"
+  },
+  "Josef & Hedwig Hödl": {
+   "welt": "oesterreich"
+  },
+  "SteirerKren": {
+   "welt": "oesterreich"
+  },
+  "LieblingsKren": {
+   "welt": "oesterreich"
+  },
+  "Verein der Mostbarone": {
+   "welt": "oesterreich",
+   "alkohol": true
+  },
+  "Bienenhof Klaindl": {
+   "welt": "oesterreich"
+  },
+  "Ennstal Milch": {
+   "welt": "oesterreich"
+  },
+  "Schärdinger": {
+   "welt": "oesterreich"
+  },
+  "Beetgold": {
+   "welt": "oesterreich"
+  },
+  "SunflowerFamily": {
+   "welt": "oesterreich"
+  },
+  "Kiendler": {
+   "welt": "oesterreich"
+  },
+  "Gusto Mundial Flor de Sal": {
+   "welt": "oesterreich"
+  },
+  "KühbreinMost": {
+   "welt": "oesterreich",
+   "alkohol": true
+  },
+  "Fleischerei Turza": {
+   "welt": "oesterreich"
+  },
+  "Hofbauer": {
+   "welt": "oesterreich"
+  },
+  "Pumpkin Organics": {
+   "welt": "oesterreich"
+  },
+  "Loacker": {
+   "welt": "italien"
+  },
+  "Piccantino": {
+   "welt": "oesterreich"
+  },
+  "Montaraz": {
+   "welt": "oesterreich"
+  },
+  "Frico": {
+   "welt": "benelux"
+  },
+  "Alpenhain": {
+   "welt": "deutschland"
+  },
+  "Gösser": {
+   "welt": "oesterreich",
+   "alkohol": true
+  },
+  "Puntigamer": {
+   "welt": "oesterreich",
+   "alkohol": true
+  },
+  "Ottakringer": {
+   "welt": "oesterreich"
+  },
+  "Zipfer": {
+   "welt": "oesterreich"
+  },
+  "Wiesbauer": {
+   "welt": "oesterreich"
+  },
+  "Ennstal": {
+   "welt": "oesterreich"
+  },
+  "Meggle": {
+   "welt": "deutschland"
+  },
+  "Mozartkugeln": {
+   "welt": "oesterreich"
+  },
+  "Rauch Happy Day": {
+   "welt": "oesterreich"
+  },
+  "Spar": {
+   "welt": "oesterreich"
+  },
+  "Julius Meinl": {
+   "welt": "oesterreich"
+  },
+  "Meinl": {
+   "welt": "oesterreich"
+  },
+  "Leicht & Cross": {
+   "welt": "oesterreich"
+  },
+  "Bergbauern": {
+   "welt": "oesterreich"
+  },
+  "Hofer": {
+   "welt": "oesterreich"
+  },
+  "Gmundner": {
+   "welt": "oesterreich"
+  },
+  "Kitzbühel": {
+   "welt": "oesterreich"
+  },
+  "SOLE": {
+   "welt": "oesterreich"
+  },
+  "Almtaler": {
+   "welt": "oesterreich"
+  },
+  "Tirol": {
+   "welt": "oesterreich"
+  },
+  "Lindt": {
+   "welt": "schweiz"
+  },
+  "Toblerone": {
+   "welt": "schweiz"
+  },
+  "Holle": {
+   "welt": "schweiz"
+  },
+  "Maggi": {
+   "welt": "schweiz"
+  },
+  "Kuhn Rikon": {
+   "welt": "schweiz"
+  },
+  "Nestle": {
+   "welt": "schweiz"
+  },
+  "Weleda": {
+   "welt": "schweiz"
+  },
+  "Thomy": {
+   "welt": "schweiz"
+  },
+  "Nescafé": {
+   "welt": "schweiz"
+  },
+  "Camille Bloch": {
+   "welt": "schweiz"
+  },
+  "Ricola": {
+   "welt": "schweiz"
+  },
+  "Cailler": {
+   "welt": "schweiz"
+  },
+  "Frey": {
+   "welt": "schweiz"
+  },
+  "Sprüngli": {
+   "welt": "schweiz"
+  },
+  "Läderach": {
+   "welt": "schweiz"
+  },
+  "Wander": {
+   "welt": "schweiz"
+  },
+  "Rivella": {
+   "welt": "schweiz"
+  },
+  "Emmi": {
+   "welt": "schweiz"
+  },
+  "Caotina": {
+   "welt": "schweiz"
+  },
+  "Migros": {
+   "welt": "schweiz"
+  },
+  "Kambly": {
+   "welt": "schweiz"
+  },
+  "Villars": {
+   "welt": "schweiz"
+  },
+  "Munz": {
+   "welt": "schweiz"
+  },
+  "Rimuss": {
+   "welt": "schweiz"
+  },
+  "Mövenpick": {
+   "welt": "schweiz"
+  },
+  "Möwenpick": {
+   "welt": "schweiz"
+  },
+  "Hero": {
+   "welt": "schweiz"
+  },
+  "Biotta": {
+   "welt": "schweiz"
+  },
+  "Bernrain": {
+   "welt": "schweiz"
+  },
+  "Wernli": {
+   "welt": "schweiz"
+  },
+  "Guzzini": {
+   "welt": "italien"
+  },
+  "Sapore di Sole": {
+   "welt": "italien"
+  },
+  "Marcato": {
+   "welt": "italien"
+  },
+  "Barilla": {
+   "welt": "italien"
+  },
+  "Bialetti": {
+   "welt": "italien"
+  },
+  "LaSelva": {
+   "welt": "italien"
+  },
+  "Bavicchi": {
+   "welt": "italien"
+  },
+  "Viani": {
+   "welt": "italien"
+  },
+  "Tartuflanghe": {
+   "welt": "italien"
+  },
+  "Rustichella d'Abruzzo": {
+   "welt": "italien"
+  },
+  "Schär": {
+   "welt": "italien"
+  },
+  "Calvi": {
+   "welt": "italien"
+  },
+  "Don Antonio": {
+   "welt": "italien"
+  },
+  "Venchi": {
+   "welt": "italien"
+  },
+  "De Cecco": {
+   "welt": "italien"
+  },
+  "La Gallinara": {
+   "welt": "italien"
+  },
+  "Fiasconaro": {
+   "welt": "italien"
+  },
+  "Casale Paradiso": {
+   "welt": "italien"
+  },
+  "Oro di Parma": {
+   "welt": "italien"
+  },
+  "Mulino Sobrino": {
+   "welt": "italien"
+  },
+  "ITALIANAVERA": {
+   "welt": "italien"
+  },
+  "La Porcellana Bianca": {
+   "welt": "italien"
+  },
+  "Lavazza": {
+   "welt": "italien"
+  },
+  "CA'S BEATO": {
+   "welt": "italien"
+  },
+  "Lorenzo il Magnifico": {
+   "welt": "italien"
+  },
+  "Casali": {
+   "welt": "italien"
+  },
+  "Soletti": {
+   "welt": "italien"
+  },
+  "Il pomodoro più buono": {
+   "welt": "italien"
+  },
+  "DOSPA": {
+   "welt": "italien"
+  },
+  "Mattei": {
+   "welt": "italien"
+  },
+  "Bertolli": {
+   "welt": "italien"
+  },
+  "Delverde": {
+   "welt": "italien"
+  },
+  "Ragusa": {
+   "welt": "italien"
+  },
+  "ilBio": {
+   "welt": "italien"
+  },
+  "Rummo": {
+   "welt": "italien"
+  },
+  "Ferrero": {
+   "welt": "italien"
+  },
+  "Nutella": {
+   "welt": "italien"
+  },
+  "Kinder": {
+   "welt": "italien"
+  },
+  "Muraglia": {
+   "welt": "italien"
+  },
+  "Don PiccanToni": {
+   "welt": "italien"
+  },
+  "Galbani": {
+   "welt": "italien"
+  },
+  "Mia Bella": {
+   "welt": "italien"
+  },
+  "CAPUTO": {
+   "welt": "italien"
+  },
+  "Mazzetti": {
+   "welt": "italien"
+  },
+  "Mutti": {
+   "welt": "italien"
+  },
+  "MUTTI": {
+   "welt": "italien"
+  },
+  "Rocca di Vignola": {
+   "welt": "italien"
+  },
+  "Viani & Co.": {
+   "welt": "italien"
+  },
+  "Borrelli": {
+   "welt": "italien"
+  },
+  "Caffarel": {
+   "welt": "italien"
+  },
+  "La Molisana": {
+   "welt": "italien"
+  },
+  "Rigoni di Asiago": {
+   "welt": "italien"
+  },
+  "Antica Enotria": {
+   "welt": "italien"
+  },
+  "Sant'Anna": {
+   "welt": "italien"
+  },
+  "Ortiz": {
+   "welt": "spanien"
+  },
+  "Lauffener": {
+   "welt": "italien",
+   "alkohol": true
+  },
+  "Illy": {
+   "welt": "italien"
+  },
+  "Crodino": {
+   "welt": "italien"
+  },
+  "San Pellegrino": {
+   "welt": "italien"
+  },
+  "SAN PELLEGRINO": {
+   "welt": "italien"
+  },
+  "Pastificio Plin": {
+   "welt": "italien"
+  },
+  "Boella + Sorrisi": {
+   "welt": "italien"
+  },
+  "Marca Italia": {
+   "welt": "italien"
+  },
+  "Contessa Marina": {
+   "welt": "italien"
+  },
+  "Fantinato": {
+   "welt": "italien"
+  },
+  "Granforno": {
+   "welt": "italien"
+  },
+  "Torino": {
+   "welt": "italien"
+  },
+  "I Deliziosi": {
+   "welt": "italien"
+  },
+  "Miraval by Jolie Pitt & Perrin": {
+   "welt": "italien",
+   "alkohol": true
+  },
+  "Voiello": {
+   "welt": "italien"
+  },
+  "Giovanni Rana": {
+   "welt": "italien"
+  },
+  "Cirio": {
+   "welt": "italien"
+  },
+  "Divella": {
+   "welt": "italien"
+  },
+  "Garofalo": {
+   "welt": "italien"
+  },
+  "Amarelli": {
+   "welt": "italien"
+  },
+  "Pernigotti": {
+   "welt": "italien"
+  },
+  "Motta": {
+   "welt": "italien"
+  },
+  "Balocco": {
+   "welt": "italien"
+  },
+  "Perugina": {
+   "welt": "italien"
+  },
+  "Bauli": {
+   "welt": "italien"
+  },
+  "Galup": {
+   "welt": "italien"
+  },
+  "Piatti": {
+   "welt": "italien"
+  },
+  "Pomito": {
+   "welt": "italien"
+  },
+  "Peroni": {
+   "welt": "italien",
+   "alkohol": true
+  },
+  "Testa": {
+   "welt": "italien"
+  },
+  "Caseificio Gennari": {
+   "welt": "italien"
+  },
+  "Citterio": {
+   "welt": "italien"
+  },
+  "Belli": {
+   "welt": "italien"
+  },
+  "Gaea": {
+   "welt": "orient"
+  },
+  "Casa Rinaldi": {
+   "welt": "italien"
+  },
+  "Mionetto": {
+   "welt": "italien",
+   "alkohol": true
+  },
+  "ZabaLab": {
+   "welt": "italien"
+  },
+  "Mirabella": {
+   "welt": "italien"
+  },
+  "Misura": {
+   "welt": "italien"
+  },
+  "Sorbetteria": {
+   "welt": "italien"
+  },
+  "Italiamo": {
+   "welt": "italien"
+  },
+  "Primo Gusto": {
+   "welt": "italien"
+  },
+  "Valdo": {
+   "welt": "italien"
+  },
+  "Bonne Maman": {
+   "welt": "frankreich"
+  },
+  "Bonduelle": {
+   "welt": "frankreich"
+  },
+  "L'Oréal Paris": {
+   "welt": "frankreich"
+  },
+  "Garnier": {
+   "welt": "frankreich"
+  },
+  "Saupiquet": {
+   "welt": "frankreich"
+  },
+  "Berard": {
+   "welt": "frankreich"
+  },
+  "Volvic": {
+   "welt": "frankreich"
+  },
+  "Evian": {
+   "welt": "frankreich"
+  },
+  "Lacroix": {
+   "welt": "frankreich"
+  },
+  "Le Saunier de Camargue": {
+   "welt": "frankreich"
+  },
+  "St. Dalfour": {
+   "welt": "frankreich"
+  },
+  "Fol Epi": {
+   "welt": "frankreich"
+  },
+  "Chavroux": {
+   "welt": "frankreich"
+  },
+  "Paysan Breton": {
+   "welt": "frankreich"
+  },
+  "Géramont": {
+   "welt": "frankreich"
+  },
+  "Rustica": {
+   "welt": "frankreich"
+  },
+  "Bridel": {
+   "welt": "frankreich"
+  },
+  "Grand Sud": {
+   "welt": "frankreich"
+  },
+  "Danone": {
+   "welt": "frankreich"
+  },
+  "Activia": {
+   "welt": "frankreich"
+  },
+  "Actimel": {
+   "welt": "frankreich"
+  },
+  "Yoplait": {
+   "welt": "frankreich"
+  },
+  "Michel et Augustin": {
+   "welt": "frankreich"
+  },
+  "Président": {
+   "welt": "frankreich"
+  },
+  "Babybel": {
+   "welt": "frankreich"
+  },
+  "Perrier": {
+   "welt": "frankreich"
+  },
+  "Badoit": {
+   "welt": "frankreich"
+  },
+  "Vittel": {
+   "welt": "frankreich"
+  },
+  "Lesieur": {
+   "welt": "frankreich"
+  },
+  "Maille": {
+   "welt": "frankreich"
+  },
+  "Amora": {
+   "welt": "frankreich"
+  },
+  "Garnier Ambre Solaire": {
+   "welt": "frankreich"
+  },
+  "La Laitière": {
+   "welt": "frankreich"
+  },
+  "Saint Michel": {
+   "welt": "frankreich"
+  },
+  "Dopff au Moulin": {
+   "welt": "frankreich",
+   "alkohol": true
+  },
+  "Blanchet": {
+   "welt": "frankreich"
+  },
+  "Yogi Tea": {
+   "welt": "asien"
+  },
+  "Ben's Original": {
+   "welt": "usa"
+  },
+  "Pampers": {
+   "welt": "usa"
+  },
+  "Lenor": {
+   "welt": "usa"
+  },
+  "Heinz": {
+   "welt": "usa"
+  },
+  "California": {
+   "welt": "usa"
+  },
+  "Maryland": {
+   "welt": "deutschland"
+  },
+  "Coca-Cola": {
+   "welt": "usa"
+  },
+  "Coca‑Cola": {
+   "welt": "usa"
+  },
+  "Maybelline": {
+   "welt": "usa"
+  },
+  "Always": {
+   "welt": "usa"
+  },
+  "Ariel": {
+   "welt": "usa"
+  },
+  "Pringles": {
+   "welt": "usa"
+  },
+  "Dove": {
+   "welt": "usa"
+  },
+  "Bee’s Wrap": {
+   "welt": "usa"
+  },
+  "Hellmann's": {
+   "welt": "usa"
+  },
+  "Ben & Jerry's": {
+   "welt": "usa"
+  },
+  "Kellogg's": {
+   "welt": "usa"
+  },
+  "Kelloggs": {
+   "welt": "usa"
+  },
+  "Lay's": {
+   "welt": "usa"
+  },
+  "Doritos": {
+   "welt": "usa"
+  },
+  "M&M's": {
+   "welt": "usa"
+  },
+  "Snickers": {
+   "welt": "usa"
+  },
+  "Twix": {
+   "welt": "usa"
+  },
+  "Mars": {
+   "welt": "usa"
+  },
+  "Bounty": {
+   "welt": "usa"
+  },
+  "Oreo": {
+   "welt": "usa"
+  },
+  "Nature Valley": {
+   "welt": "usa"
+  },
+  "Fanta": {
+   "welt": "usa"
+  },
+  "Sprite": {
+   "welt": "usa"
+  },
+  "Pepsi": {
+   "welt": "usa"
+  },
+  "Reese's": {
+   "welt": "usa"
+  },
+  "Reese’s": {
+   "welt": "usa"
+  },
+  "Tabasco": {
+   "welt": "usa"
+  },
+  "Starbucks": {
+   "welt": "usa"
+  },
+  "Rockstar": {
+   "welt": "usa"
+  },
+  "Old El Paso": {
+   "welt": "usa"
+  },
+  "Kettle Chips": {
+   "welt": "usa"
+  },
+  "Snyder's": {
+   "welt": "usa"
+  },
+  "Jack Link's": {
+   "welt": "usa"
+  },
+  "Clif Bar": {
+   "welt": "usa"
+  },
+  "BE-KIND": {
+   "welt": "usa"
+  },
+  "Premier Protein": {
+   "welt": "usa"
+  },
+  "Libby's": {
+   "welt": "usa"
+  },
+  "Del Monte": {
+   "welt": "usa"
+  },
+  "Beyond Meat": {
+   "welt": "usa"
+  },
+  "Wrigley's Extra": {
+   "welt": "usa"
+  },
+  "Bull's-Eye": {
+   "welt": "usa"
+  },
+  "McCain": {
+   "welt": "usa"
+  },
+  "Gillette": {
+   "welt": "usa"
+  },
+  "Colgate": {
+   "welt": "usa"
+  },
+  "Oral-B": {
+   "welt": "usa"
+  },
+  "Pantene Pro-V": {
+   "welt": "usa"
+  },
+  "Hershey's": {
+   "welt": "usa"
+  },
+  "Q-tips": {
+   "welt": "usa"
+  },
+  "Kleenex": {
+   "welt": "usa"
+  },
+  "Huggies": {
+   "welt": "usa"
+  },
+  "Listerine": {
+   "welt": "usa"
+  },
+  "Neutrogena": {
+   "welt": "usa"
+  },
+  "Crave": {
+   "welt": "usa"
+  },
+  "Lipton": {
+   "welt": "usa"
+  },
+  "Tassimo": {
+   "welt": "usa"
+  },
+  "Powerade": {
+   "welt": "usa"
+  },
+  "Capri-Sun": {
+   "welt": "usa"
+  },
+  "Pop-Tarts": {
+   "welt": "usa"
+  },
+  "Skittles": {
+   "welt": "usa"
+  },
+  "Twizzlers": {
+   "welt": "usa"
+  },
+  "Jelly Belly": {
+   "welt": "usa"
+  },
+  "Hostess": {
+   "welt": "usa"
+  },
+  "Planters": {
+   "welt": "usa"
+  },
+  "Jif": {
+   "welt": "usa"
+  },
+  "Quaker": {
+   "welt": "usa"
+  },
+  "Betty Crocker": {
+   "welt": "usa"
+  },
+  "Kraft": {
+   "welt": "usa"
+  },
+  "Oscar Mayer": {
+   "welt": "usa"
+  },
+  "Cheez-It": {
+   "welt": "usa"
+  },
+  "Cheetos": {
+   "welt": "usa"
+  },
+  "Fritos": {
+   "welt": "usa"
+  },
+  "Ruffles": {
+   "welt": "usa"
+  },
+  "Tostitos": {
+   "welt": "usa"
+  },
+  "Welch's": {
+   "welt": "usa"
+  },
+  "Dr Pepper": {
+   "welt": "usa"
+  },
+  "Mountain Dew": {
+   "welt": "usa"
+  },
+  "7UP": {
+   "welt": "usa"
+  },
+  "Gatorade": {
+   "welt": "usa"
+  },
+  "Wrigley's": {
+   "welt": "usa"
+  },
+  "Reese": {
+   "welt": "usa"
+  },
+  "Hershey": {
+   "welt": "usa"
+  },
+  "Butterfinger": {
+   "welt": "usa"
+  },
+  "Baby Ruth": {
+   "welt": "usa"
+  },
+  "Milky Way": {
+   "welt": "usa"
+  },
+  "3 Musketeers": {
+   "welt": "usa"
+  },
+  "Dum Dums": {
+   "welt": "usa"
+  },
+  "Altoids": {
+   "welt": "usa"
+  },
+  "Trident": {
+   "welt": "usa"
+  },
+  "Blow Pop": {
+   "welt": "usa"
+  },
+  "Tootsie": {
+   "welt": "usa"
+  },
+  "Takis": {
+   "welt": "mexiko"
+  },
+  "Mexican": {
+   "welt": "mexiko"
+  },
+  "Tajín": {
+   "welt": "mexiko"
+  },
+  "Tajin": {
+   "welt": "mexiko"
+  },
+  "Valentina": {
+   "welt": "mexiko"
+  },
+  "Barcel": {
+   "welt": "mexiko"
+  },
+  "Sabritas": {
+   "welt": "mexiko"
+  },
+  "Jarritos": {
+   "welt": "mexiko"
+  },
+  "Pocky": {
+   "welt": "japan"
+  },
+  "Mitsuba": {
+   "welt": "japan"
+  },
+  "Kikkoman": {
+   "welt": "japan"
+  },
+  "Miyako": {
+   "welt": "japan"
+  },
+  "O-MOCHI": {
+   "welt": "japan"
+  },
+  "Ita-San": {
+   "welt": "japan"
+  },
+  "Yakult": {
+   "welt": "japan"
+  },
+  "Hakuma": {
+   "welt": "japan"
+  },
+  "Meiji": {
+   "welt": "japan"
+  },
+  "Glico": {
+   "welt": "japan"
+  },
+  "Calbee": {
+   "welt": "japan"
+  },
+  "Morinaga": {
+   "welt": "japan"
+  },
+  "Kracie": {
+   "welt": "japan"
+  },
+  "Kasugai": {
+   "welt": "japan"
+  },
+  "Ito En": {
+   "welt": "japan"
+  },
+  "Hello Panda": {
+   "welt": "japan"
+  },
+  "HAKUMA": {
+   "welt": "japan"
+  },
+  "Koala's March": {
+   "welt": "japan"
+  },
+  "Ramune": {
+   "welt": "japan"
+  },
+  "Furuta": {
+   "welt": "japan"
+  },
+  "Hi-Chew": {
+   "welt": "japan"
+  },
+  "Marukome": {
+   "welt": "japan"
+  },
+  "Mizkan": {
+   "welt": "japan"
+  },
+  "Shirakiku": {
+   "welt": "japan"
+  },
+  "Nissin": {
+   "welt": "japan"
+  },
+  "Sanyo": {
+   "welt": "japan"
+  },
+  "Yamamotoyama": {
+   "welt": "japan"
+  },
+  "Tohato": {
+   "welt": "japan"
+  },
+  "Bourbon": {
+   "welt": "japan"
+  },
+  "Itoen": {
+   "welt": "japan"
+  },
+  "Sapporo": {
+   "welt": "japan"
+  },
+  "Kewpie": {
+   "welt": "japan"
+  },
+  "Pepero": {
+   "welt": "korea"
+  },
+  "Samyang": {
+   "welt": "korea"
+  },
+  "Nongshim": {
+   "welt": "korea"
+  },
+  "bibigo": {
+   "welt": "korea"
+  },
+  "Namdong": {
+   "welt": "korea"
+  },
+  "Choi's": {
+   "welt": "korea"
+  },
+  "Orion": {
+   "welt": "korea"
+  },
+  "Binggrae": {
+   "welt": "korea"
+  },
+  "Haitai": {
+   "welt": "korea"
+  },
+  "Ottogi": {
+   "welt": "korea"
+  },
+  "Paldo": {
+   "welt": "korea"
+  },
+  "Lotte": {
+   "welt": "korea"
+  },
+  "Maeil": {
+   "welt": "korea"
+  },
+  "Dongwon": {
+   "welt": "korea"
+  },
+  "Sempio": {
+   "welt": "korea"
+  },
+  "Chung Jung One": {
+   "welt": "korea"
+  },
+  "Daesang": {
+   "welt": "korea"
+  },
+  "Pulmuone": {
+   "welt": "korea"
+  },
+  "Jinro": {
+   "welt": "korea"
+  },
+  "Bibigo": {
+   "welt": "korea"
+  },
+  "Cosmoveda": {
+   "welt": "asien"
+  },
+  "Govinda": {
+   "welt": "asien"
+  },
+  "Classic Ayurveda": {
+   "welt": "asien"
+  },
+  "Bamboo Garden": {
+   "welt": "asien"
+  },
+  "Wan Kwai": {
+   "welt": "asien"
+  },
+  "FLYING GOOSE": {
+   "welt": "asien"
+  },
+  "YumYum": {
+   "welt": "asien"
+  },
+  "Truly Indian": {
+   "welt": "asien"
+  },
+  "Tilda": {
+   "welt": "asien"
+  },
+  "Mae Ploy": {
+   "welt": "asien"
+  },
+  "Aroy-D": {
+   "welt": "asien"
+  },
+  "Lee Kum Kee": {
+   "welt": "asien"
+  },
+  "Thai Kitchen": {
+   "welt": "asien"
+  },
+  "Tai Pan": {
+   "welt": "asien"
+  },
+  "Golden Turtle": {
+   "welt": "asien"
+  },
+  "Ayurveda": {
+   "welt": "asien"
+  },
+  "Patak's": {
+   "welt": "asien"
+  },
+  "Haldiram": {
+   "welt": "asien"
+  },
+  "Kadai": {
+   "welt": "asien"
+  },
+  "Sun Lik": {
+   "welt": "asien"
+  },
+  "Suzi Wan": {
+   "welt": "asien"
+  },
+  "Royal Orient": {
+   "welt": "asien"
+  },
+  "Pearl River Bridge": {
+   "welt": "asien"
+  },
+  "Yeo's": {
+   "welt": "asien"
+  },
+  "Indomie": {
+   "welt": "asien"
+  },
+  "Mie Goreng": {
+   "welt": "asien"
+  },
+  "Lao Gan Ma": {
+   "welt": "asien"
+  },
+  "Wai Wai": {
+   "welt": "asien"
+  },
+  "Koh-Kae": {
+   "welt": "asien"
+  },
+  "Amaroy": {
+   "welt": "asien"
+  },
+  "Cock": {
+   "welt": "asien"
+  },
+  "Cock Brand": {
+   "welt": "asien"
+  },
+  "Thai": {
+   "welt": "asien"
+  },
+  "Heera": {
+   "welt": "asien"
+  },
+  "Tata": {
+   "welt": "asien"
+  },
+  "Dabur": {
+   "welt": "asien"
+  },
+  "Everest": {
+   "welt": "asien"
+  },
+  "MDH": {
+   "welt": "asien"
+  },
+  "Ching's": {
+   "welt": "asien"
+  },
+  "English Tea Shop": {
+   "welt": "uk"
+  },
+  "Windsor-Castle": {
+   "welt": "uk"
+  },
+  "Kilner": {
+   "welt": "uk"
+  },
+  "Pukka": {
+   "welt": "uk"
+  },
+  "Wilkin": {
+   "welt": "uk"
+  },
+  "black + blum": {
+   "welt": "uk"
+  },
+  "black+blum": {
+   "welt": "uk"
+  },
+  "Schweppes": {
+   "welt": "uk"
+  },
+  "Cadbury": {
+   "welt": "uk"
+  },
+  "McVitie's": {
+   "welt": "uk"
+  },
+  "Walkers": {
+   "welt": "uk"
+  },
+  "Fentimans": {
+   "welt": "uk"
+  },
+  "Fever-Tree": {
+   "welt": "uk"
+  },
+  "Fever Tree": {
+   "welt": "uk"
+  },
+  "Tate & Lyle": {
+   "welt": "uk"
+  },
+  "Twinings": {
+   "welt": "uk"
+  },
+  "Tetley": {
+   "welt": "uk"
+  },
+  "PG Tips": {
+   "welt": "uk"
+  },
+  "Yorkshire Tea": {
+   "welt": "uk"
+  },
+  "Lyle's": {
+   "welt": "uk"
+  },
+  "Colman's": {
+   "welt": "uk"
+  },
+  "Branston": {
+   "welt": "uk"
+  },
+  "Hovis": {
+   "welt": "uk"
+  },
+  "Ribena": {
+   "welt": "uk"
+  },
+  "Robinsons": {
+   "welt": "uk"
+  },
+  "Marmite": {
+   "welt": "uk"
+  },
+  "HP": {
+   "welt": "uk"
+  },
+  "Mason Cash": {
+   "welt": "uk"
+  },
+  "Baxters": {
+   "welt": "uk"
+  },
+  "Weetabix": {
+   "welt": "uk"
+  },
+  "Jordans": {
+   "welt": "uk"
+  },
+  "Pip & Nut": {
+   "welt": "uk"
+  },
+  "innocent": {
+   "welt": "uk"
+  },
+  "Chivers": {
+   "welt": "uk"
+  },
+  "Tyrrells": {
+   "welt": "uk"
+  },
+  "Brewdog": {
+   "welt": "uk"
+  },
+  "Warburtons": {
+   "welt": "uk"
+  },
+  "Wine Gums": {
+   "welt": "uk"
+  },
+  "Fox's": {
+   "welt": "uk"
+  },
+  "Jacob's": {
+   "welt": "uk"
+  },
+  "Tunnock's": {
+   "welt": "uk"
+  },
+  "Bassetts": {
+   "welt": "uk"
+  },
+  "Swizzels": {
+   "welt": "uk"
+  },
+  "Rowntree's": {
+   "welt": "uk"
+  },
+  "Penguin": {
+   "welt": "uk"
+  },
+  "Mackintosh": {
+   "welt": "uk"
+  },
+  "Thorntons": {
+   "welt": "uk"
+  },
+  "Hotel Chocolat": {
+   "welt": "uk"
+  },
+  "Bettys": {
+   "welt": "uk"
+  },
+  "Whittard": {
+   "welt": "uk"
+  },
+  "Clipper": {
+   "welt": "uk"
+  },
+  "Bird's": {
+   "welt": "uk"
+  },
+  "Typhoo": {
+   "welt": "uk"
+  },
+  "Arla": {
+   "welt": "skandinavien"
+  },
+  "Wasa": {
+   "welt": "skandinavien"
+  },
+  "Oatly": {
+   "welt": "skandinavien"
+  },
+  "Marabou": {
+   "welt": "skandinavien"
+  },
+  "Fazer": {
+   "welt": "skandinavien"
+  },
+  "Finn Crisp": {
+   "welt": "skandinavien"
+  },
+  "Den Gamle Fabrik": {
+   "welt": "skandinavien"
+  },
+  "Läkerol": {
+   "welt": "skandinavien"
+  },
+  "Cloetta": {
+   "welt": "skandinavien"
+  },
+  "Malaco": {
+   "welt": "skandinavien"
+  },
+  "Toms": {
+   "welt": "skandinavien"
+  },
+  "Anthon Berg": {
+   "welt": "skandinavien"
+  },
+  "Freia": {
+   "welt": "skandinavien"
+  },
+  "Orkla": {
+   "welt": "skandinavien"
+  },
+  "Ahlgrens": {
+   "welt": "skandinavien"
+  },
+  "Haribo Skandinavien": {
+   "welt": "skandinavien"
+  },
+  "Kalles": {
+   "welt": "skandinavien"
+  },
+  "Ikea": {
+   "welt": "skandinavien"
+  },
+  "Estrella": {
+   "welt": "skandinavien"
+  },
+  "Göteborgs": {
+   "welt": "skandinavien"
+  },
+  "Pågen": {
+   "welt": "skandinavien"
+  },
+  "Leksands": {
+   "welt": "skandinavien"
+  },
+  "Barilla Wasa": {
+   "welt": "skandinavien"
+  },
+  "Gammeldags": {
+   "welt": "skandinavien"
+  },
+  "Lakrids": {
+   "welt": "skandinavien"
+  },
+  "Lakrids by Bülow": {
+   "welt": "skandinavien"
+  },
+  "Bülow": {
+   "welt": "skandinavien"
+  },
+  "Plantagen": {
+   "welt": "skandinavien"
+  },
+  "Ballerina": {
+   "welt": "skandinavien"
+  },
+  "Skånemejerier": {
+   "welt": "skandinavien"
+  },
+  "alpro": {
+   "welt": "benelux"
+  },
+  "Alpro": {
+   "welt": "benelux"
+  },
+  "Boska": {
+   "welt": "benelux"
+  },
+  "Tony's Chocolonely": {
+   "welt": "benelux"
+  },
+  "Tony’s Chocolonely": {
+   "welt": "benelux"
+  },
+  "DE RIT": {
+   "welt": "benelux"
+  },
+  "Mepal": {
+   "welt": "benelux"
+  },
+  "De Bolster": {
+   "welt": "benelux"
+  },
+  "Leerdammer": {
+   "welt": "benelux"
+  },
+  "Delicata": {
+   "welt": "benelux"
+  },
+  "Sligro": {
+   "welt": "benelux"
+  },
+  "Verkade": {
+   "welt": "benelux"
+  },
+  "Droste": {
+   "welt": "benelux"
+  },
+  "Van Houten": {
+   "welt": "benelux"
+  },
+  "Jacobs Douwe Egberts": {
+   "welt": "benelux"
+  },
+  "Douwe Egberts": {
+   "welt": "benelux"
+  },
+  "Remia": {
+   "welt": "benelux"
+  },
+  "Calvé": {
+   "welt": "benelux"
+  },
+  "Maitre": {
+   "welt": "benelux"
+  },
+  "Callebaut": {
+   "welt": "benelux"
+  },
+  "Neuhaus": {
+   "welt": "benelux"
+  },
+  "Leonidas": {
+   "welt": "benelux"
+  },
+  "Galler": {
+   "welt": "benelux"
+  },
+  "Lotus Bakeries": {
+   "welt": "benelux"
+  },
+  "Speculoos": {
+   "welt": "benelux"
+  },
+  "Delacre": {
+   "welt": "benelux"
+  },
+  "Jules Destrooper": {
+   "welt": "benelux"
+  },
+  "Côte d'Or": {
+   "welt": "benelux"
+  },
+  "Cote d'Or": {
+   "welt": "benelux"
+  },
+  "Godiva": {
+   "welt": "benelux"
+  },
+  "Guylian": {
+   "welt": "benelux"
+  },
+  "Elvea": {
+   "welt": "benelux"
+  },
+  "Ter Beke": {
+   "welt": "benelux"
+  },
+  "Wonderbra": {
+   "welt": "benelux"
+  },
+  "Stroopwafel": {
+   "welt": "benelux"
+  },
+  "Daelmans": {
+   "welt": "benelux"
+  },
+  "Van der Meulen": {
+   "welt": "benelux"
+  },
+  "Kwatta": {
+   "welt": "benelux"
+  },
+  "Venz": {
+   "welt": "benelux"
+  },
+  "Meurisse": {
+   "welt": "benelux"
+  },
+  "Nutricia": {
+   "welt": "benelux"
+  },
+  "Jumbo": {
+   "welt": "benelux"
+  },
+  "Albert Heijn": {
+   "welt": "benelux"
+  },
+  "Magnum": {
+   "welt": "benelux"
+  },
+  "Ülker": {
+   "welt": "orient"
+  },
+  "Kandisin": {
+   "welt": "deutschland"
+  },
+  "Emsal": {
+   "welt": "orient"
+  },
+  "Marka Hellas": {
+   "welt": "orient"
+  },
+  "Efsane": {
+   "welt": "orient"
+  },
+  "Haribo Türkei": {
+   "welt": "orient"
+  },
+  "Eti": {
+   "welt": "orient"
+  },
+  "Torku": {
+   "welt": "orient"
+  },
+  "Dimes": {
+   "welt": "orient"
+  },
+  "Pınar": {
+   "welt": "orient"
+  },
+  "Sütaş": {
+   "welt": "orient"
+  },
+  "Namet": {
+   "welt": "orient"
+  },
+  "Tadım": {
+   "welt": "orient"
+  },
+  "Tadim": {
+   "welt": "orient"
+  },
+  "Alsancak": {
+   "welt": "orient"
+  },
+  "Tamek": {
+   "welt": "orient"
+  },
+  "Cappy": {
+   "welt": "orient"
+  },
+  "Saray": {
+   "welt": "orient"
+  },
+  "Koska": {
+   "welt": "orient"
+  },
+  "Hacı Bekir": {
+   "welt": "orient"
+  },
+  "Haci Bekir": {
+   "welt": "orient"
+  },
+  "Pasabahce": {
+   "welt": "orient"
+  },
+  "Bamya": {
+   "welt": "orient"
+  },
+  "Ulker": {
+   "welt": "orient"
+  },
+  "Dr.Oetker Türkei": {
+   "welt": "orient"
+  },
+  "Lokum": {
+   "welt": "orient"
+  },
+  "Yayla": {
+   "welt": "orient"
+  },
+  "Salihli": {
+   "welt": "orient"
+  },
+  "Çaykur": {
+   "welt": "orient"
+  },
+  "Caykur": {
+   "welt": "orient"
+  },
+  "Efes": {
+   "welt": "orient"
+  },
+  "Ayran": {
+   "welt": "orient"
+  },
+  "Sarelle": {
+   "welt": "orient"
+  },
+  "Zaatar": {
+   "welt": "orient"
+  },
+  "Al Wadi": {
+   "welt": "orient"
+  },
+  "Al Rabih": {
+   "welt": "orient"
+  },
+  "Sahtein": {
+   "welt": "orient"
+  },
+  "Alshifa": {
+   "welt": "orient"
+  },
+  "Baklava": {
+   "welt": "orient"
+  },
+  "Minerva": {
+   "welt": "orient"
+  },
+  "Delphi": {
+   "welt": "orient"
+  },
+  "Kalamata": {
+   "welt": "orient"
+  },
+  "Misko": {
+   "welt": "orient"
+  },
+  "Barba Stathis": {
+   "welt": "orient"
+  },
+  "Olympos": {
+   "welt": "orient"
+  },
+  "Fage": {
+   "welt": "orient"
+  },
+  "Elais": {
+   "welt": "orient"
+  },
+  "Dovgan": {
+   "welt": "osteuropa"
+  },
+  "Kalnik": {
+   "welt": "osteuropa"
+  },
+  "Moskovskaya": {
+   "welt": "osteuropa",
+   "alkohol": true
+  },
+  "Roshen": {
+   "welt": "osteuropa"
+  },
+  "Wedel": {
+   "welt": "osteuropa"
+  },
+  "Wawel": {
+   "welt": "osteuropa"
+  },
+  "Alpen Gold": {
+   "welt": "osteuropa"
+  },
+  "Korona": {
+   "welt": "osteuropa"
+  },
+  "Haribo Polen": {
+   "welt": "osteuropa"
+  },
+  "Kinder Polen": {
+   "welt": "osteuropa"
+  },
+  "Vegeta": {
+   "welt": "osteuropa"
+  },
+  "Podravka": {
+   "welt": "osteuropa"
+  },
+  "Jamnica": {
+   "welt": "osteuropa"
+  },
+  "Kandit": {
+   "welt": "osteuropa"
+  },
+  "Studentska": {
+   "welt": "osteuropa"
+  },
+  "Bambi": {
+   "welt": "osteuropa"
+  },
+  "Mlekara": {
+   "welt": "osteuropa"
+  },
+  "Solidarność": {
+   "welt": "osteuropa"
+  },
+  "Ludwik": {
+   "welt": "osteuropa"
+  },
+  "Prince Polo": {
+   "welt": "osteuropa"
+  },
+  "Goplana": {
+   "welt": "osteuropa"
+  },
+  "Jutrzenka": {
+   "welt": "osteuropa"
+  },
+  "Krakus": {
+   "welt": "osteuropa"
+  },
+  "Lubella": {
+   "welt": "osteuropa"
+  },
+  "Winiary": {
+   "welt": "osteuropa"
+  },
+  "Kotlin": {
+   "welt": "osteuropa"
+  },
+  "Pudliszki": {
+   "welt": "osteuropa"
+  },
+  "Tymbark": {
+   "welt": "osteuropa"
+  },
+  "Hortex": {
+   "welt": "osteuropa"
+  },
+  "Nałęczowianka": {
+   "welt": "osteuropa"
+  },
+  "Oshee": {
+   "welt": "osteuropa"
+  },
+  "Soplica": {
+   "welt": "osteuropa"
+  },
+  "La Chinata": {
+   "welt": "spanien"
+  },
+  "Sal de Ibiza": {
+   "welt": "spanien"
+  },
+  "La Espanola": {
+   "welt": "spanien"
+  },
+  "Finca La Barca": {
+   "welt": "spanien"
+  },
+  "Marques de Tomares S.L.": {
+   "welt": "spanien",
+   "alkohol": true
+  },
+  "Miraflores": {
+   "welt": "spanien"
+  },
+  "La Maja": {
+   "welt": "spanien"
+  },
+  "La Amarilla de Ronda": {
+   "welt": "spanien"
+  },
+  "Ildefonso": {
+   "welt": "spanien"
+  },
+  "Safinter": {
+   "welt": "spanien"
+  },
+  "Torres": {
+   "welt": "spanien"
+  },
+  "Torras": {
+   "welt": "spanien"
+  },
+  "Chupa Chups": {
+   "welt": "spanien"
+  },
+  "Cola Cao": {
+   "welt": "spanien"
+  },
+  "Lacasa": {
+   "welt": "spanien"
+  },
+  "Gallina Blanca": {
+   "welt": "spanien"
+  },
+  "Carretilla": {
+   "welt": "spanien"
+  },
+  "Hacendado": {
+   "welt": "spanien"
+  },
+  "Ybarra": {
+   "welt": "spanien"
+  },
+  "Borges": {
+   "welt": "spanien"
+  },
+  "Coosur": {
+   "welt": "spanien"
+  },
+  "La Española": {
+   "welt": "spanien"
+  },
+  "Iberico": {
+   "welt": "spanien"
+  },
+  "Cinco Jotas": {
+   "welt": "spanien"
+  },
+  "Jamón": {
+   "welt": "spanien"
+  },
+  "Pata Negra": {
+   "welt": "spanien"
+  },
+  "Pastas Gallo": {
+   "welt": "spanien"
+  },
+  "Gallo": {
+   "welt": "spanien"
+  },
+  "Campofrío": {
+   "welt": "spanien"
+  },
+  "Vicky Foods": {
+   "welt": "spanien"
+  },
+  "Turrones": {
+   "welt": "spanien"
+  },
+  "El Almendro": {
+   "welt": "spanien"
+  },
+  "Delaviuda": {
+   "welt": "spanien"
+  },
+  "Nocilla": {
+   "welt": "spanien"
+  },
+  "Lizano": {
+   "welt": "spanien"
+  },
+  "Nocciolata": {
+   "welt": "spanien"
+  },
+  "Rioja": {
+   "welt": "spanien"
+  },
+  "Carbonell": {
+   "welt": "spanien"
+  },
+  "Dos Hermanas": {
+   "welt": "spanien"
+  },
+  "Jordan Olivenöl": {
+   "welt": "spanien"
+  },
+  "Weinfreunde": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Weißwein": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Rotwein": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Roséwein": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Rosèwein": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Weingut Günter u. Regina Triebaumer": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Weingut Polz": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Domäne Wachau": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Allegrini": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Weingut Birgit Eichinger": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Weingut Pock": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Weingut Triebl": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Weingut Markus Huber": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Cantina Girlan": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Weingut Lukas Kesselring": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Weingut Diehl": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Weingut Fogt": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Weingut Klundt": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Weingut Müller": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Weingut Ecker - Eckhof": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Weingut Hofbauer-Schmidt": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Weingut Dr. Bürklin-Wolf": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Weingut Silvia Heinrich": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Weingut": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Bodega Atamisque": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Chateau": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Cantina": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Montepulciano": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Spumante": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Zukunftsweine": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Rotweine Lang": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Deutsches Weintor": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Champagner": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Rotkäppchen-Mumm": {
+   "welt": "deutschland",
+   "alkohol": true
+  },
+  "Freixenet": {
+   "welt": "spanien",
+   "alkohol": true
+  },
+  "Paulaner": {
+   "welt": "deutschland",
+   "alkohol": true
+  },
+  "Krombacher": {
+   "welt": "deutschland",
+   "alkohol": true
+  },
+  "Jägermeister": {
+   "welt": "deutschland",
+   "alkohol": true
+  },
+  "Baileys": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Aperol": {
+   "welt": "italien",
+   "alkohol": true
+  },
+  "Campari": {
+   "welt": "italien",
+   "alkohol": true
+  },
+  "Bacardi": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Jim Beam": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Jack Daniel's": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Smirnoff": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Havana Club": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Captain Morgan": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Gordon's": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Tanqueray": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Bombay": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Absolut": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Martini": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Lillet": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Ramazzotti": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Mumm & Co.": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Jules Mumm": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Söhnlein Brillant": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Geldermann": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Heidsieck & Co.": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Pommery": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Chandon": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Beck's": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Bitburger": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Heineken": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Erdinger": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Jever": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Budweiser Budvar": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Guinness": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Desperados": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Corona": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Somersby": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Kilbeggan Whiskey": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Gin": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Roku Gin": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Wodka Gorbatschow": {
+   "welt": null,
+   "alkohol": true
+  },
+  "SKYY Vodka": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Sierra Tequila": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Augustinerbräu München": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Echter Nordhäuser": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Fürst von Metternich": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Brut Dargent": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Brut": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Prosecco": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Barefoot": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Bread & Butter Wines": {
+   "welt": null,
+   "alkohol": true
+  },
+  "[ yellow tail ]": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Kloster Eberbach": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Luis Felipe Edwards": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Tavernello": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Intención": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Weingut Kesselring": {
+   "welt": null,
+   "alkohol": true
+  },
+  "La Gioiosa": {
+   "welt": null,
+   "alkohol": true
+  },
+  "CA' S BEATO": {
+   "welt": null,
+   "alkohol": true
+  },
+  "Felix": {
+   "welt": null,
+   "tier": true
+  },
+  "Vitakraft": {
+   "welt": null,
+   "tier": true
+  },
+  "Butchers": {
+   "welt": null,
+   "tier": true
+  },
+  "Purina Gourmet": {
+   "welt": null,
+   "tier": true
+  },
+  "Purina One": {
+   "welt": null,
+   "tier": true
+  },
+  "Purina": {
+   "welt": null,
+   "tier": true
+  },
+  "Sheba": {
+   "welt": null,
+   "tier": true
+  },
+  "Whiskas": {
+   "welt": null,
+   "tier": true
+  },
+  "Pedigree": {
+   "welt": null,
+   "tier": true
+  },
+  "Dreamies": {
+   "welt": null,
+   "tier": true
+  },
+  "Catsan": {
+   "welt": null,
+   "tier": true
+  },
+  "8in1": {
+   "welt": null,
+   "tier": true
+  },
+  "Gourmet": {
+   "welt": null,
+   "tier": true
+  },
+  "Kitekat": {
+   "welt": null,
+   "tier": true
+  },
+  "Cesar": {
+   "welt": null,
+   "tier": true
+  },
+  "Applaws": {
+   "welt": null,
+   "tier": true
+  },
+  "Terra Canis": {
+   "welt": null,
+   "tier": true
+  },
+  "Bozita": {
+   "welt": null,
+   "tier": true
+  },
+  "Happy Dog": {
+   "welt": null,
+   "tier": true
+  },
+  "Rinti": {
+   "welt": null,
+   "tier": true
+  },
+  "MAC's": {
+   "welt": null,
+   "tier": true
+  },
+  "Mera": {
+   "welt": null,
+   "tier": true
+  },
+  "Royal Canin": {
+   "welt": null,
+   "tier": true
+  },
+  "Hills": {
+   "welt": null,
+   "tier": true
+  },
+  "Eukanuba": {
+   "welt": null,
+   "tier": true
+  },
+  "Trixie": {
+   "welt": null,
+   "tier": true
+  },
+  "Zooroyal": {
+   "welt": null,
+   "tier": true
+  },
+  "ZooRoyal": {
+   "welt": null,
+   "tier": true
+  },
+  "Mjamjam": {
+   "welt": null,
+   "tier": true
+  },
+  "MjAMjAM": {
+   "welt": null,
+   "tier": true
+  },
+  "Wildborn": {
+   "welt": null,
+   "tier": true
+  },
+  "Granatapet": {
+   "welt": null,
+   "tier": true
+  },
+  "Josera": {
+   "welt": null,
+   "tier": true
+  },
+  "Tetra": {
+   "welt": null,
+   "tier": true
+  },
+  "Sera": {
+   "welt": null,
+   "tier": true
+  },
+  "JBL": {
+   "welt": null,
+   "tier": true
+  },
+  "Nobby": {
+   "welt": null,
+   "tier": true
+  },
+  "Kong": {
+   "welt": null,
+   "tier": true
+  },
+  "Greenies": {
+   "welt": null,
+   "tier": true
+  },
+  "Pro Plan": {
+   "welt": null,
+   "tier": true
+  },
+  "Meowing Heads": {
+   "welt": null,
+   "tier": true
+  },
+  "Lunderland": {
+   "welt": null,
+   "tier": true
+  },
+  "Warheads": {
+   "welt": "usa"
+  },
+  "Mike & Ike": {
+   "welt": "usa"
+  },
+  "Sour Patch Kids": {
+   "welt": "usa"
+  },
+  "Toast'em": {
+   "welt": "usa"
+  },
+  "Herr's": {
+   "welt": "usa"
+  },
+  "Van Holten's": {
+   "welt": "usa"
+  },
+  "Van Holtens": {
+   "welt": "usa"
+  },
+  "Airheads": {
+   "welt": "usa"
+  },
+  "Jolly Rancher": {
+   "welt": "usa"
+  },
+  "Nerds": {
+   "welt": "usa"
+  },
+  "Laffy Taffy": {
+   "welt": "usa"
+  },
+  "Twinkies": {
+   "welt": "usa"
+  },
+  "Swedish Fish": {
+   "welt": "usa"
+  },
+  "Kool-Aid": {
+   "welt": "usa"
+  },
+  "Hi-C": {
+   "welt": "usa"
+  },
+  "Arizona": {
+   "welt": "usa"
+  },
+  "Prime": {
+   "welt": "usa"
+  },
+  "Lucky Charms": {
+   "welt": "usa"
+  },
+  "Cap'n Crunch": {
+   "welt": "usa"
+  },
+  "Froot Loops": {
+   "welt": "usa"
+  },
+  "Goldfish": {
+   "welt": "usa"
+  },
+  "Ritz": {
+   "welt": "usa"
+  },
+  "Smucker's": {
+   "welt": "usa"
+  },
+  "Marshmallow Fluff": {
+   "welt": "usa"
+  },
+  "Sun Chips": {
+   "welt": "usa"
+  },
+  "Little Debbie": {
+   "welt": "usa"
+  },
+  "Lotte Japan": {
+   "welt": "japan"
+  },
+  "UHA Mikakuto": {
+   "welt": "japan"
+  },
+  "Crown": {
+   "welt": "korea"
+  },
+  "De la Rosa": {
+   "welt": "mexiko"
+  },
+  "Vero": {
+   "welt": "mexiko"
+  },
+  "Pelon Pelo Rico": {
+   "welt": "mexiko"
+  },
+  "Lucas": {
+   "welt": "mexiko"
+  },
+  "Maltesers": {
+   "welt": "uk"
+  },
+  "Galaxy": {
+   "welt": "uk"
+  },
+  "Irn Bru": {
+   "welt": "uk"
+  },
+  "Vimto": {
+   "welt": "uk"
+  },
+  "Haribo UK": {
+   "welt": "uk"
+  },
+  "Hayat": {
+   "welt": "orient"
+  },
+  "KitKat": {
+   "welt": "uk"
+  },
+  "Kit Kat": {
+   "welt": "uk"
+  },
+  "Smarties": {
+   "welt": "uk"
+  },
+  "Andy Capp's": {
+   "welt": "usa"
+  },
+  "Fruity Pebbles": {
+   "welt": "usa"
+  },
+  "Surasang": {
+   "welt": "korea"
+  },
+  "Tokimeki": {
+   "welt": "japan"
+  },
+  "Hello Kitty": {
+   "welt": "japan"
+  },
+  "Cokoc": {
+   "welt": "asien"
+  }
+ }
+}

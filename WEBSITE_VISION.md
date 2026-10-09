@@ -97,6 +97,11 @@ Ziel: Sobald ein Partner zusagt, erscheinen seine Produkte automatisch.
 
 ## 6. Partner-Stand (AWIN, Publisher-ID 3111189)
 Zugelassen: **my-schoko-world 16944** (kein Feed, 2 Produkte per Hand, Fotos nach Einwilligung).
+Zugelassen am 08.10.2026: **SugarGang 127807, Burghardt Delicious 115505, Sodapop 42806, Piccantino 79456, REWE 11652, GOURVITA 14403** (in `feeds.json` aktiv). REWE: 8 % Neukunden / 4 % Bestandskunden, 30 Tage Cookie.
+
+**Affiliate-Wächter:** `build.py` wirft jedes Produkt raus, dessen Link nicht über `awin1.com` mit Publisher-ID 3111189 (`awinaffid=` oder `a=`) läuft. Das Build-Log zeigt `[Affiliate-Check]`.
+
+**Learnings Top-Seiten (08.10.):** World of Sweets, SugarGang, Universal Yums, Bokksu zeigen im Oktober schon Adventskalender/Weihnachten ganz oben, Produktbilder im ersten Bildschirm, ein großes 2-Spalten-Raster, Spielereien weiter unten. Danach umgebaut: Startseite = Hero + „Gerade im Shop“ (PC rechts), dann Saison (Halloween + Adventskalender ab 01.10.), dann Neu im Shop, erst danach Rad/Karte/Pass.
 
 Bewerbung offen (28):
 

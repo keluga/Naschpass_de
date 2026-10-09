@@ -34,10 +34,42 @@ if _ff.exists() and not os.environ.get("PRODUCTS_FILE"):
                            if re.sub(r"[^a-z0-9]+", " ", p.get("name", "").lower()).strip() not in _have]
 if DEMO and not os.environ.get("PRODUCTS_FILE"):  # Vorschau: echte Produkte zuerst, dann Beispiele
     products = json.loads((HERE / "products.json").read_text(encoding="utf-8"))["products"] + products
+
+# ---------- Affiliate-Wächter ----------
+# Jeder Produkt-Link MUSS über AWIN mit Kevs Publisher-ID laufen, sonst gibt es keine Provision.
+# Links ohne die ID fliegen raus (Build-Log zeigt sie). Formate: cread.php?...awinaffid=ID  oder  pclick.php?...a=ID
+AWIN_ID = str(site.get("awin_publisher_id", "3111189"))
+
+
+def affiliate_ok(url):
+    from urllib.parse import urlparse, parse_qs
+    try:
+        u = urlparse(url)
+    except ValueError:
+        return False
+    if u.scheme != "https" or not (u.hostname or "").endswith("awin1.com"):
+        return False
+    q = parse_qs(u.query)
+    return AWIN_ID in q.get("awinaffid", []) + q.get("a", [])
+
+
+if not DEMO:
+    for _p in products:  # AWIN-Feeds liefern manchmal http:// -> sicher auf https umstellen
+        if _p.get("url", "").startswith("http://www.awin1.com/"):
+            _p["url"] = "https://" + _p["url"][7:]
+    _bad = [p for p in products if not affiliate_ok(p.get("url", ""))]
+    products = [p for p in products if affiliate_ok(p.get("url", ""))]
+    print(f"[Affiliate-Check] {len(products)} Produkte mit Publisher-ID {AWIN_ID}"
+          + (f", {len(_bad)} aussortiert: " + "; ".join(p.get("name", "?")[:40] for p in _bad[:10]) if _bad else ", alles ok"))
+
 posts = json.loads((ROOT / "generator" / "posts.json").read_text(encoding="utf-8"))["posts"]
 
 BASE = f"https://{site['domain']}"
 ON_NETLIFY = os.environ.get("NETLIFY") == "true"
+ON_CF = os.environ.get("CF_PAGES") == "1" or os.environ.get("WORKERS_CI") == "1" or os.environ.get("IMG_LOCAL") == "1"  # Cloudflare Pages: Bilder selbst verkleinert
+PREVIEW = os.environ.get("CONTEXT") == "deploy-preview" or (os.environ.get("CF_PAGES") == "1" and os.environ.get("CF_PAGES_BRANCH", "main") != "main") \
+    or (os.environ.get("WORKERS_CI") == "1" and os.environ.get("WORKERS_CI_BRANCH", "main") != "main") or os.environ.get("PRUEFEN") == "1"
+THUMBS = set()  # Folienbilder, die beim Build verkleinert werden (Cloudflare)
 FUSE = "/static/vendor/fuse-7.5.0.basic.min.mjs"
 
 # Erlaubte Bild-Server für Partner-Bilder (aus netlify.toml gelesen)
@@ -71,7 +103,15 @@ def translit(s):
     return s
 
 
+def thumb(src):
+    """Cloudflare: kleines Folienbild statt 1080er-Original."""
+    THUMBS.add(src)
+    return src[:-4] + "_t.jpg"
+
+
 def cdn(src, w):
+    if ON_CF and not ON_NETLIFY:
+        return thumb(src) if src.startswith("/p/") else src
     return f"/.netlify/images?url={quote(src, safe='/')}&w={w}&q=78" if src.startswith("/") else \
         f"/.netlify/images?url={quote(src, safe='')}&w={w}&q=80"
 
@@ -80,6 +120,12 @@ def slide_img(src, alt, w, sizes, cls="", eager=False):
     """Eigene Folienbilder. Auf Netlify verkleinert (spart Ladezeit und Netlify-Credits), sonst Original."""
     lazy = "" if eager else ' loading="lazy" decoding="async"'
     c = f' class="{cls}"' if cls else ""
+    if ON_CF and src.startswith("/p/"):
+        THUMBS.add(src)
+        t = src[:-4] + "_t.jpg"
+        # kleines Bild für Karten, Original für große/scharfe Bildschirme (Browser wählt selbst)
+        return (f'<img src="{t}" srcset="{t} 480w, {src} 1080w" sizes="{sizes}" alt="{e(alt)}" width="1080" height="1350"{c}{lazy} '
+                f'onerror="this.onerror=null;this.removeAttribute(\'srcset\');this.src=\'{src}\'">')
     if not ON_NETLIFY:
         return f'<img src="{src}" alt="{e(alt)}" width="1080" height="1350"{c}{lazy}>'
     srcset = ", ".join(f"{cdn(src, x)} {x}w" for x in (w, w * 2))
@@ -124,7 +170,28 @@ def _kw_re(k):
 _KW = {(g["id"], o["id"]): [_kw_re(k) for k in o.get("keywords", [])] for g in FILTER for o in g["options"]}
 
 
+_FACET_CACHE = {}
+_OVR = json.loads((HERE / "overrides.json").read_text(encoding="utf-8")).get("items", {}) if (HERE / "overrides.json").exists() else {}
+
+
 def facets(p):
+    """Ordnet ein Produkt automatisch zu (gecacht, bei tausenden Feed-Produkten wichtig)."""
+    k = id(p)
+    if k not in _FACET_CACHE:
+        f = _facets(p)
+        o = _OVR.get(re.sub(r"[^a-z0-9]+", " ", p.get("name", "").lower()).strip())
+        if o:  # geschätzte Werte nur dort, wo die Regeln nichts gefunden haben
+            for g in ("art", "land"):
+                if o.get(g) and not f.get(g):
+                    ids = {o[g]}
+                    for i in list(ids):
+                        ids.update(_parents.get((g, i), []))
+                    f[g] = ids
+        _FACET_CACHE[k] = f
+    return _FACET_CACHE[k]
+
+
+def _facets(p):
     """Ordnet ein Produkt automatisch zu (oder per Hand über p['land'|'geschmack'|'art'])."""
     text = translit(" ".join([p.get("name", ""), p.get("note", ""), p.get("feed_category", ""), p.get("brand", "")]
                              + p.get("tags", [])))
@@ -190,8 +257,93 @@ def in_cat(p, c):
     return False
 
 
+_CAT_CACHE = {}
+
+
 def cat_items(c):
-    return [p for p in products if in_cat(p, c)]
+    if c["id"] not in _CAT_CACHE:
+        items = [p for p in products if in_cat(p, c)]
+        kws = [_kw_re(k) for k in c.get("keywords", []) + c.get("top", [])]
+        if kws:  # stabil sortieren: wer das Thema im Namen trägt, steht vorn (Reihenfolge sonst "Entdecken")
+            items.sort(key=lambda p: -sum(1 for r in kws if r.search(translit(p.get("name", "")))))
+        _CAT_CACHE[c["id"]] = items
+    return _CAT_CACHE[c["id"]]
+
+
+_THEME_SETS = {}
+
+
+def themes_of(p):
+    if not _THEME_SETS:
+        for c in cats:
+            _THEME_SETS[c["id"]] = {id(x) for x in cat_items(c)}
+    return [c["id"] for c in cats if id(p) in _THEME_SETS[c["id"]]]
+
+
+# Marken, die fast jeder kennt -> ziehen den Blick und schaffen Vertrauen (nach vorn)
+TOP_BRANDS = {b.lower() for b in ["Haribo", "Milka", "Ritter Sport", "Lindt", "Kinder", "Ferrero", "Raffaello", "Toffifee", "Merci", "Reese's",
+              "Hershey's", "M&M's", "Oreo", "Pringles", "KitKat", "Toblerone", "Pocky", "Pepero", "Takis", "Skittles", "Twix", "Snickers",
+              "Mars", "Bounty", "Maoam", "Katjes", "Trolli", "Nimm2", "Hanuta", "Duplo", "Lay's", "Doritos", "Chio", "funny-frisch",
+              "Ben & Jerry's", "Magnum", "Nutella", "Lotus", "Manner", "Mövenpick", "Tony's Chocolonely", "Warheads", "Sour Patch Kids",
+              "Airheads", "Jolly Rancher", "Nerds", "Cheetos", "Lucky Charms", "Mike & Ike", "Herr's", "Reese", "Hussel", "Zotter",
+              "Leibniz", "Bahlsen", "Ferrero Rocher", "After Eight", "Smarties", "Werther's Original", "Chupa Chups", "Hubba Bubba"]}
+DULL = re.compile(r"(sparpaket|sparset|vorteilspack|großpackung|\b\d{2,3}\s*x\s*\d|\bx\s*\d{2,3}\b|1\s*kg|1000\s*g|5\s*kg|"
+                  r"portionsstick|nachfüll|refill|ersatz|zubehör|kapsel|pads\b|zuckerfrei|stevia)", re.I)
+
+
+ART_ORDER = ["schokolade", "gummi", "chips", "getraenke", "pralinen", "bonbons", "kekse", "snacks", "boxen", "eis", "feinkost", "tee"]
+
+
+def order_products():
+    """Reihenfolge "Entdecken": Punkte (Exoten, Naschen, Saison, Handauswahl) und dann mischen,
+    damit nie lange Strecken vom selben Shop oder derselben Art kommen."""
+    season = [c for c in cats if in_season(c)]
+    def art(p):
+        a = facets(p).get("art", set())
+        return next((x for x in ART_ORDER if x in a), "sonst")
+    def score(p):
+        s = p.get("score", 6 if p.get("source") != "awin" else 0)  # Handeinträge zählen als gute Auswahl
+        if (p.get("brand") or "").lower() in TOP_BRANDS or any(p.get("name", "").lower().startswith(b) for b in TOP_BRANDS):
+            s += 3
+        if DULL.search(p.get("name", "")):
+            s -= 3
+        if p.get("imgkb") and p["imgkb"] < 7:  # winziges/schwaches Produktbild
+            s -= 4
+        if not p.get("price") and p.get("source") == "awin":
+            s -= 1
+        if p.get("post"):
+            s += 3
+        a = art(p)
+        if a in ("tee", "feinkost"):
+            s -= 3
+        elif a == "getraenke":  # Getränke bleiben, aber eher als Beilage: weiter hinten, eigener Knopf im Rad
+            s -= 2
+        elif a == "sonst":  # keine Art erkannt -> vermutlich kein klassisches Naschzeug
+            s -= 3
+        return s
+    in_seas = {id(x) for c in season for x in cat_items(c)}
+    sc, ar = {}, {}
+    for p in products:
+        ar[id(p)] = art(p)
+        sc[id(p)] = score(p) + (2 if id(p) in in_seas else 0)
+    buckets = {}
+    for p in sorted(products, key=lambda x: sc[id(x)], reverse=True):
+        buckets.setdefault((p.get("shop", ""), ar[id(p)]), []).append(p)
+    queues = list(buckets.values())
+    used = {}
+    eff = lambda q: sc[id(q[0])] - 1.5 * used.get(id(q), 0)  # jede Wahl aus demselben Topf zählt weniger -> Abwechslung
+    out, last = [], (None, None)
+    while queues:
+        queues.sort(key=lambda q: -eff(q))
+        pick = (next((q for q in queues if q[0].get("shop") != last[0] and ar[id(q[0])] != last[1]), None)
+                or next((q for q in queues if q[0].get("shop") != last[0]), queues[0]))
+        p = pick.pop(0)
+        used[id(pick)] = used.get(id(pick), 0) + 1
+        out.append(p)
+        last = (p.get("shop"), ar[id(p)])
+        if not pick:
+            queues.remove(pick)
+    products[:] = out
 
 
 def cats_sorted():
@@ -294,11 +446,31 @@ STICKERS = {
 
 
 STICKERS["europa"] = STICKERS["verboten"]
+
+
+def _stripes(cid, cols, vertical=False):
+    n, w = len(cols), 64 / len(cols)
+    r = "".join((f'<rect x="{i * w:.2f}" width="{w + .5:.2f}" height="64" fill="{c}"/>' if vertical
+                 else f'<rect y="{i * w:.2f}" width="64" height="{w + .5:.2f}" fill="{c}"/>') for i, c in enumerate(cols))
+    return f'<clipPath id="c{cid}"><rect width="64" height="64" rx="14"/></clipPath><g clip-path="url(#c{cid})">{r}</g>'
+
+
+STICKERS["oesterreich"] = _stripes("at", ["#C8102E", "#fff", "#C8102E"])
+STICKERS["frankreich"] = _stripes("fr", ["#0055A4", "#fff", "#EF4135"], True)
+STICKERS["spanien"] = _stripes("es", ["#AA151B", "#F1BF00", "#F1BF00", "#AA151B"])
+STICKERS["benelux"] = _stripes("nl", ["#AE1C28", "#fff", "#21468B"])
+STICKERS["osteuropa"] = _stripes("oe", ["#fff", "#0039A6", "#D52B1E"])
+STICKERS["orient"] = ('<rect width="64" height="64" rx="14" fill="#E30A17"/><circle cx="27" cy="32" r="13" fill="#fff"/>'
+                      '<circle cx="31" cy="32" r="10.5" fill="#E30A17"/><path d="M42 32l7-3-4 6v-7l4 6z" fill="#fff"/>')
+for _k, (_bg, _em) in {"filmabend": ("#7C5CFF", "🍿"), "party": ("#FF6FA8", "🎉"), "mitbringsel": ("#FFB547", "🎁"),
+                       "geburtstag": ("#5FD3A8", "🎂"), "naschkatzen": ("#2B2350", "🐱")}.items():
+    STICKERS[_k] = (f'<rect width="64" height="64" rx="14" fill="{_bg}"/>'
+                    f'<text x="32" y="44" font-size="34" text-anchor="middle">{_em}</text>')
 STICKERS["italien"] = ('<clipPath id="ci"><rect width="64" height="64" rx="14"/></clipPath><g clip-path="url(#ci)"><rect width="22" height="64" fill="#1F8A4C"/>'
                        '<rect x="21" width="22" height="64" fill="#fff"/><rect x="42" width="22" height="64" fill="#D8263A"/></g>')
 STICKERS["schweiz"] = ('<rect width="64" height="64" rx="14" fill="#D8263A"/><rect x="27" y="14" width="10" height="36" fill="#fff"/>'
                        '<rect x="14" y="27" width="36" height="10" fill="#fff"/>')
-for _k, (_bg, _em) in {"halloween": ("#FF8A3D", "🎃"), "weihnachten": ("#2FAE7E", "🎄"), "schokolade": ("#B07A55", "🍫"), "getraenke": ("#9FD3FF", "🥤"), "snacks": ("#FFD966", "🥜"),
+for _k, (_bg, _em) in {"halloween": ("#FF8A3D", "🎃"), "weihnachten": ("#2FAE7E", "🎄"), "adventskalender": ("#E8505B", "📅"), "schokolade": ("#B07A55", "🍫"), "getraenke": ("#9FD3FF", "🥤"), "snacks": ("#FFD966", "🥜"),
                        "klassiker": ("#FF8FB1", "🛒")}.items():
     STICKERS[_k] = (f'<rect width="64" height="64" rx="14" fill="{_bg}"/>'
                     f'<text x="32" y="44" font-size="34" text-anchor="middle">{_em}</text>')
@@ -362,6 +534,7 @@ h3{font-size:17px;line-height:1.25;margin:0}
 .bgrid:not(.clip)>.bmore{display:none}
 .chip.off{opacity:.45;cursor:default}
 .mrow{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media(min-width:980px){.hgrid .mrow{grid-template-columns:repeat(3,1fr)}.hgrid .minis .head{margin-top:0!important}}
 .mini{display:flex;flex-direction:column;gap:6px;background:#fff;border-radius:14px;padding:8px;text-decoration:none;color:var(--fg);box-shadow:var(--sh)}
 .mini .mp{aspect-ratio:1;border-radius:10px;background:var(--bg2);display:grid;place-items:center;overflow:hidden}
 .mini .mp img{width:100%;height:100%;object-fit:cover}.mini .mp .stk{width:60%;height:auto}
@@ -371,7 +544,7 @@ h3{font-size:17px;line-height:1.25;margin:0}
 .mini.slot b{color:var(--vio)}.prod.pslot h3{color:var(--vio)}
 .prod.pslot .cta span{background:transparent;color:var(--vio);border:2px solid var(--vio2)}
 .mini.slot:hover,.prod.pslot:hover{border-style:solid}
-@media(max-width:520px){.mrow{grid-template-columns:repeat(4,minmax(72px,1fr));overflow-x:auto}}.ddp a.chip{text-decoration:none}
+@media(max-width:520px){.mrow{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:4px}.mrow .mini{flex:0 0 86px;scroll-snap-align:start}}.ddp a.chip{text-decoration:none}
 .bc.off{opacity:.45;box-shadow:none;background:rgba(255,255,255,.6);cursor:default}.bc.off:hover{outline:0}
 .bmore{border:2px dashed var(--line);background:transparent;box-shadow:none;cursor:pointer;font:inherit;color:var(--fg);font-weight:800}
 .bmore .emo{background:#fff}
@@ -395,6 +568,8 @@ header .wrap{display:flex;align-items:center;gap:10px;height:60px}
 .logo img{width:38px;height:38px;border-radius:50%}
 header nav{display:flex;gap:2px}
 header nav a{color:var(--fg);text-decoration:none;font-weight:700;font-size:15px;padding:8px 11px;border-radius:999px}
+@media(max-width:430px){.logo{font-size:20px;gap:7px}.logo img{width:32px;height:32px}header nav a{padding:8px 8px;font-size:14.5px}}
+@media(max-width:360px){.logo{font-size:0;gap:0}}
 header nav a:hover{background:#fff}
 @media(max-width:420px){.hide-s{display:none}}
 .sbtn{display:grid;place-items:center;width:42px;height:42px;border-radius:50%;border:0;background:var(--fg);color:#fff;cursor:pointer}
@@ -430,6 +605,7 @@ font-weight:700;font-size:13.5px;line-height:1.2;text-align:center;box-shadow:va
 .themes h2{font:800 15px Inter,sans-serif;text-transform:none;letter-spacing:0;margin:0 0 10px;color:var(--mut)}
 .trow{display:flex;gap:10px;overflow-x:auto;padding:2px 16px 8px;margin:0 -16px;scrollbar-width:none}
 .trow::-webkit-scrollbar{display:none}.trow .bc{flex:none;width:118px}
+@media(min-width:760px){.trow{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));overflow:visible;margin:0;padding:2px 0 8px}.trow .bc{width:auto}}
 .filters{margin-bottom:8px}
 .fbtns{position:relative;display:flex;gap:8px;flex-wrap:wrap}
 .ddb{display:inline-flex;align-items:center;gap:7px;border:0;background:#fff;box-shadow:var(--sh);border-radius:999px;padding:10px 15px;
@@ -461,6 +637,13 @@ section{padding:34px 0 6px}
 
 /* Empfehlungs-Band */
 .recs{padding-top:26px}
+.hsw{position:relative}
+.hsb{display:none;position:absolute;top:50%;transform:translateY(-50%);z-index:5;width:40px;height:40px;border-radius:50%;border:0;background:#fff;color:var(--fg);
+font-size:26px;line-height:1;cursor:pointer;box-shadow:0 4px 14px rgba(43,35,80,.22)}
+.hsb.l{left:-6px}.hsb.r{right:-6px}.hsb:hover{background:var(--vio);color:#fff}
+@media(hover:hover) and (pointer:fine){.hsw.more-r>.hsb.r,.hsw.more-l>.hsb.l{display:block}}
+.hsw.scrolls.more-r::after{content:"";position:absolute;top:0;bottom:0;right:-16px;width:36px;pointer-events:none;background:linear-gradient(90deg,rgba(234,246,241,0),var(--bg))}
+.drag{cursor:grabbing!important;user-select:none}.drag a{pointer-events:none}
 .band{display:flex;gap:12px;overflow-x:auto;padding:4px 16px 14px;margin:0 -16px;scrollbar-width:none;cursor:grab}
 .band::-webkit-scrollbar{display:none}
 .ri{flex:none;width:168px;background:#fff;border-radius:18px;overflow:hidden;text-decoration:none;color:var(--fg);box-shadow:var(--sh)}
@@ -501,6 +684,28 @@ section{padding:34px 0 6px}
 .prods.v-list{grid-template-columns:1fr;gap:10px}
 @media(min-width:620px){.prods.v-big{grid-template-columns:repeat(2,1fr)}.prods.v-small{grid-template-columns:repeat(3,1fr)}.prods.v-list{grid-template-columns:repeat(2,1fr)}}
 @media(min-width:960px){.prods.v-big{grid-template-columns:repeat(3,1fr)}.prods.v-small{grid-template-columns:repeat(4,1fr)}}
+.favlink{white-space:nowrap;color:#E8457A!important}.mrow2 .btn{background:var(--vio);color:#fff;border-radius:12px;text-decoration:none;font-weight:800}
+.pcw{position:relative;display:flex}.pcw .pi,.pcw h3{cursor:zoom-in}
+.qv{border:0;border-radius:22px 22px 0 0;padding:0;width:100%;max-width:640px;max-height:88vh;margin:auto auto 0;background:var(--bg);color:var(--fg)}
+@media(min-width:700px){.qv{border-radius:22px;margin:auto}}
+.qv::backdrop{background:rgba(43,35,80,.5)}
+.qvi{padding:18px 16px 22px;overflow-y:auto;max-height:88vh;position:relative}
+.qx{position:absolute;right:10px;top:8px;border:0;background:#fff;width:36px;height:36px;border-radius:50%;font-size:22px;cursor:pointer;box-shadow:var(--sh)}
+.qtop{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap}
+.qimg{width:150px;aspect-ratio:1;background:#fff;border-radius:16px;display:grid;place-items:center;overflow:hidden;flex:none}
+.qimg img{max-width:100%;max-height:100%;object-fit:contain}
+.qtx{flex:1;min-width:180px}.qtx h2{font:800 19px/1.25 Inter,sans-serif;text-transform:none;letter-spacing:0;margin:4px 34px 6px 0}
+.qpr{font-weight:800;font-size:20px;margin:0}.qsh{color:var(--mut);margin:2px 0 10px;font-size:14px}
+.qacts{display:flex;gap:8px;align-items:center}.qacts .fav{position:static}
+.qv h3{font:800 16px Inter,sans-serif;margin:18px 0 8px}
+.qmore{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none}
+.qm{flex:0 0 120px;border:0;background:#fff;border-radius:14px;padding:8px;text-align:left;cursor:pointer;box-shadow:var(--sh);display:flex;flex-direction:column;gap:4px;color:var(--fg)}
+.qm img{width:100%;aspect-ratio:1;object-fit:contain}.qm b{font-size:12px;line-height:1.25;max-height:2.5em;overflow:hidden}.qm span{font-size:12px;font-weight:800}.pcw>.prod{flex:1;min-width:0}
+.fav{position:absolute;right:8px;top:8px;width:34px;height:34px;border-radius:50%;border:0;background:#fff;color:#E8457A;font-size:19px;line-height:1;cursor:pointer;box-shadow:0 2px 8px rgba(43,35,80,.15);z-index:2}
+.fav[aria-pressed=true]{background:#E8457A;color:#fff}
+.v-list .fav{top:auto;bottom:8px;right:8px;width:30px;height:30px;font-size:16px}
+.prod .reg{font-size:11.5px;color:var(--mut);line-height:1.3}
+.prod .pr{font-weight:800;font-size:15px;color:var(--fg)}
 .prod{display:flex;flex-direction:column;background:#fff;border-radius:18px;overflow:hidden;text-decoration:none;color:var(--fg);box-shadow:var(--sh)}
 .prod .pi{position:relative;background:var(--bg2);aspect-ratio:1;display:grid;place-items:center;padding:12px}
 .prod .pi img{max-height:100%;object-fit:contain}
@@ -522,11 +727,12 @@ section{padding:34px 0 6px}
 .v-list .prod .cta span{display:inline-block;padding:7px 12px;font-size:13.5px}
 .wl{font-size:13px;color:var(--mut);margin:10px 0 0}
 .xi{display:contents}.xi.ok .stk{display:none}
-.imgbar{position:fixed;left:12px;right:12px;bottom:12px;z-index:40;max-width:560px;margin:0 auto;background:var(--fg);color:#fff;border-radius:18px;
-padding:14px 14px 12px;box-shadow:0 12px 40px rgba(43,35,80,.35);font-size:14.5px;line-height:1.4}
-.imgbar p{margin:0 0 10px}.imgbar a{color:var(--mint)}
-.imgbar .row{display:flex;gap:8px;flex-wrap:wrap}
-.imgbar button{border:0;border-radius:12px;font-weight:800;font-size:15px;padding:10px 16px;cursor:pointer}
+.imgbar{position:fixed;left:10px;right:10px;bottom:10px;z-index:40;max-width:560px;margin:0 auto;background:var(--fg);color:#fff;border-radius:14px;
+padding:8px 8px 8px 14px;box-shadow:0 10px 30px rgba(43,35,80,.3);font-size:13px;line-height:1.35;display:flex;align-items:center;gap:10px}
+.imgbar[hidden]{display:none}
+.imgbar p{margin:0;flex:1}.imgbar a{color:var(--mint)}
+.imgbar .row{display:flex;gap:6px;flex:none}
+.imgbar button{border:0;border-radius:10px;font-weight:800;font-size:14px;padding:8px 12px;cursor:pointer}
 .imgbar .yes{background:var(--mint);color:var(--fg)}.imgbar .no{background:transparent;color:#fff;border:2px solid rgba(255,255,255,.4)}
 .linkbtn{border:0;background:none;color:var(--mut);text-decoration:underline;cursor:pointer;font-size:14px;padding:0}
 .clip>[data-more]{display:none}
@@ -659,7 +865,7 @@ def page(title, body, desc=None, path="/", og_img=None, script="", stamp=""):
 <style>{CSS}{SPIN_CSS}{EXTRA_CSS}{EXTRA_CSS2}</style></head><body{stamp_attr(stamp)}>
 <div class="ad">{AD}</div>{'<div class="ad" style="background:#FFB547;color:#2B2350;font-weight:700">VORSCHAU mit Beispielprodukten – nicht live</div>' if DEMO else ''}
 <header><div class="wrap"><a class="logo" href="/"><img src="/static/logo-96.png" alt="" width="38" height="38">NASCHPASS</a>
-<nav aria-label="Hauptmenü"><a href="/shop/">Shop</a><a href="/posts/">Posts</a><a href="/ueber/" class="hide-s">Über uns</a></nav>
+<nav aria-label="Hauptmenü"><a href="/shop/">Shop</a><a href="/posts/">Posts</a><a href="/ueber/" class="hide-s">Über uns</a><a href="/merkliste/" class="favlink" hidden aria-label="Merkliste">♥ <span></span></a></nav>
 <button class="sbtn" type="button" data-open-search aria-label="Suche öffnen">{ICON_SEARCH}</button></div></header>
 <main class="wrap">
 {body}
@@ -668,10 +874,30 @@ def page(title, body, desc=None, path="/", og_img=None, script="", stamp=""):
 <footer><div class="wrap"><a href="/advent/">Adventskalender</a><a href="/geschenk/">Geschenk-Finder</a><a href="/quiz/">Snack-Typ-Quiz</a><a href="/ueber/">Über Naschpass</a><a href="/ueber/#partner">Für Partner</a><a href="/impressum/">Impressum</a><a href="/datenschutz/">Datenschutz</a>
 <button class="linkbtn" type="button" data-imgpref hidden>Foto-Einstellung</button>
 <span>Keine Cookies, kein Tracking.</span></div></footer>
-<div class="imgbar" id="imgbar" role="region" aria-label="Produktfotos" hidden><p>Einige Produktfotos kommen direkt vom Shop. Dabei bekommt der Shop deine IP-Adresse. <a href="/datenschutz/#fotos">Mehr zum Datenschutz</a></p>
-<div class="row"><button class="yes" type="button" data-img="1">Fotos anzeigen</button><button class="no" type="button" data-img="0">Nein danke</button></div></div>
+<div class="imgbar" id="imgbar" role="region" aria-label="Produktfotos" hidden><p>Shop-Fotos laden? Der Shop sieht dann deine IP-Adresse. <a href="/datenschutz/#fotos">Mehr</a></p>
+<div class="row"><button class="yes" type="button" data-img="1">Ja</button><button class="no" type="button" data-img="0">Nein</button></div></div>
 {SEARCH_DIALOG}
+<dialog id="qv" class="qv" aria-label="Produkt-Schnellansicht"><div class="qvi"></div></dialog>
 <script>{COMMON_JS}</script><script type="module">{SEARCH_JS}</script>{script}</body></html>"""
+
+
+REGION_NOTE = {"REWE": "Lieferung je nach Wohnort, sonst Abholung im Markt"}
+CART_SHOPS = {"SugarGang": {"base": "https://sugargang.com/cart/", "mid": "127807"}}  # Shopify: /cart/<variante>:<menge>,...
+WL = f"* Werbelink · Preise vom {TODAY.strftime('%d.%m.')}, maßgeblich ist der Shop"
+
+
+def euro(x):
+    return f"{x:.2f}".replace(".", ",") + " €" if x else ""
+
+
+def fav_data(p):
+    i = prod_img(p, 200)
+    d = {"u": p["url"], "n": p["name"], "s": p.get("shop", ""), "i": i[1] if i and i[0] == "own" else ""}
+    if p.get("vid"):
+        d["v"] = p["vid"]
+    if p.get("price"):
+        d["p"] = euro(p["price"])
+    return html.escape(json.dumps(d, ensure_ascii=False), quote=True)
 
 
 def prod_card(p):
@@ -680,12 +906,16 @@ def prod_card(p):
     pic = pic_html(p, 480, p["name"], cid)
     shop = p.get("shop", "")
     btn = f"Bei {e(shop)} ansehen*" if shop else "Zum Shop*"
-    return (f'<a class="prod" href="{e(p["url"])}" rel="sponsored noopener" target="_blank" data-cat="{e(cid)}"{facet_attrs(p)} style="--c:{cat_color.get(cid, "#CFE7DD")}">'
+    reg = REGION_NOTE.get(shop)
+    return (f'<div class="pcw" data-cat="{e(cid)}"{facet_attrs(p)}><a class="prod" href="{e(p["url"])}" rel="sponsored noopener" target="_blank" style="--c:{cat_color.get(cid, "#CFE7DD")}">'
             f'<div class="pi">{pic}' + (f'<span class="pc"><i></i>{e(cname)}</span>' if cname else "") + '</div>'
             f'<div class="pb"><h3>{e(p["name"])}</h3>'
             + (f'<p class="note">{e(p["note"])}</p>' if p.get("note") else "")
+            + (f'<span class="pr">{euro(p["price"])}</span>' if p.get("price") else "")
             + (f'<span class="shop">bei {e(shop)}</span>' if shop else "")
-            + f'<div class="cta"><span><em class="l">{btn}</em><em class="s">Zum Shop*</em></span></div></div></a>')
+            + (f'<span class="reg">{e(reg)}</span>' if reg else "")
+            + f'<div class="cta"><span><em class="l">{btn}</em><em class="s">Zum Shop*</em></span></div></div></a>'
+            f'<button class="fav" type="button" aria-pressed="false" aria-label="Merken" data-fav="{fav_data(p)}">♡</button></div>')
 
 
 def partner_card():
@@ -702,7 +932,7 @@ def fill_slots(cards, target):
 
 def prod_grid(items, gid, default="small"):
     return (f'<div class="grid prods v-{default}" id="{gid}">{"".join(prod_card(p) for p in items)}</div>'
-            f'<p class="wl">* Werbelink</p>')
+            f'<p class="wl">{WL}</p>')
 
 
 def cover_url(p):
@@ -778,11 +1008,28 @@ document.querySelectorAll('.band[data-shuffle]').forEach(function(b){
 document.querySelectorAll('.band').forEach(function(b){
  if(reduce||b.scrollWidth<=b.clientWidth+10)return;
  var half=b.scrollWidth/2,pause=0,x=b.scrollLeft;
- function hold(){pause=Date.now()+2500}
+ function hold(){pause=Date.now()+2500;x=b.scrollLeft}
  ['pointerdown','touchstart','wheel','focusin','mouseenter'].forEach(function(ev){b.addEventListener(ev,hold,{passive:true})});
  b.addEventListener('mousemove',hold,{passive:true});
- function tick(){if(Date.now()>pause&&!document.hidden){x=b.scrollLeft+.45;if(x>=half)x-=half;b.scrollLeft=x}requestAnimationFrame(tick)}
+ /* x zählt in Kommastellen weiter; scrollLeft wird vom Browser gerundet und darf nicht zurückgelesen werden */
+ function tick(){if(Date.now()>pause&&!document.hidden){x+=.45;if(x>=half)x-=half;b.scrollLeft=x}else{x=b.scrollLeft}requestAnimationFrame(tick)}
  requestAnimationFrame(tick)});
+/* Wisch-Reihen: am PC Pfeile + Ziehen mit der Maus, Verlauf am Rand zeigt "geht weiter". Gilt für ALLE horizontalen Reihen. */
+window.npHS=function(root){(root||document).querySelectorAll('.band,.trow,.stickers,.explore,.mrow,.chips,.cats.row,.qmore').forEach(function(r){
+ if(r.dataset.hs||r.closest('.ddp'))return;var cs=getComputedStyle(r);if(cs.overflowX!=='auto'&&cs.overflowX!=='scroll')return;r.dataset.hs=1;
+ var w=document.createElement('div');w.className='hsw';r.parentNode.insertBefore(w,r);w.appendChild(r);
+ var L=document.createElement('button'),R=document.createElement('button');L.type=R.type='button';L.className='hsb l';R.className='hsb r';
+ L.setAttribute('aria-label','Zurück');R.setAttribute('aria-label','Weiter');L.textContent='‹';R.textContent='›';w.appendChild(L);w.appendChild(R);
+ function upd(){var m=r.scrollWidth-r.clientWidth;w.classList.toggle('more-r',r.scrollLeft<m-4);w.classList.toggle('more-l',r.scrollLeft>4);w.classList.toggle('scrolls',m>4)}
+ function go(k){r.scrollBy({left:k*Math.max(160,r.clientWidth*.8),behavior:reduce?'auto':'smooth'})}
+ L.addEventListener('click',function(){go(-1)});R.addEventListener('click',function(){go(1)});
+ r.addEventListener('scroll',function(){requestAnimationFrame(upd)},{passive:true});addEventListener('resize',upd);
+ var down=null,moved=0;r.addEventListener('pointerdown',function(ev){if(ev.pointerType!=='mouse')return;down={x:ev.clientX,s:r.scrollLeft};moved=0});
+ addEventListener('pointermove',function(ev){if(!down)return;var d=ev.clientX-down.x;moved=Math.max(moved,Math.abs(d));if(moved>5){r.scrollLeft=down.s-d;r.classList.add('drag')}});
+ addEventListener('pointerup',function(){down=null;setTimeout(function(){r.classList.remove('drag')},0)});
+ r.addEventListener('click',function(ev){if(moved>5){ev.preventDefault();ev.stopPropagation();moved=0}},true);
+ upd();setTimeout(upd,600)})};
+window.npHS();
 /* Mehr zeigen */
 document.querySelectorAll('[data-expand]').forEach(function(b){b.addEventListener('click',function(){
  var g=document.getElementById(b.dataset.expand);g.classList.remove('clip');b.remove();
@@ -810,19 +1057,41 @@ document.querySelectorAll('[role=tab]').forEach(function(t){t.addEventListener('
  n.querySelectorAll('[data-panel]').forEach(function(p){p.hidden=p.dataset.panel!==t.dataset.tab})})});
 /* Shop-Filter: innerhalb einer Gruppe ODER, zwischen Gruppen UND; Zustand steht in der Adresse (teilbar) */
 var fl=document.getElementById('flt');
-if(fl){var grid=document.getElementById(fl.dataset.grid),cards=[].slice.call(grid.children),PAGE=24,shown=PAGE,sel={};
+if(fl){var grid=document.getElementById(fl.dataset.grid),PAGE=24,shown=48,sel={},data=null,loading=false;
  var cnt=document.getElementById('fcount'),rst=document.getElementById('freset'),more=document.getElementById('fmore'),emp=document.getElementById('fempty');
+ var total=+grid.dataset.total||grid.children.length;
  fl.querySelectorAll('[data-g]').forEach(function(b){sel[b.dataset.g]=[]});
  var u=new URLSearchParams(location.search);Object.keys(sel).forEach(function(k){var v=u.get(k);if(v)sel[k]=v.split(',')});
- function ok(c){return Object.keys(sel).every(function(k){if(!sel[k].length)return true;var h=' '+(c.dataset[k]||'')+' ';
+ function any(){return Object.keys(sel).some(function(k){return sel[k].length})}
+ function okD(d){return Object.keys(sel).every(function(k){if(!sel[k].length)return true;var h=' '+(d[k]||'')+' ';
   return sel[k].some(function(v){return h.indexOf(' '+v+' ')>=0})})}
- function apply(){var n=0;cards.forEach(function(c){var m=ok(c);if(m)n++;c.hidden=!m||n>shown});
+ function esc2(x){return String(x).replace(/[&<>"']/g,function(c){return'&#'+c.charCodeAt(0)+';'})}
+ function card(i){var im=i.img||(i.ext&&window.npImgOK&&window.npImgOK()?i.ext:'');var sh=(i.sub||'').split(' · ')[0];
+  var fav=esc2(JSON.stringify({u:i.url,n:i.title,s:sh,i:i.img||'',v:i.v||'',p:i.pr||''}));
+  return '<div class="pcw"><a class="prod" href="'+esc2(i.url)+'" rel="sponsored noopener" target="_blank"><div class="pi">'
+   +(im?'<img src="'+esc2(im)+'" alt="'+esc2(i.title)+'" loading="lazy">':'<span class="svgw">'+(i.svg||'')+'</span>')+'</div><div class="pb"><h3>'+esc2(i.title)+'</h3>'
+   +(i.pr?'<span class="pr">'+esc2(i.pr)+'</span>':'')+(sh?'<span class="shop">bei '+esc2(sh)+'</span>':'')+(i.reg?'<span class="reg">'+esc2(i.reg)+'</span>':'')
+   +'<div class="cta"><span><em class="l">'+(sh?'Bei '+esc2(sh)+' ansehen*':'Zum Shop*')+'</em><em class="s">Zum Shop*</em></span></div></div></a>'
+   +'<button class="fav" type="button" aria-pressed="false" aria-label="Merken" data-fav="'+fav+'">♡</button></div>'}
+ function load(cb){if(data){cb();return}if(loading)return;loading=true;
+  fetch('/search.json').then(function(r){return r.json()}).then(function(j){data=j.items.filter(function(i){return i.type==='product'}).map(function(i){
+   var o={i:i};(i.f||'').split(' ').forEach(function(x){var kv=x.split(':');if(kv[1])o[kv[0]]=(o[kv[0]]?o[kv[0]]+' ':'')+kv[1]});o.t=(i.th||'');return o});cb()})}
+ var TK=null;try{TK=JSON.parse(fl.dataset.tk||'null')}catch(e){}
+ function apply(){
+  if(!data&&(any()||shown>48)){cnt.textContent='Lädt …';load(apply);return}
+  var n;
+  if(data){var hits=data.filter(okD);n=hits.length;
+   if(sel.t&&sel.t.length&&TK){var rx=[];sel.t.forEach(function(t){(TK[t]||[]).forEach(function(w){rx.push(w)})});
+    if(rx.length){var sc=function(d){var h=(d.i.title||'').toLowerCase(),k=0;rx.forEach(function(w){if(h.indexOf(w)>=0)k++});return k};
+     hits=hits.map(function(d,j){return [sc(d),j,d]}).sort(function(a,b){return b[0]-a[0]||a[1]-b[1]}).map(function(x){return x[2]})}}grid.innerHTML=hits.slice(0,shown).map(function(d){return card(d.i)}).join('');
+   if(window.npFavSync)window.npFavSync(grid)}
+  else{n=total}
   fl.querySelectorAll('[data-g]').forEach(function(b){b.setAttribute('aria-pressed',sel[b.dataset.g].indexOf(b.dataset.v)>=0)});
   fl.querySelectorAll('[data-badge]').forEach(function(x){var k=sel[x.dataset.badge].length;x.textContent=k;x.hidden=!k});
   var act=[];fl.querySelectorAll('[data-g][aria-pressed=true]').forEach(function(b){act.push('<button type="button" data-rm="'+b.dataset.g+':'+b.dataset.v+'" aria-label="'+b.dataset.n+' entfernen">'+b.dataset.n+' ×</button>')});
   document.getElementById('factive').innerHTML=act.join('');
   cnt.textContent=n+' Treffer';more.hidden=n<=shown;more.textContent='Mehr zeigen ('+(n-shown)+')';emp.hidden=n>0;
-  var any=Object.keys(sel).some(function(k){return sel[k].length});rst.hidden=!any;
+  rst.hidden=!any();
   var q=Object.keys(sel).filter(function(k){return sel[k].length}).map(function(k){return k+'='+sel[k].join(',')}).join('&');
   history.replaceState(null,'',location.pathname+(q?'?'+q:'')+location.hash)}
  function closeAll(x){fl.querySelectorAll('.dd.open').forEach(function(d){if(d!==x){d.classList.remove('open');d.querySelector('.ddb').setAttribute('aria-expanded','false')}})}
@@ -830,10 +1099,10 @@ if(fl){var grid=document.getElementById(fl.dataset.grid),cards=[].slice.call(gri
   closeAll(d);d.classList.toggle('open',o);t.setAttribute('aria-expanded',o)})});
  document.addEventListener('click',function(ev){if(!ev.target.closest('.dd'))closeAll()});
  document.addEventListener('keydown',function(ev){if(ev.key==='Escape')closeAll()});
- fl.addEventListener('click',function(ev){var r=ev.target.closest('[data-rm]');if(r){var kv=r.dataset.rm.split(':'),a2=sel[kv[0]];a2.splice(a2.indexOf(kv[1]),1);shown=PAGE;apply();return}
+ fl.addEventListener('click',function(ev){var r=ev.target.closest('[data-rm]');if(r){var kv=r.dataset.rm.split(':'),a2=sel[kv[0]];a2.splice(a2.indexOf(kv[1]),1);shown=48;apply();return}
   var b=ev.target.closest('[data-g]');if(!b)return;var a=sel[b.dataset.g],i=a.indexOf(b.dataset.v);
-  if(i>=0)a.splice(i,1);else a.push(b.dataset.v);shown=PAGE;apply()});
- rst.addEventListener('click',function(){Object.keys(sel).forEach(function(k){sel[k]=[]});shown=PAGE;apply()});
+  if(i>=0)a.splice(i,1);else a.push(b.dataset.v);shown=48;apply()});
+ rst.addEventListener('click',function(){Object.keys(sel).forEach(function(k){sel[k]=[]});shown=48;apply()});
  more.addEventListener('click',function(){shown+=PAGE;apply()});
  apply()}
 /* Folien-Galerie */
@@ -853,6 +1122,48 @@ if(f){var inp=f.querySelector('input'),msg=f.querySelector('.msg'),st=f.querySel
   if(ids.indexOf(n)<0){msg.textContent='Post #'+n+' gibt es noch nicht. Schau mal bei allen Posts.';return}
   msg.textContent='';st.textContent='#'+n;st.classList.remove('go');void st.offsetWidth;st.classList.add('go');
   setTimeout(function(){location.href='/p/'+n+'/'},reduce?0:480)})}
+window.npToast=function(msg){var t=document.createElement('div');t.className='toast';t.setAttribute('role','status');t.textContent=msg;
+ document.body.appendChild(t);setTimeout(function(){t.classList.add('on')},30);setTimeout(function(){t.classList.remove('on')},2200);setTimeout(function(){t.remove()},2800)};
+/* Schnellansicht: Tipp auf Bild oder Name öffnet das Produkt bei uns, mit "Mehr von <Shop>". Kauf-Knopf führt direkt zum Shop. */
+var qv=document.getElementById('qv'),SP=null;
+function sdata(){return SP||(SP=fetch('/search.json').then(function(r){return r.json()}).then(function(j){return j.items.filter(function(i){return i.type==='product'})}))}
+function qesc(x){return String(x==null?'':x).replace(/[&<>"']/g,function(c){return'&#'+c.charCodeAt(0)+';'})}
+function qopen(d){if(!qv)return;var box=qv.querySelector('.qvi');
+ box.innerHTML='<button class="qx" type="button" aria-label="Schließen">×</button><div class="qtop"><div class="qimg">'+(d.i?'<img src="'+qesc(d.i)+'" alt="">':'<span class="emo">🍬</span>')+'</div>'
+  +'<div class="qtx"><h2>'+qesc(d.n)+'</h2>'+(d.p?'<p class="qpr">'+qesc(d.p)+'</p>':'')+'<p class="qsh">bei '+qesc(d.s)+'</p>'
+  +'<div class="qacts"><a class="btn dark" href="'+qesc(d.u)+'" rel="sponsored noopener" target="_blank">Bei '+qesc(d.s)+' ansehen*</a>'
+  +'<button class="fav qfav" type="button" aria-pressed="false" aria-label="Merken" data-fav="'+qesc(JSON.stringify(d))+'">♡</button></div>'
+  +'<small class="wl">* Werbelink. Ein Klick genügt: Was du danach im Shop kaufst, unterstützt Naschpass.</small></div></div>'
+  +'<h3>Mehr von '+qesc(d.s)+'</h3><div class="qmore"><span class="wl">Lädt …</span></div>';
+ if(!qv.open)qv.showModal();window.npFavSync(qv);
+ sdata().then(function(all){var m=all.filter(function(i){return (i.sub||'').split(' · ')[0]===d.s&&i.url!==d.u}).slice(0,12);
+  var el=box.querySelector('.qmore');if(!el)return;
+  el.innerHTML=m.length?m.map(function(i){var x={u:i.url,n:i.title,s:d.s,i:i.img||'',p:i.pr||'',v:i.v||''};
+   return '<button type="button" class="qm" data-q="'+qesc(JSON.stringify(x))+'">'+(x.i?'<img src="'+qesc(x.i)+'" alt="" loading="lazy">':'<span class="emo">🍬</span>')
+    +'<b>'+qesc(x.n)+'</b>'+(x.p?'<span>'+qesc(x.p)+'</span>':'')+'</button>'}).join(''):'<span class="wl">Keine weiteren Produkte.</span>';
+  if(window.npHS)window.npHS(box)})}
+if(qv){qv.addEventListener('click',function(ev){if(ev.target===qv||ev.target.closest('.qx')){qv.close();return}
+  var m=ev.target.closest('[data-q]');if(m){qopen(JSON.parse(m.dataset.q));qv.querySelector('.qvi').scrollTop=0}});
+ document.addEventListener('click',function(ev){var hit=ev.target.closest('.pcw .pi, .pcw h3');if(!hit)return;
+  var w=hit.closest('.pcw'),f=w&&w.querySelector('.fav');if(!f)return;ev.preventDefault();
+  try{qopen(JSON.parse(f.dataset.fav))}catch(e){}})}
+/* Merkliste: nur nach Klick auf ♡, nur im Browser (localStorage), wird nie übertragen */
+var FK='np_merk';function fget(){try{return JSON.parse(localStorage.getItem(FK)||'[]')}catch(e){return[]}}
+function fset(v){try{if(v.length)localStorage.setItem(FK,JSON.stringify(v));else localStorage.removeItem(FK)}catch(e){}}
+function fbadge(){var n=fget().length;document.querySelectorAll('.favlink').forEach(function(a){a.hidden=!n;var c=a.querySelector('span');if(c)c.textContent=n})}
+window.npFavSync=function(root){var l=fget().map(function(x){return x.u});(root||document).querySelectorAll('.fav').forEach(function(b){
+ try{var d=JSON.parse(b.dataset.fav);var on=l.indexOf(d.u)>=0;b.setAttribute('aria-pressed',on);b.textContent=on?'♥':'♡';b.setAttribute('aria-label',on?'Gemerkt – entfernen':'Merken')}catch(e){}})};
+document.addEventListener('click',function(ev){var b=ev.target.closest('.fav');if(!b)return;ev.preventDefault();ev.stopPropagation();
+ var d;try{d=JSON.parse(b.dataset.fav)}catch(e){return}var l=fget(),k=l.findIndex(function(x){return x.u===d.u});
+ if(k>=0)l.splice(k,1);else l.push(d);fset(l);window.npFavSync(document);fbadge();
+ if(window.npToast)window.npToast(k>=0?'Von der Merkliste entfernt':'Auf der Merkliste ♥')});
+window.npFavSync(document);fbadge();
+/* Verlauf: nur wenn selbst eingeschaltet (Merkliste-Seite oder unter dem Rad), nur im Browser, max. 30 Einträge */
+var HK='np_verlauf';window.npHistOn=function(){try{return localStorage.getItem(HK)!==null}catch(e){return false}};
+window.npHist=function(d,w){if(!d||!d.u||!window.npHistOn())return;try{var l=JSON.parse(localStorage.getItem(HK)||'[]').filter(function(x){return x.u!==d.u});
+ d.w=w||'';l.unshift(d);localStorage.setItem(HK,JSON.stringify(l.slice(0,30)))}catch(e){}};
+document.addEventListener('click',function(ev){var a=ev.target.closest('.pcw a[rel~=sponsored]');if(!a)return;
+ var b=a.closest('.pcw').querySelector('.fav');try{window.npHist(JSON.parse(b.dataset.fav),'Angeklickt')}catch(e){}},true);
 })();
 """
 
@@ -925,20 +1236,43 @@ ART_COLORS = {"schokolade": "#8B5A3C", "pralinen": "#C2185B", "gummi": "#FF4D8D"
               "kekse": "#D4A373", "snacks": "#2FAE7E", "getraenke": "#3D8BFF", "boxen": "#8B6CFF"}
 
 
+# "Lust auf …": das Rad dreht nur innerhalb der Auswahl (Treffer kommen aus search.json, beste zuerst)
+MOODS = [("alles", "Überrasch mich", [], "#FFD23F"),
+         ("schoko", "Schoko", ["art:schokolade", "art:pralinen", "geschmack:schoko"], "#8B5A3C"),
+         ("fruchtig", "Fruchtig & Gummi", ["art:gummi", "art:bonbons", "geschmack:fruchtig"], "#FF4D8D"),
+         ("knabbern", "Knabbern", ["art:chips", "art:snacks", "geschmack:salzig"], "#E8384F"),
+         ("sauerscharf", "Sauer & scharf", ["geschmack:sauer", "geschmack:scharf"], "#3DDC97"),
+         ("fern", "Weit weg", ["land:usa", "land:mexiko", "land:japan", "land:korea", "land:asien", "land:orient"], "#8B6CFF"),
+         ("trinken", "Was zum Trinken", ["art:getraenke"], "#3D8BFF")]
+SPIN_SKIP = {"getraenke", "tee", "feinkost"}  # Getränke nur über den eigenen Knopf
+
+
+def _stem(name):
+    """Gleiche Sorte in anderer Größe/Packung = gleiches Produkt fürs Rad."""
+    w = re.sub(r"[^a-zäöüß ]", " ", name.lower()).split()
+    return " ".join(w[:3])
+
+
 def spin_items(live):
-    items = []
+    items, seen = [], set()
     art_name = {o["id"]: o["name"] for g in FILTER if g["id"] == "art" for o in g["options"]}
-    for p in products:
-        arts = [a for a in ART_COLORS if a in facets(p).get("art", set())]
-        a = arts[0] if arts else ""
+    # Rad: 60 verschiedene Sorten aus der vorderen "Entdecken"-Liste, nur mit eigenem Bild, ohne Getränke/Tee/Feinkost
+    for p in products[:1500]:
+        if len(items) >= 60:
+            break
+        arts = facets(p).get("art", set())
         i = prod_img(p, 240)
+        st = _stem(p["name"])
+        if not arts or arts & SPIN_SKIP or st in seen or not i:
+            continue
+        seen.add(st)
+        a = next((x for x in ART_COLORS if x in arts), "")
         items.append({"t": p["name"], "u": p["url"], "k": "p", "c": ART_COLORS.get(a, "#9C94C7"), "l": art_name.get(a, "Süßigkeit"),
-                      "img": i[1] if i and i[0] == "own" else "", "ext": i[1] if i and i[0] == "ext" else "",
-                      "svg": "" if i and i[0] == "own" else sticker(p.get("category", ""), 64)})
-    if len(products) < 6:  # noch wenige Produkte: Posts und Themenwelten mit ins Rad
+                      "s": p.get("shop", ""), "img": i[1] if i[0] == "own" else "", "ext": i[1] if i[0] == "ext" else "", "svg": ""})
+    if len(items) < 6:  # noch wenige Produkte: Posts und Themenwelten mit ins Rad
         for p in live:
             items.append({"t": f"#{p['id']} {plain(p.get('short', ''))}", "u": f"/p/{p['id']}/", "k": "post", "c": "#FF4D8D",
-                          "l": "Post", "img": cdn(cover_url(p), 240) if ON_NETLIFY else cover_url(p)})
+                          "l": "Post", "img": cdn(cover_url(p), 240) if (ON_NETLIFY or ON_CF) else cover_url(p)})
         for c in cats:
             items.append({"t": c["name"], "u": f"/kategorie/{c['id']}/", "k": "cat", "c": "#3DDC97", "l": "Themenwelt",
                           "svg": sticker(c["id"], 64)})
@@ -949,21 +1283,27 @@ def spin_html(live):
     items = spin_items(live)
     if len(items) < 3:
         return ""
-    leg, seen = [], set()
-    for i in items:
-        if i["l"] not in seen:
-            seen.add(i["l"])
-            leg.append(f'<span class="chip" style="--c:{i["c"]}"><i></i>{e(i["l"])}</span>')
-    data = json.dumps(items, ensure_ascii=False).replace("</", "<\\/")
+    art_name = {o["id"]: o["name"] for g in FILTER if g["id"] == "art" for o in g["options"]}
+    cnt = {}
+    for p in products:
+        f = {f"{g}:{v}" for g, vs in facets(p).items() for v in vs}
+        for mid, _, toks, _ in MOODS[1:]:
+            if f & set(toks):
+                cnt[mid] = cnt.get(mid, 0) + 1
+    moods = [m for m in MOODS if not m[2] or cnt.get(m[0], 0) >= 8]
+    chips = "".join(f'<button class="chip" type="button" data-mood="{m[0]}" aria-pressed="{"true" if not m[2] else "false"}" style="--c:{m[3]}">'
+                    f'<i></i>{e(m[1])}</button>' for m in moods)
+    data = json.dumps({"i": items, "m": {m[0]: m[2] for m in moods}, "skip": sorted(SPIN_SKIP),
+                       "a": {k: [art_name.get(k, k), v] for k, v in ART_COLORS.items()}}, ensure_ascii=False).replace("</", "<\\/")
     return (f'<section class="spin" id="zufall"><div class="spinbox"><div class="spinhead"><h2>Was naschst du heute?</h2>'
-            f'<button class="snd" type="button" aria-pressed="true" aria-label="Ton an/aus">🔊</button></div>'
-            f'<p class="sub" style="margin:0 0 12px">Dreh das Rad und lass dich überraschen. Die Farbe verrät, was es ist.</p>'
+            f'<div class="vol"><button class="snd" type="button" aria-pressed="true" aria-label="Ton an/aus">🔊</button>'
+            f'<input type="range" class="volr" min="0" max="1" step="0.05" value="0.35" aria-label="Lautstärke"></div></div>'
+            f'<p class="sub" style="margin:0 0 12px">Worauf hast du Lust? Wähl aus und dreh. Die Farbe verrät, was es ist.</p>'
+            f'<div class="legend moods" role="group" aria-label="Lust auf">{chips}</div>'
             f'<div class="reel"><div class="track"></div><div class="marker" aria-hidden="true"></div></div>'
-            f'<div class="legend">{"".join(leg)}</div>'
-            f'<button class="spinbtn" type="button">Drehen</button>'
+            f'<button class="spinbtn" type="button" style="margin-top:12px">Drehen</button>'
             f'<div class="result" aria-live="polite"></div></div>'
             f'<script type="application/json" id="spin-data">{data}</script></section>')
-
 
 SPIN_CSS = """
 .spin .spinbox{position:relative;background:var(--fg);color:#fff;border-radius:26px;padding:20px 16px 18px;overflow:hidden}
@@ -993,7 +1333,9 @@ box-shadow:0 0 10px #FFD23F,0 0 26px #FF4D8D}
 .marker:before{top:0;border-top-color:#FFD23F}.marker:after{bottom:0;border-bottom-color:#FFD23F}
 .marker.tick{box-shadow:0 0 18px #FFD23F,0 0 44px #FF4D8D}
 .legend{position:relative;display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
-.legend .chip{background:rgba(255,255,255,.1);color:#fff;box-shadow:none;font-size:13px;padding:6px 11px;cursor:default}
+.legend .chip{background:rgba(255,255,255,.1);color:#fff;box-shadow:none;font-size:13px;padding:6px 11px;cursor:pointer;border:2px solid transparent}
+.legend .chip i{background:var(--c)}.legend .chip[aria-pressed=true]{background:#fff;color:#2B2350;border-color:var(--c)}
+.vol{display:flex;align-items:center;gap:8px}.volr{width:90px;accent-color:#FFD23F}
 .spinbtn{position:relative;width:100%;border:0;border-radius:16px;padding:16px;font:28px Anton,sans-serif;letter-spacing:1px;text-transform:uppercase;
 color:#2B2350;background:linear-gradient(90deg,#FFD23F,#FF8FB1,#8B6CFF,#3DDC97,#FFD23F);background-size:300% 100%;cursor:pointer;
 animation:btnflow 6s linear infinite;box-shadow:0 8px 26px rgba(255,77,141,.35)}
@@ -1019,7 +1361,8 @@ animation:conf 1.1s ease-out forwards}
 SPIN_JS = r"""<script>
 (function(){
 var root=document.getElementById('zufall');if(!root)return;
-var items=JSON.parse(document.getElementById('spin-data').textContent),track=root.querySelector('.track'),reel=root.querySelector('.reel'),
+var SD=JSON.parse(document.getElementById('spin-data').textContent),base=SD.i,items=base,ALL=null,
+ vr=root.querySelector('.volr'),track=root.querySelector('.track'),reel=root.querySelector('.reel'),
  mk=root.querySelector('.marker'),btn=root.querySelector('.spinbtn'),res=root.querySelector('.result'),snd=root.querySelector('.snd'),
  box=root.querySelector('.spinbox'),reduce=matchMedia('(prefers-reduced-motion: reduce)').matches,sound=true,ac=null,busy=false;
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
@@ -1027,40 +1370,77 @@ function pic(i){var ok=window.npImgOK&&window.npImgOK(),src=i.img||(i.ext&&ok?i.
  return src?'<img src="'+esc(src)+'" alt="" loading="lazy">':'<span class="svgw">'+(i.svg||'')+'</span>'}
 function card(i){return '<div class="card" style="--c:'+i.c+'">'+pic(i)+'<b>'+esc(i.t)+'</b></div>'}
 function rnd(n){return Math.floor(Math.random()*n)}
+function deal(n){var a=items.slice(),o=[];for(var k=a.length-1;k>0;k--){var j=rnd(k+1),t=a[k];a[k]=a[j];a[j]=t}
+ while(o.length<n)o=o.concat(a);return o.slice(0,n)}
 function setX(x){track.style.transform='translateX('+x+'px)'}
-(function(){var h='';for(var k=0;k<14;k++)h+=card(items[rnd(items.length)]);track.innerHTML=h;setX(-40)})();
+track.innerHTML=deal(14).map(card).join('');setX(-40);
 res.innerHTML='<small>Tippe auf „Drehen“ und lass dich überraschen.</small>';
-snd.addEventListener('click',function(){sound=!sound;snd.textContent=sound?'🔊':'🔇';snd.setAttribute('aria-pressed',sound)});
-function beep(f,d,v,type){if(!sound)return;try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();
- var o=ac.createOscillator(),g=ac.createGain();o.type=type||'square';o.frequency.value=f;g.gain.setValueAtTime(v,ac.currentTime);
- g.gain.exponentialRampToValueAtTime(0.0001,ac.currentTime+d);o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+d)}catch(e){}}
-function fanfare(){[523,659,784,1047,1319].forEach(function(f,k){setTimeout(function(){beep(f,.22,.07,'triangle')},k*95)})}
+var vol=.35;try{var sv=localStorage.getItem('npVol');if(sv!==null){vol=+sv;vr.value=vol}}catch(e){}
+function setVol(v){vol=v;sound=v>0;snd.textContent=sound?'🔊':'🔇';snd.setAttribute('aria-pressed',sound);if(gain)gain.gain.value=v;
+ try{localStorage.setItem('npVol',v)}catch(e){}}
+vr.addEventListener('input',function(){setVol(+vr.value)});
+snd.addEventListener('click',function(){if(sound){snd.dataset.v=vol;vr.value=0;setVol(0)}else{var v=+(snd.dataset.v||.35)||.35;vr.value=v;setVol(v)}});
+setVol(vol);
+/* Lust auf …: Treffer aus allen Produkten (search.json, beste zuerst), je Sorte nur einmal */
+function stem(t){return t.toLowerCase().replace(/[^a-zäöüß ]/g,' ').split(/\s+/).filter(Boolean).slice(0,3).join(' ')}
+function pool(m){var toks=SD.m[m]||[],out=[],seen={};
+ ALL.forEach(function(i){if(out.length>=150||!(i.img||i.ext))return;var f=' '+(i.f||'')+' ',has=function(t){return f.indexOf(' '+t+' ')>=0};
+  if(toks.length?!toks.some(has):SD.skip.some(function(a){return has('art:'+a)}))return;
+  if(m!=='trinken'&&has('art:getraenke'))return;var k=stem(i.title);if(seen[k])return;seen[k]=1;
+  var a=Object.keys(SD.a).filter(function(x){return has('art:'+x)})[0],c=a?SD.a[a]:['Süßigkeit','#9C94C7'];
+  out.push({t:i.title,u:i.url,k:'p',c:c[1],l:c[0],img:i.img,ext:i.ext,s:(i.sub||'').split(' · ')[0]})});return out}
+root.querySelectorAll('[data-mood]').forEach(function(b){b.addEventListener('click',function(){if(busy)return;
+ root.querySelectorAll('[data-mood]').forEach(function(x){x.setAttribute('aria-pressed',x===b)});var m=b.dataset.mood;
+ function go(){var p=m==='alles'?base:pool(m);items=p.length>=3?p:base;
+  track.innerHTML=deal(14).map(card).join('');setX(-40)}
+ if(m==='alles'||ALL){go();return}
+ btn.disabled=true;fetch('/search.json').then(function(r){return r.json()}).then(function(j){
+  ALL=j.items.filter(function(i){return i.type==='product'});btn.disabled=false;go()}).catch(function(){btn.disabled=false})})});
+/* Klänge: Casino-Set aus /static/snd (Kenney Casino Audio, CC0, + eigene Synthese; Quelle: tools/make_sounds.py).
+   Wird erst beim ersten Drehen geladen. Ticks werden zum Ende hin höher (Spannung), Riser kurz vor dem Stopp. */
+var master=null,gain=null,buf={},loading=false;
+function audio(){if(!sound)return null;try{if(!ac){ac=new (window.AudioContext||window.webkitAudioContext)();
+  gain=ac.createGain();gain.gain.value=vol;gain.connect(ac.destination);master=ac.createDynamicsCompressor();master.connect(gain)}
+ if(ac.state==='suspended')ac.resume();
+ if(!loading){loading=true;['tick','start','riser','stop','win'].forEach(function(n){
+  fetch('/static/snd/'+n+'.mp3').then(function(r){return r.arrayBuffer()}).then(function(d){return new Promise(function(ok,no){ac.decodeAudioData(d,ok,no)})})
+   .then(function(b){buf[n]=b}).catch(function(){})})}
+ return ac}catch(e){return null}}
+function play(n,vol,rate){var a=audio();if(!a||!buf[n])return;var s=a.createBufferSource(),g=a.createGain();s.buffer=buf[n];
+ if(rate)s.playbackRate.value=rate;g.gain.value=vol==null?1:vol;s.connect(g);g.connect(master);s.start()}
+document.addEventListener('pointerdown',function(){audio()},{once:true});  /* Sounds schon beim ersten Antippen der Seite vorladen */
+function tick(speed){play('tick',.75,1+Math.max(0,1-speed)*.28)}
+function thunk(){play('stop',.95)}
+function fanfare(){play('win',.85)}
 function confetti(color){var r=reel.getBoundingClientRect(),b=box.getBoundingClientRect();
  for(var k=0;k<44;k++){var c=document.createElement('i');c.className='confetti';
   c.style.background=['#FFD23F','#FF4D8D','#3DDC97','#3D8BFF',color][k%5];
   c.style.left=(r.left-b.left+r.width/2)+'px';c.style.top=(r.top-b.top+r.height/2)+'px';
   c.style.setProperty('--x',(Math.random()*420-210)+'px');c.style.setProperty('--y',(Math.random()*-220-20)+'px');
   c.style.setProperty('--r',(Math.random()*720)+'deg');box.appendChild(c);setTimeout(c.remove.bind(c),1300)}}
-function show(i){var ext=i.k==='p',lbl=i.k==='p'?'Zum Shop*':(i.k==='post'?'Zum Post':'Zur Themenwelt');
+function show(i){if(i.k==='p'&&window.npHist)window.npHist({u:i.u,n:i.t,s:i.s||'',i:i.img||'',v:'',p:''},'Am Rad gedreht');var ext=i.k==='p',lbl=i.k==='p'?'Zum Shop*':(i.k==='post'?'Zum Post':'Zur Themenwelt');
  res.style.setProperty('--c',i.c);res.classList.add('has');
  res.innerHTML='<div class="ri2">'+pic(i)+'</div><div><small>Dein Zufalls-Vorschlag · '+esc(i.l)+'</small><h3>'+esc(i.t)+'</h3><div class="acts">'
   +'<a class="btn dark" href="'+esc(i.u)+'"'+(ext?' rel="sponsored noopener" target="_blank"':'')+'>'+lbl+'</a>'
   +'<button class="btn" type="button" data-share style="border:2px solid var(--fg)">Teilen</button>'
-  +(ext?'<small style="align-self:center">* Werbelink</small>':'')+'</div></div>';
+  +(ext?'<small style="align-self:center">* Werbelink</small>':'')+'</div>'
+  +(window.npHistOn&&!window.npHistOn()?'<small><button type="button" class="linkbtn" data-histon>Verlauf einschalten</button> (Gedrehtes wiederfinden, nur in deinem Browser)</small>':'')+'</div>';
  res.querySelector('[data-share]').addEventListener('click',function(ev){var b=ev.currentTarget,
   d={title:'Naschpass',text:'Mein Naschpass-Rad sagt: '+i.t+' 🍬 Was zeigt es dir?',url:location.origin+'/#zufall'};
   if(navigator.share){navigator.share(d).catch(function(){})}
-  else{try{navigator.clipboard.writeText(d.text+' '+d.url);b.textContent='Kopiert!'}catch(e){}}})}
+  else{try{navigator.clipboard.writeText(d.text+' '+d.url);b.textContent='Kopiert!'}catch(e){}}})
+ var ho=res.querySelector('[data-histon]');if(ho)ho.addEventListener('click',function(){try{localStorage.setItem('np_verlauf','[]')}catch(e){}
+  window.npHist({u:i.u,n:i.t,s:i.s||'',i:i.img||'',v:'',p:''},'Am Rad gedreht');ho.parentNode.textContent='Verlauf ist an. Du findest ihn auf der Merkliste.'})}
 /* Ablauf wie beim Case-Opening: kurz ausholen, schnell los, lange sanft auslaufen,
    knapp an der Kante liegen bleiben, kurze Pause, dann in die Mitte rutschen und aufdecken */
-function spin(){if(busy)return;busy=true;btn.disabled=true;btn.textContent='…';res.classList.add('dim');
- var N=48,T=41,seq=[];for(var k=0;k<N;k++)seq.push(items[rnd(items.length)]);var win=seq[T];
+function spin(){if(busy)return;busy=true;audio();btn.disabled=true;btn.textContent='…';res.classList.add('dim');
+ var N=48,T=41,seq=deal(N);var win=seq[T];
  var PS='<div class="card ps"><span class="svgw"><span style="font-size:34px">🤝</span></span><b>Hier könnte dein Produkt stehen</b></div>';
  track.innerHTML=seq.map(function(i,k){return (k!==T&&items.length<20&&Math.random()<.18)?PS:card(i)}).join('');setX(0);
  var cw=track.children[0].offsetWidth,W=cw+10,mid=reel.clientWidth/2,center=-(T*W+cw/2-mid),
   edge=(Math.random()<.5?-1:1)*cw*(.28+Math.random()*.17),end=center+edge,
-  dur=reduce?0:8200,t0=null,last=-1,hot=null;
- root.classList.add('go');
+  dur=reduce?0:8200,t0=null,last=-1,hot=null,rised=false;
+ root.classList.add('go');play('start',.8);
  function hi(idx){if(hot)hot.classList.remove('hot');hot=track.children[idx];if(hot)hot.classList.add('hot')}
  function reveal(){if(hot)hot.classList.remove('hot');track.children[T].classList.add('win');root.classList.remove('go');
   fanfare();if(!reduce)confetti(win.c);show(win);res.classList.remove('dim');busy=false;btn.disabled=false;btn.textContent='Nochmal drehen'}
@@ -1068,12 +1448,13 @@ function spin(){if(busy)return;busy=true;btn.disabled=true;btn.textContent='…'
  function settle(){var s0=null,from=end;
   function f(ts){if(!s0)s0=ts;var p=Math.min(1,(ts-s0)/550),e=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;setX(from+(center-from)*e);
    if(p<1)requestAnimationFrame(f);else reveal()}
-  setTimeout(function(){requestAnimationFrame(f)},450)}
+  setTimeout(function(){thunk();requestAnimationFrame(f)},450)}
  function frame(ts){if(!t0)t0=ts;var t=ts-t0,x;
   if(t<260){x=26*Math.sin(t/260*Math.PI/2)}                 /* ausholen */
   else{var p=Math.min(1,(t-260)/dur),e=1-Math.pow(1-p,3.4);x=26+(end-26)*e}
+  if(!rised&&t>260+dur-1650){rised=true;play('riser',.5)}
   setX(x);var idx=Math.floor((mid-x)/W);
-  if(idx!==last&&idx>=0){last=idx;hi(idx);beep(1250+Math.random()*250,.035,.04);mk.classList.add('tick');setTimeout(function(){mk.classList.remove('tick')},70)}
+  if(idx!==last&&idx>=0){last=idx;hi(idx);try{tick(Math.max(0,1-(p||0)*1.4))}catch(e){}mk.classList.add('tick');setTimeout(function(){mk.classList.remove('tick')},70)}
   if(t<260+dur)requestAnimationFrame(frame);else settle()}
  requestAnimationFrame(frame)}
 btn.addEventListener('click',function(){btn.blur();spin()});
@@ -1112,7 +1493,7 @@ def advent_page(live):
     pool = []
     for p in reversed(live):
         pool.append({"t": plain(p["hook"]), "s": f"Post #{p['id']}", "u": f"/p/{p['id']}/",
-                     "img": cdn(cover_url(p), 240) if ON_NETLIFY else cover_url(p)})
+                     "img": cdn(cover_url(p), 240) if (ON_NETLIFY or ON_CF) else cover_url(p)})
     for c in cats_sorted():
         pool.append({"t": c["name"], "s": c.get("teaser", ""), "u": f"/kategorie/{c['id']}/", "svg": sticker(c["id"], 64)})
     if not pool:
@@ -1372,10 +1753,13 @@ root.addEventListener('click',async function(ev){var b=ev.target.closest('.qopt'
  var next=root.querySelector('[data-step="'+(n+1)+'"]');if(next){next.hidden=false;next.scrollIntoView({behavior:'smooth',block:'center'});return}
  data=data||await fetch('/search.json').then(function(r){return r.json()});
  var prods=data.items.filter(function(i){return i.type==='product'}),has=function(i,k){return (' '+i.f+' ').indexOf(' '+k+' ')>=0};
- var want=[];if(ans.geschmack)want.push('geschmack:'+ans.geschmack);if(ans.land)want.push('land:'+ans.land);
- if(ans.anlass!=='ich')want.push('art:boxen');
- var scored=prods.map(function(i){return [i,want.filter(function(w){return has(i,w)}).length]}).filter(function(x){return x[1]>0||!want.length})
-  .sort(function(a,b){return b[1]-a[1]}).slice(0,6).map(function(x){return x[0]});
+ var want=[];if(ans.geschmack)want.push(['geschmack:'+ans.geschmack,2]);if(ans.land)want.push(['land:'+ans.land,2]);
+ var th={weihnachten:['weihnachten','adventskalender','mitbringsel'],mitbringsel:['mitbringsel','geburtstag','boxen']}[ans.anlass]||[];
+ var inTh=function(i){return th.some(function(t){return (' '+(i.th||'')+' ').indexOf(' '+t+' ')>=0})};
+ /* Punkte: Geschmack und Land je 2, passende Themenwelt (Weihnachten/Mitbringsel) 1,5; dann je Shop höchstens 2, damit es gemischt bleibt */
+ var scored=prods.map(function(i){return [i,want.reduce(function(s,w){return s+(has(i,w[0])?w[1]:0)},0)+(inTh(i)?1.5:0)]})
+  .filter(function(x){return x[1]>0||!want.length}).sort(function(a,b){return b[1]-a[1]});
+ var per={},pick=[];scored.forEach(function(x){var sh=(x[0].sub||'').split(' · ')[0];if(pick.length<6&&(per[sh]||0)<2){per[sh]=(per[sh]||0)+1;pick.push(x[0])}});scored=pick;
  var ok=window.npImgOK&&window.npImgOK(),themes=[];
  if(ans.anlass==='weihnachten')themes.push(['/kategorie/weihnachten/','Weihnachten & Geschenke']);
  if(ans.anlass==='mitbringsel')themes.push(['/kategorie/boxen/','Boxen & Geschenke']);
@@ -1411,6 +1795,49 @@ root.addEventListener('click',function(ev){var b=ev.target.closest('.qopt');if(!
   text:'Mein Snack-Typ: '+t.n+' '+t.i+' Welcher bist du? '+location.origin+'/quiz/'})}});
 })();
 </script>"""
+
+
+MERK_HTML = ('<section class="hero" style="padding-bottom:0"><h1>Deine <span class="acc">Merkliste</span></h1>'
+             '<p class="sub">Gekauft wird immer direkt im jeweiligen Shop. Darum steht hier alles nach Shop sortiert: '
+             'einen Shop öffnen, Sachen in den Warenkorb, fertig.</p></section><section id="merk"></section>'
+             '<section id="verlauf"></section><p class="wl">* Werbelink</p>')
+MERK_JS = r"""<script>(function(){var K='np_merk',box=document.getElementById('merk'),CART=__CART__;
+function get(){try{return JSON.parse(localStorage.getItem(K)||'[]')}catch(e){return[]}}
+function set(v){try{if(v.length)localStorage.setItem(K,JSON.stringify(v));else localStorage.removeItem(K)}catch(e){}}
+function esc(x){return String(x).replace(/[&<>"']/g,function(c){return'&#'+c.charCodeAt(0)+';'})}
+function draw(){var l=get();if(!l.length){box.innerHTML='<div class="empty"><strong>Noch nichts gemerkt.</strong><br>Tipp im Shop auf das ♡ bei einem Produkt.</div><p><a class="btn" href="/shop/">Zum Shop</a></p>';return}
+ var g={};l.forEach(function(x){(g[x.s||'Shop']=g[x.s||'Shop']||[]).push(x)});
+ box.innerHTML=Object.keys(g).map(function(s){return '<div class="mgrp"><h2>'+esc(s)+' <small>'+g[s].length+'</small></h2>'+g[s].map(function(x){
+  return '<div class="mrow2">'+(x.i?'<img src="'+esc(x.i)+'" alt="">':'<span class="ph">🍬</span>')+'<b>'+esc(x.n)+(x.p?' <small>'+esc(x.p)+'</small>':'')+'</b>'
+  +'<a class="btn" href="'+esc(x.u)+'" rel="sponsored noopener" target="_blank">Ansehen*</a><button type="button" class="linkbtn" data-del="'+esc(x.u)+'">Entfernen</button></div>'}).join('')
+  +(function(){var c=CART[s],v=g[s].filter(function(x){return x.v});if(!c||v.length<1)return'';
+    var url='https://www.awin1.com/cread.php?awinmid='+c.mid+'&awinaffid=3111189&ued='+encodeURIComponent(c.base+v.map(function(x){return x.v+':1'}).join(','));
+    return '<a class="btn dark cartbtn" href="'+esc(url)+'" rel="sponsored noopener" target="_blank">Alle '+v.length+' in den Warenkorb bei '+esc(s)+'*</a>'})()+'</div>'}).join('')
+  +'<p style="margin-top:16px"><button type="button" class="linkbtn" data-clear>Merkliste leeren</button></p>'}
+box.addEventListener('click',function(ev){var d=ev.target.closest('[data-del]');if(d){set(get().filter(function(x){return x.u!==d.dataset.del}));draw()}
+ if(ev.target.closest('[data-clear]')){set([]);draw()}});draw();
+var vb=document.getElementById('verlauf'),HK='np_verlauf';
+function hget(){try{var v=localStorage.getItem(HK);return v===null?null:JSON.parse(v)}catch(e){return null}}
+function hdraw(){var l=hget();
+ if(l===null){vb.innerHTML='<div class="mgrp"><h2>Verlauf</h2><p>Willst du wiederfinden, was du am Rad gedreht oder im Shop angeklickt hast? Der Verlauf bleibt nur in deinem Browser und wird nie übertragen.</p><button type="button" class="btn" data-hon>Verlauf einschalten</button></div>';return}
+ vb.innerHTML='<div class="mgrp"><h2>Zuletzt angeschaut <small>'+l.length+'</small></h2>'+(l.length?l.map(function(x){
+  var fav=esc(JSON.stringify({u:x.u,n:x.n,s:x.s||'',i:x.i||'',v:x.v||'',p:x.p||''}));
+  return '<div class="mrow2">'+(x.i?'<img src="'+esc(x.i)+'" alt="">':'<span class="ph">🍬</span>')+'<b>'+esc(x.n)+' <small>'+esc(x.w||'')+'</small></b>'
+  +'<a class="btn" href="'+esc(x.u)+'" rel="sponsored noopener" target="_blank">Ansehen*</a><button class="fav" type="button" aria-pressed="false" aria-label="Merken" data-fav="'+fav+'">♡</button></div>'}).join('')
+  :'<p>Noch leer. Dreh am Rad oder klick dich durch den Shop.</p>')
+  +'<p style="margin-top:12px"><button type="button" class="linkbtn" data-hclr>Verlauf leeren</button> · <button type="button" class="linkbtn" data-hoff>Verlauf ausschalten</button></p></div>';
+ if(window.npFavSync)window.npFavSync(vb)}
+vb.addEventListener('click',function(ev){try{if(ev.target.closest('[data-hon]'))localStorage.setItem(HK,'[]');
+ if(ev.target.closest('[data-hclr]'))localStorage.setItem(HK,'[]');if(ev.target.closest('[data-hoff]'))localStorage.removeItem(HK)}catch(e){}
+ if(ev.target.closest('[data-hon],[data-hclr],[data-hoff]'))hdraw()});
+document.addEventListener('click',function(ev){if(ev.target.closest('#verlauf .fav'))setTimeout(draw,0)});hdraw()})();</script>
+<style>.mrow2 .fav{position:static;flex:none}</style>
+<style>.mgrp{background:#fff;border-radius:18px;padding:14px;margin:14px 0;box-shadow:var(--sh)}.mgrp h2{margin:0 0 8px;font-size:20px}.mgrp small{font:700 14px Inter,sans-serif;color:var(--mut)}
+.mrow2{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)}.mrow2 img,.mrow2 .ph{width:52px;height:52px;object-fit:contain;border-radius:10px;background:var(--bg2);flex:none;display:grid;place-items:center}
+.mrow2 b{flex:1;font-size:14px;line-height:1.3}.mrow2 small{color:var(--mut);font-weight:700}.cartbtn{display:block;text-align:center;margin-top:12px}.mrow2 .btn{padding:8px 12px;font-size:14px}</style>"""
+
+
+MERK_JS = MERK_JS.replace("__CART__", json.dumps(CART_SHOPS))
 
 
 def cat_tile(c):
@@ -1456,14 +1883,15 @@ def search_index(live):
                       "sub": " · ".join(x for x in (p.get("shop", ""), cname) if x),
                       "alt": translit(p["name"]), "tags": " ".join([cname, cid] + p.get("tags", [])),
                       "text": p.get("note", ""),
-                      "f": " ".join(f"{g}:{i}" for g, v in facets(p).items() for i in sorted(v))})
+                      "f": " ".join(f"{g}:{i}" for g, v in facets(p).items() for i in sorted(v)),
+                      "th": " ".join(themes_of(p)), "pr": euro(p.get("price")), "v": p.get("vid", ""), **({"reg": REGION_NOTE[p.get("shop")]} if p.get("shop") in REGION_NOTE else {})})
     for c in cats:
         items.append({"type": "cat", "title": c["name"], "url": f"/kategorie/{c['id']}/", "svg": sticker(c["id"], 52),
                       "sub": c["teaser"], "alt": translit(c["name"]), "tags": c["id"].replace("-", " "), "text": c["teaser"]})
     for p in reversed(live):
         txt = " ".join([p.get("sub", "")] + [plain(s.get("title", "")) + " " + s.get("body", "") for s in p.get("slides", [])])
         items.append({"type": "post", "id": p["id"], "title": f"#{p['id']} {p['hook'].replace('*', '')}", "url": f"/p/{p['id']}/",
-                      "img": cdn(f"/p/{p['id']}/01.jpg", 120) if ON_NETLIFY else f"/p/{p['id']}/01.jpg",
+                      "img": cdn(f"/p/{p['id']}/01.jpg", 120) if (ON_NETLIFY or ON_CF) else f"/p/{p['id']}/01.jpg",
                       "sub": p.get("tag", ""), "alt": translit(p.get("short", "")),
                       "tags": " ".join([p.get("tag", ""), p.get("short", "")] + p.get("hashtags", [])), "text": txt})
     sugg = [c["name"] for c in cats[:4]] + ["KitKat", "Farbstoffe"]  # feste Vorschläge, keine Auswertung
@@ -1483,12 +1911,16 @@ def build():
     if DEMO:
         shutil.copytree(HERE / "demo", DIST / "static" / "demo")
     live = [p for p in posts if (ROOT / "fertige_posts" / post_folder(p)).exists()]
+    order_products()
+    _CAT_CACHE.clear()  # Themenwelten in der neuen Reihenfolge
 
     # --- Kategorie-Seiten
     for c in cats:
         items = cat_items(c)
-        inner = (f'<div class="tools"><span></span>{view_toggle("g-cat", ["big", "small", "list"], "small")}</div>'
-                 + prod_grid(items, "g-cat")) if items else (
+        more_link = (f'<div class="morebar"><a class="morebtn" href="/shop/?t={c["id"]}#alle">Alle {len(items)} {e(c["name"])}-Sorten im Shop</a></div>'
+                     if len(items) > 48 else "")
+        inner = (f'<div class="tools"><span>{len(items)} Sorten</span>{view_toggle("g-cat", ["big", "small", "list"], "small")}</div>'
+                 + prod_grid(items[:48], "g-cat") + more_link) if items else (
             f'<div class="slots"><div class="slot main"><span class="emo">🤝</span><div><strong>Partner-Platz frei</strong>'
             f'<p>Hier erscheinen Produkte zum Thema {e(c["name"])}, sobald ein passender Partner-Shop freigeschaltet ist.'
             + (' Bis dahin findest du unten die passenden Posts.' if c.get("posts") else '')
@@ -1585,7 +2017,8 @@ def build():
     empty_shop = ('<div class="empty"><strong>Die ersten Sorten kommen bald.</strong><br>'
                   'Wir suchen gerade Shops aus, bei denen du die Sachen aus den Posts in Deutschland bekommst.</div>')
 
-    # --- Shop-Seite: alle Länder/Themen + alle Produkte
+    # --- Shop-Seite: alle Länder/Themen + alle Produkte (48 sofort, Rest lädt nach)
+    SHOP_STATIC = 48
     def _n(c):
         return len(cat_items(c))
     theme_row = "".join(
@@ -1604,13 +2037,26 @@ def build():
                     + "".join(f'<button class="chip" type="button" data-g="{g["id"]}" data-v="{o["id"]}" data-n="{e(o["name"])}" aria-pressed="false">'
                               f'{facet_icon(g["id"], o)}{e(o["name"])} <small>{counts[(g["id"], o["id"])]}</small></button>' for o in opts)
                     + '</div></div></div>')
-    shop_all = (f'<div class="filters" id="flt" data-grid="g-all"><div class="fbtns">{fgroups}</div><div class="active" id="factive"></div></div>'
+    # Themen & Anlässe als eigener Filter (Adventskalender, Boxen, Filmabend …), Saison-Themen zuerst
+    # Länder und Arten haben schon eigene Filter (Woher/Art) -> hier nur Saison, Anlass, Boxen & Co.
+    DOPPELT = {"japan", "usa", "italien", "schweiz", "mexiko", "skandinavien", "schokolade", "getraenke", "snacks"}
+    tcats = [c for c in cats_sorted() if _n(c) and c["id"] not in DOPPELT]
+    fgroups = ('<div class="dd"><button class="ddb" type="button" aria-expanded="false" aria-controls="dd-t">'
+               'Thema &amp; Anlass <span class="badge" data-badge="t" hidden></span><span class="car" aria-hidden="true">▾</span></button>'
+               '<div class="ddp" id="dd-t"><div class="chips">' + "".join(
+        f'<button class="chip" type="button" data-g="t" data-v="{c["id"]}" data-n="{e(c["name"])}" aria-pressed="false">'
+        f'{e(c["name"])} <small>{_n(c)}</small></button>' for c in tcats) + '</div></div></div>') + fgroups
+    fgroups += ('<div class="dd" hidden><div class="chips">' + "".join(
+        f'<button class="chip" type="button" data-g="t" data-v="{c["id"]}" data-n="{e(c["name"])}" aria-pressed="false">{e(c["name"])}</button>'
+        for c in cats if not _n(c)) + '</div></div>')
+    tk = json.dumps({c["id"]: [k.lower() for k in c.get("top", []) + c.get("keywords", [])[:8]] for c in tcats}, ensure_ascii=False)
+    shop_all = (f'<div class="filters" id="flt" data-grid="g-all" data-tk="{e(tk)}"><div class="fbtns">{fgroups}</div><div class="active" id="factive"></div></div>'
                 f'<div class="fbar"><b id="fcount" aria-live="polite"></b><button class="linkbtn" type="button" id="freset" hidden>Filter zurücksetzen</button>'
                 f'<span style="margin-left:auto">{view_toggle("g-all", ["big", "small", "list"], "small")}</span></div>'
-                f'<div class="grid prods v-small" id="g-all">{"".join(fill_slots([prod_card(p) for p in reversed(products)], 8 if len(products) < 8 else 0))}</div>'
+                f'<div class="grid prods v-small" id="g-all" data-total="{len(products)}">{"".join(fill_slots([prod_card(p) for p in products[:SHOP_STATIC]], 8 if len(products) < 8 else 0))}</div>'
                 f'<div class="empty" id="fempty" hidden><strong>Keine Treffer mit dieser Kombination.</strong> Nimm einen Filter raus oder probier die Suche.</div>'
                 f'<div class="morebar"><button class="morebtn" type="button" id="fmore" hidden>Mehr zeigen</button></div>'
-                f'<p class="wl">* Werbelink</p>') if products else empty_shop
+                f'<p class="wl">{WL}</p>') if products else empty_shop
     write("shop/index.html", page(
         "Shop – Naschpass",
         f'<section class="hero" style="padding-bottom:0">{SPRINKLES}<h1>Shop</h1>'
@@ -1632,7 +2078,8 @@ def build():
     # --- Startseite: Shop zuerst, Posts danach, Nummernsuche ganz unten
     SHOW, LIMIT = 4, 12  # erst 4 zeigen, per Knopf bis 12 aufklappen, Rest im Shop
     def clip_grid(cards, gid, cls):
-        cells = [c if i < SHOW else c.replace("<a ", "<a data-more ", 1) for i, c in enumerate(cards)]
+        cells = [c if i < SHOW else (c.replace("<div ", "<div data-more ", 1) if c.startswith("<div") else c.replace("<a ", "<a data-more ", 1))
+                 for i, c in enumerate(cards)]
         return f'<div class="grid {cls} v-small clip" id="{gid}">{"".join(cells)}</div>'
 
     def more_bar(gid, n_shown, total, href, label):
@@ -1641,9 +2088,9 @@ def build():
         link = f'<a class="btn dark" href="{href}">{label}</a>' if total > SHOW else ""
         return f'<div class="morebar">{btn}{link}</div>' if (btn or link) else ""
 
-    new_prods = list(reversed(products))[:LIMIT]
-    home_prods = (f'<section id="neu"><div class="head"><h2>Neu im Shop</h2>{view_toggle("g-new", ["big", "small", "list"], "small")}</div>'
-                  f'{clip_grid(fill_slots([prod_card(p) for p in new_prods], 4), "g-new", "prods")}<p class="wl">* Werbelink</p>'
+    new_prods = products[:LIMIT]
+    home_prods = (f'<section id="neu"><div class="head"><h2>Zum Entdecken</h2>{view_toggle("g-new", ["big", "small", "list"], "small")}</div>'
+                  f'{clip_grid(fill_slots([prod_card(p) for p in new_prods], 4), "g-new", "prods")}<p class="wl">{WL}</p>'
                   f'{more_bar("g-new", len(new_prods), len(products), "/shop/", f"Alle {len(products)} im Shop")}</section>'
                   ) if products else ""
     home_posts = newest[:LIMIT]
@@ -1679,19 +2126,33 @@ def build():
             f'<div class="ddp"><div class="chips">{tchips}</div></div></div>')
     browse_html = f'<nav class="fbtns ddnav" aria-label="Stöbern" style="margin-top:14px">{dds}</nav>'
     minis = []
-    for p in list(reversed(products))[:6]:
+    # "Gerade im Shop": je eine Art, damit jeder sofort Verschiedenes sieht (Exoten zuerst)
+    pick, seen_art = [], set()
+    for want in ["exot", "schokolade", "gummi", "chips", "getraenke", "pralinen", "kekse", "snacks", "boxen"]:
+        for p in products:
+            f = facets(p)
+            hit = (bool(f.get("land", set()) - {"deutschland", "europa"}) and p not in pick) if want == "exot" else (want in f.get("art", set()) and p not in pick)
+            if hit:
+                pick.append(p)
+                break
+        if len(pick) >= 6:
+            break
+    pick += [p for p in products if p not in pick][:max(0, 6 - len(pick))]
+    for p in pick[:6]:
         minis.append(f'<a class="mini" href="{e(p["url"])}" rel="sponsored noopener" target="_blank" style="--c:{cat_color.get(p.get("category", ""), "#CFE7DD")}">'
                      f'<span class="mp">{pic_html(p, 200, p["name"], p.get("category", ""))}</span><b>{e(p["name"])}*</b></a>')
     while len(minis) < 4:
         minis.append('<a class="mini slot" href="/ueber/#partner"><span class="mp"><span class="emo">🤝</span></span><b>Hier könnte dein Produkt stehen</b></a>')
-    browse_html += (f'<div class="minis"><div class="head" style="margin:18px 0 8px"><h2 style="font:800 15px Inter,sans-serif;text-transform:none;'
+    minis_html = (f'<div class="minis"><div class="head" style="margin:18px 0 8px"><h2 style="font:800 15px Inter,sans-serif;text-transform:none;'
                     f'letter-spacing:0;color:var(--mut);margin:0">Gerade im Shop</h2><a class="more" href="/shop/#alle">Alle ansehen</a></div>'
                     f'<div class="mrow">{"".join(minis)}</div>' + ('<p class="wl" style="margin-top:6px">* Werbelink</p>' if products else '') + '</div>')
-    season_html = "".join(
-        f'<section style="padding-top:22px"><a class="cat" style="--c:{cat_color[c["id"]]}" href="/kategorie/{c["id"]}/">{sticker(c["id"])}'
+    season_html = '<section class="seasons" style="padding-top:22px"><div class="cats">' + "".join(
+        f'<a class="cat" style="--c:{cat_color[c["id"]]}" href="/kategorie/{c["id"]}/">{sticker(c["id"])}'
         f'<h3>{e(c["name"])}</h3><p>{e(c["teaser"])}</p>'
         + (f'<span class="n">{len(cat_items(c))} {"Sorte" if len(cat_items(c)) == 1 else "Sorten"}</span>' if cat_items(c) else '<span class="n soon">Jetzt Saison</span>')
-        + '</a></section>' for c in cats if in_season(c))
+        + '</a>' for c in cats if in_season(c)) + '</div></section>'
+    if 'class="cat"' not in season_html:
+        season_html = ""
     # Themenwelten: erst 8, Rest aufklappbar
     ordered = cats_sorted()
     tcells = [cat_tile(c) if i < 8 else cat_tile(c).replace("<a ", "<a data-more ", 1) for i, c in enumerate(ordered)]
@@ -1727,8 +2188,8 @@ def build():
     home = (f'<section class="hero hgrid">{SPRINKLES}<div class="hl"><h1>Süßes aus <span class="acc">aller Welt</span></h1>'
             f'<p class="lead" style="max-width:36ch">{e(site["intro"])}</p>{how}'
             f'<button class="fake" type="button" data-open-search>{ICON_SEARCH}<span>Snacks, Länder, Marken suchen …</span></button>{browse_html}</div>'
-            f'<div class="hr">{spin_html(live)}</div></section>{explore_html()}'
-            f'{season_html}{advent_teaser}{home_prods}{map_html()}{pass_html()}{band_html}{posts_html}{about_box}{jump}')
+            f'<div class="hr">{minis_html}</div></section>'
+            f'{season_html}{advent_teaser}{home_prods}{explore_html()}{spin_html(live)}{map_html()}{pass_html()}{band_html}{posts_html}{about_box}{jump}')
     write("index.html", page("Naschpass – Süßigkeiten aus aller Welt", home, script=SPIN_JS + SHARE_JS + PASS_SHARE_JS))
 
     # --- Über Naschpass / Für Partner (ehrlich: neuer Kanal, keine Reichweitenzahlen)
@@ -1759,7 +2220,28 @@ Vollständige Angaben im <a href="/impressum/">Impressum</a>.</p></section>"""
     write("ueber/index.html", page("Über Naschpass & für Partner", about,
                                    "Was Naschpass ist, wie wir arbeiten und was Partner-Shops bei uns bekommen.", "/ueber/"))
 
-    write("search.json", json.dumps(search_index(live), ensure_ascii=False, separators=(",", ":")))
+    si = search_index(live)
+    for it in si["items"]:  # leere Felder und doppelte Schreibweisen weglassen (Datei bleibt kleiner)
+        if it.get("alt") == it.get("title", "").lower():
+            it.pop("alt")
+        for k in [k for k, v in it.items() if v in ("", None)]:
+            it.pop(k)
+    write("search.json", json.dumps(si, ensure_ascii=False, separators=(",", ":")))
+    write("merkliste/index.html", page("Merkliste – Naschpass", MERK_HTML, "Deine gemerkten Süßigkeiten, sortiert nach Shop.",
+                                       "/merkliste/", script=MERK_JS))
+    if PREVIEW:
+        rows = "".join(
+            f'<tr><td>{k + 1}</td><td><a href="{e(p["url"])}" rel="sponsored noopener" target="_blank">{e(p["name"])}</a></td><td>{e(p.get("shop", ""))}</td>'
+            f'<td>{e(p.get("brand", ""))}</td><td>{e(" ".join(sorted(facets(p).get("land", set()))))}</td>'
+            f'<td>{e(" ".join(sorted(facets(p).get("art", set()))))}</td><td>{e(" ".join(themes_of(p)))}</td><td>{e(p.get("feed_category", "")[:60])}</td></tr>'
+            for k, p in enumerate(products))
+        write("pruefen/index.html", page("Prüfen – Naschpass (nur Vorschau)",
+              f'<section class="prose" style="max-width:none"><h1>Prüfliste ({len(products)} Produkte)</h1>'
+              '<p>Nur in der Vorschau sichtbar. Reihenfolge = „Entdecken“. Strg+F zum Suchen. Schreib Claude die Nummern, die raus oder anders sollen.</p>'
+              '<div style="overflow-x:auto"><table class="pt"><thead><tr><th>#</th><th>Produkt</th><th>Shop</th><th>Marke</th><th>Welt</th><th>Art</th>'
+              f'<th>Themen</th><th>Feed-Kategorie</th></tr></thead><tbody>{rows}</tbody></table></div></section>'
+              '<style>.pt{border-collapse:collapse;font-size:12.5px;width:100%}.pt td,.pt th{border-bottom:1px solid var(--line);padding:4px 6px;text-align:left;vertical-align:top}</style>',
+              "Prüfliste", "/pruefen/"))
     write("geschenk/index.html", page("Geschenk-Finder – Naschpass", finder_page(),
                                       "Drei Fragen, passende Süßigkeiten zum Verschenken.", "/geschenk/", script=FINDER_JS))
     write("quiz/index.html", page("Welcher Snack-Typ bist du? – Naschpass", quiz_page(),
@@ -1792,13 +2274,29 @@ Vollständige Angaben im <a href="/impressum/">Impressum</a>.</p></section>"""
 <h2>Verbraucherstreitbeilegung</h2><p>Ich bin nicht bereit und nicht verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.</p>
 </section>""", "Impressum"))
 
+    HOST_NAME = "Cloudflare" if ON_CF else "Netlify"
+    HOST_TEXT = (("Die Website wird bei Cloudflare, Inc., 101 Townsend St, San Francisco, CA 94107, USA gehostet (Cloudflare Workers). "
+                  "Beim Aufruf verarbeitet Cloudflare technisch notwendige Daten (z. B. IP-Adresse, Datum und Uhrzeit, aufgerufene Seite, Browser), "
+                  "um die Seite auszuliefern und vor Angriffen zu schützen. Produktbilder liegen dabei auf unserem eigenen Speicher bei Cloudflare. "
+                  "Details: <a href=\"https://www.cloudflare.com/privacypolicy/\" rel=\"noopener\" target=\"_blank\">cloudflare.com/privacypolicy</a>")
+                 if ON_CF else
+                 ("Die Website wird bei Netlify, Inc., 101 2nd Street, San Francisco, CA 94105, USA gehostet. Beim Aufruf verarbeitet Netlify "
+                  "technisch notwendige Daten (z. B. IP-Adresse, Datum und Uhrzeit, aufgerufene Seite, Browser) in Server-Logfiles, um die Seite "
+                  "auszuliefern und die Sicherheit zu gewährleisten. Details: <a href=\"https://www.netlify.com/privacy/\" rel=\"noopener\" "
+                  "target=\"_blank\">netlify.com/privacy</a>"))
+    HOST_TEXT += (" Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einem sicheren und stabilen Betrieb). "
+                  "Dabei können Daten in die USA übermittelt werden; die Übermittlung erfolgt auf Grundlage des EU-US Data Privacy Framework "
+                  "(soweit der Anbieter dort zertifiziert ist) bzw. der EU-Standardvertragsklauseln. Mit dem Anbieter besteht ein Vertrag zur Auftragsverarbeitung.")
     write("datenschutz/index.html", page("Datenschutz – Naschpass", f"""<section class="legal"><h1>Datenschutz&shy;erklärung</h1>
 <h2>1. Verantwortlicher</h2><p>{e(im["name"])}, {e(im["firma"])}, Anschrift siehe <a href="/impressum/">Impressum</a>, E-Mail: {e(im["email"])}</p>
 <h2>2. Kurz gesagt</h2><p>Diese Website setzt keine Cookies, nutzt keine Analyse- oder Tracking-Tools und lädt Inhalte von Drittanbietern nur, wenn du es ausdrücklich erlaubst (Produktfotos, siehe Abschnitt 4b). Schriften und unsere eigenen Bilder liegen auf unserem eigenen Server.</p>
-<h2>3. Hosting</h2><p>Die Website wird bei Netlify, Inc., 101 2nd Street, San Francisco, CA 94105, USA gehostet. Beim Aufruf verarbeitet Netlify technisch notwendige Daten (z. B. IP-Adresse, Datum und Uhrzeit, aufgerufene Seite, Browser) in Server-Logfiles, um die Seite auszuliefern und die Sicherheit zu gewährleisten. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einem sicheren und stabilen Betrieb). Dabei können Daten in die USA übermittelt werden; die Übermittlung erfolgt auf Grundlage der EU-Standardvertragsklauseln bzw. des EU-US Data Privacy Framework, soweit der Anbieter dort zertifiziert ist. Mit Netlify besteht ein Vertrag zur Auftragsverarbeitung. Details: <a href="https://www.netlify.com/privacy/" rel="noopener" target="_blank">netlify.com/privacy</a></p>
-<h2>4. Werbelinks (Affiliate)</h2><p>Einige Links führen zu Online-Shops und sind mit einer Partnerkennung versehen (z. B. über das Netzwerk Awin). Erst wenn du einen solchen Link anklickst, verlässt du diese Website; der Shop bzw. das Partnernetzwerk kann dann auf seiner eigenen Seite Cookies setzen, um den Kauf zuzuordnen. Dafür ist der jeweilige Anbieter verantwortlich. Auf dieser Website selbst wird dabei nichts gespeichert. Produktbilder aus den Datenfeeds der Partner-Shops werden über unseren Hoster Netlify ausgeliefert; dein Browser baut dabei keine Verbindung zu den Shops auf. Ausnahme: Abschnitt 4b.</p>
+<h2>3. Hosting</h2><p>{HOST_TEXT}</p>
+
+<h2>4. Werbelinks (Affiliate)</h2><p>Einige Links führen zu Online-Shops und sind mit einer Partnerkennung versehen (z. B. über das Netzwerk Awin). Erst wenn du einen solchen Link anklickst, verlässt du diese Website; der Shop bzw. das Partnernetzwerk kann dann auf seiner eigenen Seite Cookies setzen, um den Kauf zuzuordnen. Dafür ist der jeweilige Anbieter verantwortlich. Auf dieser Website selbst wird dabei nichts gespeichert. Produktbilder aus den Datenfeeds der Partner-Shops werden über unseren Hoster {HOST_NAME} ausgeliefert; dein Browser baut dabei keine Verbindung zu den Shops auf. Ausnahme: Abschnitt 4b.</p>
 {fotos_html()}
 <h2>4c. Dein Naschpass (Stempel)</h2><p>Wenn du auf der Startseite „Pass starten“ drückst, speichern wir im lokalen Speicher deines Browsers, welche Länder-Themenwelten du besucht hast. Das passiert nur auf deinen Wunsch (§ 25 Abs. 2 Nr. 2 TDDDG), wird nie an uns übertragen und lässt sich mit „Pass zurücksetzen“ jederzeit löschen.</p>
+<h2>4d. Merkliste</h2><p>Tippst du bei einem Produkt auf ♡, speichern wir Name, Shop und Link im lokalen Speicher deines Browsers, damit du deine Auswahl später wiederfindest. Das passiert nur auf deinen Wunsch (§ 25 Abs. 2 Nr. 2 TDDDG), wird nie an uns übertragen und lässt sich auf der Seite „Merkliste“ jederzeit löschen.</p>
+<h2>4e. Verlauf</h2><p>Nur wenn du den Verlauf selbst einschaltest, speichern wir im lokalen Speicher deines Browsers, welche Produkte du am Glücksrad gedreht oder angeklickt hast (Name, Link, Bild), höchstens 30 Einträge. Auch das passiert nur auf deinen Wunsch (§ 25 Abs. 2 Nr. 2 TDDDG), wird nie an uns übertragen und lässt sich auf der Seite „Merkliste“ jederzeit leeren oder ausschalten. Die gewählte Lautstärke des Glücksrads merkt sich dein Browser ebenfalls lokal.</p>
 <h2>4a. Suche</h2><p>Die Suche läuft komplett in deinem Browser. Deine Suchbegriffe werden nicht übertragen und nicht gespeichert.</p>
 <h2>5. Social-Media-Links</h2><p>Links zu Instagram, TikTok und Pinterest sind einfache Verlinkungen, keine eingebetteten Inhalte. Daten werden erst übertragen, wenn du den Link anklickst und die jeweilige Plattform besuchst; dort gelten deren Datenschutzbestimmungen.</p>
 <h2>6. Kontakt per E-Mail</h2><p>Schreibst du uns eine E-Mail, verarbeiten wir deine Angaben nur, um deine Anfrage zu beantworten (Art. 6 Abs. 1 lit. b bzw. f DSGVO), und löschen sie, wenn sie nicht mehr benötigt werden.</p>
@@ -1809,11 +2307,24 @@ Vollständige Angaben im <a href="/impressum/">Impressum</a>.</p></section>"""
     urls = sorted({"/" + str(f.relative_to(DIST)).replace("index.html", "") for f in DIST.rglob("index.html")})
     (DIST / "sitemap.xml").write_text('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
                                       + "".join(f"<url><loc>{BASE}{u}</loc></url>\n" for u in urls) + "</urlset>\n", encoding="utf-8")
+    if (HERE / "img_cache").exists():
+        shutil.copytree(HERE / "img_cache", DIST / "i", dirs_exist_ok=True)
+    if THUMBS:
+        try:
+            from PIL import Image
+            for src in THUMBS:
+                f = DIST / src.lstrip("/")
+                if f.exists():
+                    im = Image.open(f).convert("RGB")
+                    im.thumbnail((480, 600))
+                    im.save(f.with_name(f.stem + "_t.jpg"), quality=80, optimize=True)
+        except ImportError:
+            print("WARNUNG: Pillow fehlt, Vorschaubilder der Posts nicht verkleinert (Original wird geladen)")
     (DIST / "robots.txt").write_text(f"User-agent: *\nAllow: /\nSitemap: {BASE}/sitemap.xml\n", encoding="utf-8")
     # Sicherheits-Header: Seite darf nur Dinge von der eigenen Domain laden (plus freigegebene Partner-Bildserver nach Einwilligung)
     img_hosts = " ".join(f"https://{h}" for h in sorted(PARTNERS))
     csp = ("default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; "
-           f"img-src 'self' data: blob: {img_hosts}; font-src 'self'; connect-src 'self'; media-src 'none'; object-src 'none'; "
+           f"img-src 'self' data: blob: {img_hosts}; font-src 'self'; connect-src 'self'; media-src 'self'; object-src 'none'; "
            "base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests")
     (DIST / "_headers").write_text(
         "/*\n"
@@ -1823,7 +2334,9 @@ Vollständige Angaben im <a href="/impressum/">Impressum</a>.</p></section>"""
         "  Referrer-Policy: strict-origin-when-cross-origin\n"
         "  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()\n"
         "  Strict-Transport-Security: max-age=31536000\n"
-        "  Cross-Origin-Opener-Policy: same-origin\n", encoding="utf-8")
+        "  Cross-Origin-Opener-Policy: same-origin\n"
+        "/static/*\n  Cache-Control: public, max-age=2592000\n"
+        "/i/*\n  Cache-Control: public, max-age=31536000, immutable\n", encoding="utf-8")
     for w in WARN:
         print("WARNUNG:", w)
     print("fertig:", DIST, "| Impressum-Adresse fehlt!" if missing else "")

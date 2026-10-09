@@ -8,7 +8,7 @@
 # Produktbilder aus dem AWIN-Feed: Netlify holt sie serverseitig und liefert sie über die eigene Domain aus
 # (kein Kontakt der Besucher zum Shop -> kein Cookie-Banner nötig). Neue Bild-Server hier ergänzen.
 [images]
-  remote_images = ['https://images2\.productserve\.com/.*']
+  remote_images = ['https://images2\.productserve\.com/.*', 'https://cdn\.shopify\.com/.*']
 
 # Caching: Dateien in /static/ dürfen 30 Tage im Browser bleiben (spart Ladezeit und Netlify-Bandbreite).
 # Wer eine Datei dort ändert, gibt ihr einen neuen Namen (z. B. og-2.jpg), sonst sehen Besucher bis zu 30 Tage die alte.

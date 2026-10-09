@@ -1,6 +1,5 @@
 {
-  "_hinweis": "AWIN-Advertiser mit Produktfeed. Bei einer Zusage active=true setzen. 'only' = Regex auf Shop-Kategorie/Produktname (Pflicht bei großen Feeds), 'themen' = Themenwelten aus site.json, 'max' = höchstens so viele Produkte dieses Shops (Standard 120). Der Feed-Link mit API-Schlüssel steht NUR in Netlify (Umgebungsvariable AWIN_FEED_URL), nie hier.",
-  "max_total": 1200,
+  "_hinweis": "AWIN-Advertiser mit Produktfeed. active=true bei Zusage. 'include' = Regex auf 'Shop-Kategorie || Feed-Kategorie': nur passende Zeilen kommen rein (fehlt es, kommt alles). 'include_name' = zusätzlich Regex auf den Produktnamen (für gemischte Kategorien). 'exclude_name' = Regex, die trotzdem raus. 'boost' = Extra-Punkte für die Reihenfolge (Exoten-Shops höher). Alkohol, Tierfutter und Non-Food fliegen immer raus (brands.json + Regeln in import_feeds.py). Keine Mengen-Kappung. Der Feed-Link mit API-Schlüssel steht NUR in Netlify (AWIN_FEED_URL, AWIN_FEED_URL_2 ...), nie hier. 'fid' = Produktdatenfeed-ID aus AWIN (Create-a-Feed, Spalte 'Produktdatenfeed-ID'). Der erste Awin-Format-Link dient nur als Vorlage (Schlüssel + Format): Der Import holt automatisch alle aktiven 'fid' (Ziffern) damit. Neue Partner im Awin-Format brauchen also keinen neuen Link. Google-Format-Feeds (z. B. F4010) brauchen weiter einen eigenen Link (AWIN_FEED_URL_2 ...).",
   "advertisers": [
     {
       "id": 112586,
@@ -10,17 +9,19 @@
     {
       "id": 11652,
       "shop": "REWE",
-      "active": false,
-      "only": "Süßwaren|Suesswaren|Schokolade|Fruchtgummi|Kekse|Gebäck|Chips|Knabber|Getränke|Getraenke|Limonade|Bonbon",
+      "active": true,
       "themen": [
         "klassiker"
-      ]
+      ],
+      "include": "Süßes & Salziges|Getränke & Genussmittel|Kaffee, Tee & Kakao|Weihnachtswelt|Monats-Highlights",
+      "include_name": "eis\\b|eiscreme|cremissimo|magnum|ben & jerry|langnese|cornetto|pudding|dessert|mousse|nutella|aufstrich|nougat|schoko|keks|cookie|waffel|kuchen|riegel|honig|konfitüre|marmelade|popcorn|chips",
+      "exclude_name": "zigarett|tabak|zigarre|feuerzeug|blättchen|e-liquid|liquid\\b",
+      "fid": "41437"
     },
     {
       "id": 13812,
       "shop": "Netto Marken-Discount",
       "active": false,
-      "only": "Süßwaren|Suesswaren|Schokolade|Snacks|Knabber|Fruchtgummi|Kekse",
       "themen": [
         "klassiker"
       ]
@@ -38,14 +39,14 @@
     {
       "id": 11832,
       "shop": "Dallmayr",
-      "active": false,
-      "only": "Pralinen|Schokolade|Süß|Suess|Gebäck|Präsent|Praesent"
+      "active": false
     },
     {
       "id": 14403,
       "shop": "GOURVITA",
-      "active": false,
-      "only": "Süß|Suess|Schokolade|Pralinen|Gebäck|Geschenk"
+      "active": true,
+      "include": "Schokolade|Pralinen|Trüffel|Süßes|Gebäck|Plätzchen|Hussel|Nüsse|Kakao|Trinkschokolade|Geschenk|Sparsets|Tee|Eilles|Marmelade|Konfitüre|Schwartau|Aufstrich|Asiatische|Mexikanische|Griechische|Italienische|Arabische|Indische|Feinkost|Aromasirup",
+      "fid": "54723"
     },
     {
       "id": 100069,
@@ -60,31 +61,29 @@
     {
       "id": 11419,
       "shop": "Gustini",
-      "active": false,
-      "only": "Süß|Suess|Dolci|Schokolade|Gebäck|Kekse|Panettone|Torrone|Cantucci"
+      "active": false
     },
     {
       "id": 128981,
       "shop": "italienisch-einkaufen",
-      "active": false,
-      "only": "Süß|Suess|Dolci|Schokolade|Gebäck|Kekse|Panettone|Torrone|Cantucci"
+      "active": false
     },
     {
       "id": 104845,
       "shop": "Mexhaus",
-      "active": false,
-      "only": "Süß|Suess|Snacks|Chips|Dulces|Getränke|Getraenke|Salsa|Chili"
+      "active": false
     },
     {
       "id": 129605,
       "shop": "Nordland.Shop",
-      "active": false,
-      "only": "Süß|Suess|Lakritz|Schokolade|Kekse|Snacks|Getränke|Getraenke"
+      "active": false
     },
     {
       "id": 127807,
       "shop": "SugarGang",
-      "active": false
+      "active": true,
+      "boost": 4,
+      "fid": "F4010"
     },
     {
       "id": 129755,
@@ -99,39 +98,42 @@
     {
       "id": 19712,
       "shop": "BOS FOOD",
-      "active": false,
-      "only": "Süß|Suess|Schokolade|Pralinen|Gebäck|Kekse|Snacks|Konfekt"
+      "active": false
     },
     {
       "id": 79456,
       "shop": "Piccantino",
-      "active": false,
-      "only": "Schokolade|Süß|Suess|Snacks|Chips|Bonbon"
+      "active": true,
+      "include": "Süßigkeiten|Vorspeisen & Snacks|Nüsse & Samen|Getrocknete Fr|Dips & Brotaufstriche|Honig|Limonaden|Saft|Sirup|Tees & Aufgüsse|Kakao|Schokolade",
+      "exclude_name": "stevia|streusüße|erythrit|xylit|zuckerersatz|süßstoff|kandisin|babybrei|pouchy|säugling",
+      "fid": "93446"
     },
     {
       "id": 15953,
       "shop": "Velivery",
-      "active": false,
-      "only": "Süß|Suess|Schokolade|Fruchtgummi|Snacks|Kekse|Riegel"
+      "active": false
     },
     {
       "id": 42806,
       "shop": "Sodapop",
-      "active": false,
+      "active": true,
       "themen": [
         "getraenke"
-      ]
+      ],
+      "include": "Sirup|FRITT",
+      "fid": "95717"
     },
     {
       "id": 11746,
       "shop": "Pati-Versand",
-      "active": false,
-      "only": "Pralinen|Schokolade|Süß|Suess|Weihnacht|Gebäck"
+      "active": false
     },
     {
       "id": 115505,
       "shop": "Burghardt Delicious",
-      "active": false
+      "active": true,
+      "boost": 1,
+      "fid": "103286"
     }
   ]
 }

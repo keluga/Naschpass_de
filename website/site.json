@@ -57,6 +57,31 @@
       ]
     },
     {
+      "id": "adventskalender",
+      "name": "Adventskalender",
+      "season": [
+        "10-01",
+        "12-24"
+      ],
+      "teaser": "24 Türchen mit Süßigkeiten aus aller Welt.",
+      "text": "Adventskalender mit Süßigkeiten, Snacks oder Schokolade aus aller Welt. Wir zeigen sie schon ab Oktober, damit du in Ruhe aussuchen kannst.",
+      "keywords": [
+        "adventskalender",
+        "adventkalender",
+        "advent calendar",
+        "adventsbox",
+        "24 türchen",
+        "24 tuerchen",
+        "türchen",
+        "countdown kalender",
+        "advent box"
+      ],
+      "top": [
+        "adventskalender",
+        "24 türchen"
+      ]
+    },
+    {
       "id": "weihnachten",
       "name": "Weihnachten & Geschenke",
       "teaser": "Adventskalender, Lebkuchen, Panettone und Pralinen zum Verschenken.",
@@ -74,9 +99,29 @@
         "christmas",
         "panettone",
         "pandoro",
-        "nikolaus"
+        "nikolaus",
+        "xmas",
+        "santa",
+        "weihnachtsmann",
+        "dominostein",
+        "printen",
+        "zimtstern",
+        "vanillekipferl",
+        "christstollen",
+        "elisenlebkuchen",
+        "schneemann",
+        "rentier",
+        "tannenbaum",
+        "winterzauber"
       ],
-      "text": "Adventskalender, Lebkuchen, Stollen, Panettone und Pralinen: Hier sammeln wir süße Geschenkideen aus aller Welt für die Adventszeit. Vieles davon gibt es nur saisonal, deshalb lohnt sich ein früher Blick."
+      "text": "Adventskalender, Lebkuchen, Stollen, Panettone und Pralinen: Hier sammeln wir süße Geschenkideen aus aller Welt für die Adventszeit. Vieles davon gibt es nur saisonal, deshalb lohnt sich ein früher Blick.",
+      "top": [
+        "weihnacht",
+        "adventskalender",
+        "lebkuchen",
+        "christmas",
+        "santa"
+      ]
     },
     {
       "id": "schokolade",
@@ -202,13 +247,142 @@
       "facets": [
         "art:boxen"
       ],
-      "text": "Mystery-Boxen, Probiersets und süße Geschenke: zum Selbstprobieren oder Verschenken."
+      "text": "Mystery-Boxen, Probiersets und süße Geschenke: zum Selbstprobieren oder Verschenken.",
+      "keywords": [
+        "geschenkbox",
+        "geschenkset",
+        "geschenkkorb",
+        "präsentkorb",
+        "praesentkorb",
+        "präsent",
+        "praesent",
+        "probierbox",
+        "probierset",
+        "mystery",
+        "überraschungsbox",
+        "snackbox",
+        "candy box",
+        "tasting box",
+        "sortiment",
+        "geschenk"
+      ],
+      "top": [
+        "mystery",
+        "box",
+        "geschenk",
+        "probier",
+        "präsent"
+      ]
     },
     {
       "id": "klassiker",
       "name": "Supermarkt-Klassiker",
       "teaser": "Die bekannten Marken, bequem online bestellt.",
       "text": "Die bekannten Marken aus dem Supermarkt, bequem online bestellt. Damit findest du hier neben Exoten auch die Klassiker."
+    },
+    {
+      "id": "filmabend",
+      "name": "Filmabend",
+      "teaser": "Chips, Popcorn, Gummi und was zum Trinken – alles fürs Sofa.",
+      "text": "Chips, Popcorn, Gummi und was zum Trinken – alles fürs Sofa.",
+      "group": "anlass",
+      "keywords": [
+        "chips",
+        "popcorn",
+        "nacho",
+        "tortilla",
+        "flips",
+        "erdnussflips",
+        "fruchtgummi",
+        "gummi",
+        "cola",
+        "limo",
+        "cracker",
+        "brezel"
+      ]
+    },
+    {
+      "id": "party",
+      "name": "Party & Teilen",
+      "teaser": "Große Tüten, Mixe und Sachen zum Teilen.",
+      "text": "Große Tüten, Mixe und Sachen zum Teilen.",
+      "group": "anlass",
+      "keywords": [
+        "party",
+        "mix",
+        "xxl",
+        "1000g",
+        "1kg",
+        "family",
+        "großpackung",
+        "teilen",
+        "sour",
+        "sauer"
+      ]
+    },
+    {
+      "id": "mitbringsel",
+      "name": "Mitbringsel & Danke",
+      "teaser": "Kleine Geschenke, die immer gut ankommen.",
+      "text": "Kleine Geschenke, die immer gut ankommen.",
+      "group": "anlass",
+      "keywords": [
+        "praline",
+        "pralinen",
+        "trüffel",
+        "präsent",
+        "praesent",
+        "geschenk",
+        "box",
+        "dose",
+        "tafel",
+        "mozartkugel",
+        "merci"
+      ],
+      "top": [
+        "präsent",
+        "geschenk",
+        "praline",
+        "trüffel"
+      ]
+    },
+    {
+      "id": "geburtstag",
+      "name": "Geburtstag",
+      "teaser": "Süßes zum Feiern und Verschenken.",
+      "text": "Süßes zum Feiern und Verschenken.",
+      "group": "anlass",
+      "keywords": [
+        "geburtstag",
+        "birthday",
+        "party",
+        "kuchen",
+        "geschenk",
+        "box",
+        "konfetti",
+        "regenbogen",
+        "rainbow"
+      ],
+      "top": [
+        "geburtstag",
+        "birthday",
+        "konfetti",
+        "party"
+      ]
+    },
+    {
+      "id": "naschkatzen",
+      "name": "Für Naschkatzen",
+      "teaser": "Exotisches und Ausgefallenes für alle, die schon alles kennen.",
+      "text": "Exotisches und Ausgefallenes für alle, die schon alles kennen.",
+      "group": "anlass",
+      "facets": [
+        "land:usa",
+        "land:japan",
+        "land:korea",
+        "land:mexiko",
+        "land:asien"
+      ]
     }
   ],
   "partner_shops": {
@@ -392,6 +566,81 @@
           ]
         },
         {
+          "id": "oesterreich",
+          "name": "Österreich",
+          "icon": "flag",
+          "keywords": [
+            "österreich",
+            "oesterreich",
+            "wien",
+            "mozart",
+            "steirisch",
+            "tirol"
+          ]
+        },
+        {
+          "id": "frankreich",
+          "name": "Frankreich",
+          "icon": "flag",
+          "keywords": [
+            "frankreich",
+            "französisch",
+            "macaron",
+            "bretagne"
+          ]
+        },
+        {
+          "id": "spanien",
+          "name": "Spanien",
+          "icon": "flag",
+          "keywords": [
+            "spanien",
+            "spanisch",
+            "turrón",
+            "churro"
+          ]
+        },
+        {
+          "id": "benelux",
+          "name": "Belgien & Niederlande",
+          "icon": "flag",
+          "keywords": [
+            "belgisch",
+            "belgien",
+            "niederlande",
+            "holland",
+            "stroopwafel",
+            "speculoos"
+          ]
+        },
+        {
+          "id": "orient",
+          "name": "Orient & Türkei",
+          "icon": "flag",
+          "keywords": [
+            "orient",
+            "türkisch",
+            "arabisch",
+            "griechisch",
+            "baklava",
+            "halva",
+            "lokum",
+            "dattel"
+          ]
+        },
+        {
+          "id": "osteuropa",
+          "name": "Osteuropa",
+          "icon": "flag",
+          "keywords": [
+            "polnisch",
+            "russisch",
+            "ukrainisch",
+            "tschechisch",
+            "ungarisch"
+          ]
+        },
+        {
           "id": "europa",
           "name": "Europa",
           "icon": "flag",
@@ -409,7 +658,12 @@
             "skandinavien",
             "deutschland",
             "italien",
-            "schweiz"
+            "schweiz",
+            "oesterreich",
+            "frankreich",
+            "spanien",
+            "benelux",
+            "osteuropa"
           ]
         }
       ]
@@ -595,7 +849,12 @@
             "worms",
             "bärchen",
             "baerchen",
-            "bears"
+            "bears",
+            "gummies",
+            "chewy",
+            "sour patch",
+            "gummibär",
+            "marshmallow"
           ]
         },
         {
@@ -611,7 +870,9 @@
             "toffee",
             "hi-chew",
             "kaugummi",
-            "bubble gum"
+            "bubble gum",
+            "candy",
+            "karamell"
           ]
         },
         {
@@ -680,8 +941,12 @@
             "ramune",
             "energy",
             "dose",
-            "tee",
-            "tea"
+            "sirup",
+            "saft",
+            "schorle",
+            "eistee",
+            "limonade",
+            "wasser"
           ]
         },
         {
@@ -699,6 +964,65 @@
           ],
           "categories": [
             "boxen"
+          ]
+        },
+        {
+          "id": "tee",
+          "name": "Tee, Kaffee & Kakao",
+          "icon": "☕",
+          "keywords": [
+            "tee",
+            "tea",
+            "teebeutel",
+            "kakao",
+            "trinkschokolade",
+            "chai",
+            "matcha",
+            "kaffee",
+            "espresso",
+            "cappuccino"
+          ]
+        },
+        {
+          "id": "feinkost",
+          "name": "Aufstriche & Feinkost",
+          "icon": "🍯",
+          "keywords": [
+            "aufstrich",
+            "schoko-creme",
+            "nougatcreme",
+            "nutella",
+            "konfitüre",
+            "konfituere",
+            "marmelade",
+            "fruchtaufstrich",
+            "honig",
+            "feinkost",
+            "dip",
+            "pesto",
+            "chutney",
+            "sirup"
+          ]
+        },
+        {
+          "id": "eis",
+          "name": "Eis & Desserts",
+          "icon": "🍨",
+          "keywords": [
+            "eiscreme",
+            "speiseeis",
+            "cremissimo",
+            "magnum",
+            "ben & jerry",
+            "cornetto",
+            "pudding",
+            "dessert",
+            "mousse",
+            "eis am stiel",
+            "eisriegel",
+            "eiskonfekt",
+            "stieleis",
+            "sorbet"
           ]
         }
       ]

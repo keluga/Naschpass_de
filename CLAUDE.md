@@ -5,6 +5,9 @@ Content-Repo für den Kanal **@naschpass_de** (TikTok, Instagram, Pinterest): Ka
 ## Harte Regeln
 - **Kein Geld und keine Credits ausgeben** (vidIQ, Higgsfield, bezahlte APIs, Metricool-Upgrade), ohne vorher Kevs OK.
 - **Nie selbst nach `main` mergen oder pushen** (jeder Produktions-Deploy kostet 15 Netlify-Credits). Nur wenn Kev ausdrücklich „live“ schreibt. „Mach“, „do it“, „passt“ o. Ä. reichen nicht. Änderungen immer über Branch + Pull Request (kostenlose Vorschau).
+- **Git in Cloud-Sessions:** Nach dem Klonen `git config remote.origin.fetch '+refs/heads/*:refs/remotes/origin/*' && git fetch origin`. Nie lokal auf `main` committen. Jeden Arbeits-Branch nach dem Commit sofort mit `git push -u origin <branch>` pushen (kostenlose Vorschau). Sonst meldet der Stop-Hook bei jeder Antwort „unpushed commits“ und frisst Tokens.
+- **Vor jedem „live“ und nach UI-Änderungen:** `node website/test_ui.js` (PC + Handy: abgeschnittene Wisch-Reihen, stehendes Laufband, seitliches Wackeln, Skript-Fehler, Werbelinks ohne ID). Neue horizontale Reihen bekommen eine der Klassen aus `npHS` (Pfeile + Ziehen).
+- **Partner:** `PARTNER.md` ist die Liste aller AWIN-Partner (Format, Feed-ID, Variable). Bei jeder Zusage aktualisieren.
 - **Fakten nur mit Beleg:** Jede Zahl und jedes Datum auf einer geöffneten Webseite prüfen, Quelle in `sources`. Unsicheres weglassen.
 - **Recht:** keine Gesundheitsversprechen (HCVO), nichts Abwertendes über Marken (§ 4 UWG), keine Kaufappelle und keine Ansprache von Kindern (UWG Anh. Nr. 28). Enthält ein Post Affiliate-Links oder Produkte eines Partner-Shops: „Anzeige“ auf Folie 1 und in der Caption.
 - **Keine fremden Bilder** außer CC0/CC BY mit Quellenangabe. Keine Emojis auf Folien, nur in Captions.
@@ -31,6 +34,7 @@ Content-Repo für den Kanal **@naschpass_de** (TikTok, Instagram, Pinterest): Ka
 ```
 
 ## Website
+- **Hosting ab Livegang: Cloudflare Worker `naschpass`** (Workers Builds, baut bei jedem Push auf `main`, kostenlos; Vorschau je Branch unter `<branch>-naschpass.kevin-88e.workers.dev`). Variablen (z. B. `AWIN_FEED_URL`) in Cloudflare: Workers & Pages → naschpass → Settings → Build → Variables. Täglicher Neubau per GitHub-Action (leerer Commit). Netlify-Regeln unten gelten nur bis zum Umzug.
 - Quelle: `website/` (`site.json` = Texte, Socials, Impressum; `products.json` = Produkte mit Affiliate-Links; `build.py` baut nach `website/dist/`).
 - Netlify-Projekt `naschpass` (Site-ID `8c5b425f-4aa1-493b-929e-d394728481dc`) baut automatisch bei jedem Push auf `main` (`netlify.toml`). Ziel-Domain: `naschpass.oneflowsolution.de`.
 - Jeder Post bekommt automatisch eine Seite `/p/<id>/`. Produkte zu einem Post: in `products.json` mit `"post": "<id>"` und `"category"` eintragen – nur echte Affiliate-Links aus freigeschalteten Programmen, Bilder nur aus dem Partner-Feed.
