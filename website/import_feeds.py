@@ -99,10 +99,16 @@ NONFOOD = re.compile(
     r"shirt|hoodie|socken|kerze|deko|dekoration|vase|gutschein|geschenkgutschein|spielzeug|pl[üu]sch|kosmetik|seife|duft|"
     r"backform|ausstecher|dose leer|grill)\b", re.I)
 ADV_RAW, ADV_NO = {}, {}
+# Saisonware darf immer rein (Shop-Kategorie egal), solange kein anderer Filter greift
+SAISON = re.compile(r"advent|weihnacht|nikolaus|christmas|xmas|lebkuchen|spekulatius|stollen|halloween|oster", re.I)
 try:  # Sperrliste: von Hand gemeldete Produkte (ausgelistet, falsch, unpassend)
     SPERR = [x.lower() for x in json.loads((Path(__file__).parent / "sperrliste.json").read_text(encoding="utf-8")).get("eintraege", []) if x]
 except Exception:
     SPERR = []
+try:  # vom nächtlichen Check (tools/check_links.py) gefundene, beim Shop nicht mehr verfügbare Produkte
+    SPERR += [x.lower() for x in json.loads((Path(__file__).parent / "sperrliste_auto.json").read_text(encoding="utf-8")).get("eintraege", {}) if x]
+except Exception:
+    pass
 NO = {"0", "no", "nein", "false", "n", "out of stock", "outofstock", "out_of_stock", "nicht verfügbar"}
 
 ALIASES = {
@@ -376,7 +382,7 @@ def main():
                     if HART.search(name) or (WEICH.search(name) and not NASCH.search(name)):
                         stats["thema"] += 1
                         continue
-                    ok = (inc[mid] is None or inc[mid].search(f"{mcat} || {cat}")) or (inc_name[mid] and inc_name[mid].search(name))
+                    ok = (inc[mid] is None or inc[mid].search(f"{mcat} || {cat}")) or (inc_name[mid] and inc_name[mid].search(name)) or SAISON.search(name)
                     if not ok or (exc_name[mid] and exc_name[mid].search(name)):
                         stats["thema"] += 1
                         continue
@@ -394,7 +400,10 @@ def main():
                          "brand": brand, "feed_category": fc[:160], "source": "awin", "advertiser": int(mid)}
                     vm = re.search(r"variant(?:%3D|=)(\d{6,})", url) or re.search(r"variant=(\d{6,})", row.get("link") or "")
                     if vm:
-                        p["vid"] = vm.group(1)  # Shopify-Variante: erlaubt einen Sammel-Warenkorb beim Shop
+                        p["vid"] = vm.group(1)
+                    murl = row.get("merchant_deep_link") or row.get("link") or ""
+                    if murl.startswith("http") and "awin1.com" not in murl:
+                        p["murl"] = murl  # direkte Shop-Adresse: nur für den nächtlichen Verfügbarkeits-Check  # Shopify-Variante: erlaubt einen Sammel-Warenkorb beim Shop
                     pr = parse_price(col(row, "sale")) or parse_price(col(row, "price"))
                     if pr:
                         p["price"] = round(pr, 2)

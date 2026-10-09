@@ -1,0 +1,32 @@
+# Prüft nachts, ob Produkte beim Shop noch verfügbar sind (ohne Claude, kostenlos).
+# Ausgelistete landen in website/sperrliste_auto.json; der Push löst den Neubau aus.
+name: Verfügbarkeit prüfen
+on:
+  schedule:
+    - cron: "41 1 * * *"   # 01:41 UTC, vor dem täglichen Neubau
+  workflow_dispatch:
+    inputs:
+      alle:
+        description: "Alle Produkte prüfen (statt 1/7)"
+        type: boolean
+        default: false
+permissions:
+  contents: write
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Shops prüfen
+        env:
+          ALLE: ${{ inputs.alle && '1' || '0' }}
+        run: python3 tools/check_links.py
+      - name: Ergebnis speichern
+        run: |
+          git config user.name "naschpass-bot"
+          git config user.email "naschpass-bot@users.noreply.github.com"
+          git add website/sperrliste_auto.json
+          git diff --cached --quiet && echo "Nichts Neues." || (git commit -m "Verfügbarkeits-Check: Sperrliste aktualisiert" && git push origin main)
