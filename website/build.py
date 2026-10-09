@@ -2231,6 +2231,9 @@ Vollständige Angaben im <a href="/impressum/">Impressum</a>.</p></section>"""
         for k in [k for k, v in it.items() if v in ("", None)]:
             it.pop(k)
     write("search.json", json.dumps(si, ensure_ascii=False, separators=(",", ":")))
+    # Für den nächtlichen Verfügbarkeits-Check (GitHub-Action): Werbelink + direkte Shop-Adresse
+    write("check.json", json.dumps([{"u": p["url"], "m": p["murl"], "s": p.get("shop", "")} for p in products if p.get("murl")],
+                                   ensure_ascii=False, separators=(",", ":")))
     write("merkliste/index.html", page("Merkliste – Naschpass", MERK_HTML, "Deine gemerkten Süßigkeiten, sortiert nach Shop.",
                                        "/merkliste/", script=MERK_JS))
     if PREVIEW:
