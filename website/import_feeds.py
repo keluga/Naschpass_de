@@ -108,6 +108,7 @@ def _get(url):
 
 
 IMG_STATS = {"awin": 0, "shop": 0, "weg": 0}
+IMG_FAIL = []  # nur Vorschau: warum ein Bild fehlte (landet in static/_dump/img_fail.json)
 
 
 def fetch_images(prods):
@@ -132,17 +133,30 @@ def fetch_images(prods):
                     IMG_STATS["awin"] += 1
             except Exception:
                 pass
+            why = "kein Shop-Bild im Feed"
             if data is None and mimg.startswith("http"):
-                try:
-                    d, final = _get(mimg)
-                    if not _is_placeholder(d, final):
+                import time
+                for versuch in range(3):  # Shops drosseln bei vielen Abrufen gleichzeitig: kurz warten, nochmal
+                    try:
+                        d, final = _get(mimg)
+                        if _is_placeholder(d, final):
+                            why = f"Shop-Bild zu klein/Platzhalter ({len(d)} B)"
+                            break
                         data = _shrink(d)
                         if data:
                             IMG_STATS["shop"] += 1
-                except Exception:
-                    pass
+                        else:
+                            why = "Shop-Bild nicht lesbar"
+                        break
+                    except Exception as ex:
+                        why = f"{type(ex).__name__}: {str(ex)[:80]}"
+                        if "404" in why:
+                            break
+                        time.sleep(2 + versuch * 3)
             if data is None:
                 IMG_STATS["weg"] += 1
+                if DUMP and len(IMG_FAIL) < 400:
+                    IMG_FAIL.append([p.get("shop", ""), p.get("name", "")[:60], mimg, why])
                 return None
             dest.write_bytes(data)
         p["image"] = "/i/" + name
@@ -499,6 +513,7 @@ def main():
         with gzip.open(d / "rows.json.gz", "wt", encoding="utf-8") as fh:
             json.dump(DUMP_ROWS, fh, ensure_ascii=False)
         log(f"Vorschau-Dump: {len(DUMP_ROWS)} Zeilen")
+        (d / "img_fail.json").write_text(json.dumps(IMG_FAIL, ensure_ascii=False), encoding="utf-8")
     OUT.write_text(json.dumps({"generated": datetime.now(timezone.utc).isoformat(timespec="seconds"),
                                "products": result}, ensure_ascii=False), encoding="utf-8")
     shops, welten = {}, {}
