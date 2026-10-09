@@ -132,8 +132,16 @@ def fetch_images(prods):
         return p
 
     def runde1(p):
-        dest = IMG_DIR / (hashlib.sha1(p["image"].encode()).hexdigest()[:16] + ".jpg")
+        h = hashlib.sha1(p["image"].encode()).hexdigest()[:16]
+        dest = IMG_DIR / (h + ".jpg")
         p["_dest"] = dest
+        # Shop-Ersatzbilder heißen anders ("…s.jpg"): Unter dem alten Namen lag früher der graue
+        # AWIN-Platzhalter, und /i/ darf 1 Jahr im Browser-Cache bleiben.
+        alt = IMG_DIR / (h + "s.jpg")
+        p["_shopdest"] = alt
+        if alt.exists() and not _is_placeholder(alt.read_bytes()):
+            p["_dest"] = alt
+            return "ok"
         if dest.exists():
             if not _is_placeholder(dest.read_bytes()):
                 return "ok"
@@ -170,7 +178,8 @@ def fetch_images(prods):
                 data = _shrink(d)
                 if not data:
                     return False, "Shop-Bild nicht lesbar"
-                p["_dest"].write_bytes(data)
+                p["_shopdest"].write_bytes(data)
+                p["_dest"] = p["_shopdest"]
                 stats["shop"] += 1
                 return True, ""
             except Exception as ex:
@@ -190,6 +199,7 @@ def fetch_images(prods):
         res2 = dict(zip(map(id, nachholen), ex.map(runde2, nachholen)))
     out = []
     for p in prods:
+        p.pop("_shopdest", None)
         dest = p.pop("_dest")
         mimg = p.pop("mimg", "")
         r = res2.get(id(p))
