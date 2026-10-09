@@ -66,16 +66,19 @@ def small_img(url, w=320):
 
 
 def _is_placeholder(data, final_url=""):
-    """AWINs Bildserver liefert 'noimage.gif' (70x70), wenn er das Shop-Bild nicht abrufen kann."""
-    if "noimage" in final_url or len(data) < 300 or data[:3] == b"GIF":
+    """AWINs Bildserver liefert 'noimage.gif' (70x70, winzig), wenn er das Shop-Bild nicht abrufen kann."""
+    if "noimage" in final_url or len(data) < 300:
         return True
     try:
         from PIL import Image
         import io
+    except ImportError:
+        return data[:3] == b"GIF" and len(data) < 5000
+    try:
         with Image.open(io.BytesIO(data)) as im:
             return im.width < 100 or im.height < 100
     except Exception:
-        return False
+        return True  # keine lesbare Bilddatei (z. B. Fehlerseite)
 
 
 def _shrink(data, w=320):
@@ -84,6 +87,7 @@ def _shrink(data, w=320):
         from PIL import Image
         import io
         im = Image.open(io.BytesIO(data))
+        im.seek(0)
         if im.mode in ("RGBA", "LA", "P"):
             im = im.convert("RGBA")
             bg = Image.new("RGB", im.size, "white")
@@ -101,71 +105,90 @@ def _shrink(data, w=320):
         return None
 
 
-def _get(url):
-    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (naschpass-build)", "Accept": "image/*"})
-    with urllib.request.urlopen(req, timeout=30) as r:
+def _get(url, timeout=30):
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (naschpass-build)"})
+    with urllib.request.urlopen(req, timeout=timeout) as r:
         return r.read(), r.geturl()
 
 
-IMG_STATS = {"awin": 0, "shop": 0, "weg": 0}
 IMG_FAIL = []  # nur Vorschau: warum ein Bild fehlte (landet in static/_dump/img_fail.json)
 
 
 def fetch_images(prods):
-    """Bild zuerst vom AWIN-Bildserver. Liefert der nur den Platzhalter (z. B. bei GOURVITA),
-    wird das Originalbild direkt vom Shop geholt (steht im Feed als merchant_image_url).
+    """Runde 1 (schnell, 24 gleichzeitig): Bild vom AWIN-Bildserver.
+    Runde 2 (langsam, 4 gleichzeitig): Liefert AWIN nur den Platzhalter (z. B. bei GOURVITA), wird das
+    Originalbild direkt vom Shop geholt (Feld merchant_image_url). Shops drosseln bei vielen Abrufen,
+    deshalb wenige gleichzeitig und mit Wiederholung.
     Ohne echtes Bild fliegt das Produkt raus: lieber kein Produkt als ein graues Kästchen."""
     import hashlib
+    import time
     from concurrent.futures import ThreadPoolExecutor
     IMG_DIR.mkdir(exist_ok=True)
-    def one(p):
-        mimg = p.pop("mimg", "")
-        name = hashlib.sha1(p["image"].encode()).hexdigest()[:16] + ".jpg"
-        dest = IMG_DIR / name
-        if dest.exists() and _is_placeholder(dest.read_bytes()):
-            dest.unlink()
-        if not dest.exists():
-            data = None
-            try:
-                d, final = _get(small_img(p["image"]))
-                if not _is_placeholder(d, final):
-                    data = d
-                    IMG_STATS["awin"] += 1
-            except Exception:
-                pass
-            why = "kein Shop-Bild im Feed"
-            if data is None and mimg.startswith("http"):
-                import time
-                for versuch in range(3):  # Shops drosseln bei vielen Abrufen gleichzeitig: kurz warten, nochmal
-                    try:
-                        d, final = _get(mimg)
-                        if _is_placeholder(d, final):
-                            why = f"Shop-Bild zu klein/Platzhalter ({len(d)} B)"
-                            break
-                        data = _shrink(d)
-                        if data:
-                            IMG_STATS["shop"] += 1
-                        else:
-                            why = "Shop-Bild nicht lesbar"
-                        break
-                    except Exception as ex:
-                        why = f"{type(ex).__name__}: {str(ex)[:80]}"
-                        if "404" in why:
-                            break
-                        time.sleep(2 + versuch * 3)
-            if data is None:
-                IMG_STATS["weg"] += 1
-                if DUMP and len(IMG_FAIL) < 400:
-                    IMG_FAIL.append([p.get("shop", ""), p.get("name", "")[:60], mimg, why])
-                return None
-            dest.write_bytes(data)
-        p["image"] = "/i/" + name
+    stats = {"awin": 0, "shop": 0, "weg": 0}
+
+    def done(p, dest):
+        p["image"] = "/i/" + dest.name
         p["imgkb"] = round(dest.stat().st_size / 1024, 1)  # für die Reihenfolge: sehr kleine Bilder sind meist schwach
         return p
+
+    def runde1(p):
+        dest = IMG_DIR / (hashlib.sha1(p["image"].encode()).hexdigest()[:16] + ".jpg")
+        p["_dest"] = dest
+        if dest.exists():
+            if not _is_placeholder(dest.read_bytes()):
+                return "ok"
+            dest.unlink()
+        try:
+            d, final = _get(small_img(p["image"]))
+            if not _is_placeholder(d, final):
+                dest.write_bytes(d)
+                stats["awin"] += 1
+                return "ok"
+        except Exception:
+            pass
+        return "shop"
+
+    def runde2(p):
+        mimg = p.get("mimg", "")
+        if not mimg.startswith("http"):
+            return False, "kein Shop-Bild im Feed"
+        why = "?"
+        for versuch in range(3):
+            try:
+                d, final = _get(mimg, timeout=45)
+                if _is_placeholder(d, final):
+                    return False, f"Shop-Bild zu klein/Platzhalter ({len(d)} B)"
+                data = _shrink(d)
+                if not data:
+                    return False, "Shop-Bild nicht lesbar"
+                p["_dest"].write_bytes(data)
+                stats["shop"] += 1
+                return True, ""
+            except Exception as ex:
+                why = f"{type(ex).__name__}: {str(ex)[:80]}"
+                if any(c in why for c in ("404", "410")):  # Bild beim Shop gelöscht: Produkt meist ausgelistet
+                    break
+                time.sleep(3 + versuch * 5)
+        return False, why
+
     with ThreadPoolExecutor(max_workers=24) as ex:
-        out = [p for p in ex.map(one, prods) if p]
-    log(f"Bilder: {len(out)} von {len(prods)} geladen (AWIN {IMG_STATS['awin']}, direkt vom Shop {IMG_STATS['shop']}, "
-        f"ohne Bild aussortiert {IMG_STATS['weg']}, Rest aus Cache)")
+        res1 = list(ex.map(runde1, prods))
+    nachholen = [p for p, r in zip(prods, res1) if r == "shop"]
+    with ThreadPoolExecutor(max_workers=4) as ex:
+        res2 = dict(zip(map(id, nachholen), ex.map(runde2, nachholen)))
+    out = []
+    for p in prods:
+        dest = p.pop("_dest")
+        mimg = p.pop("mimg", "")
+        r = res2.get(id(p))
+        if r and not r[0]:
+            stats["weg"] += 1
+            if DUMP and len(IMG_FAIL) < 1000:
+                IMG_FAIL.append([p.get("shop", ""), p.get("name", "")[:60], mimg, r[1]])
+            continue
+        out.append(done(p, dest))
+    log(f"Bilder: {len(out)} von {len(prods)} (neu von AWIN {stats['awin']}, direkt vom Shop {stats['shop']}, "
+        f"ohne echtes Bild aussortiert {stats['weg']}, Rest aus Cache)")
     return out
 
 ALKOHOL = re.compile(
