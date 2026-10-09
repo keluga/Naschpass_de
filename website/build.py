@@ -815,6 +815,10 @@ dialog#suche::backdrop{background:rgba(43,35,80,.45)}
 .hit:hover,.hit:focus{outline:2px solid var(--vio2)}
 .sres .none{color:var(--mut);padding:10px 2px}
 .sugg{display:flex;flex-wrap:wrap;gap:8px}
+.exs{display:grid;gap:8px}@media(min-width:620px){.exs{grid-template-columns:1fr 1fr}}
+.ex{display:flex;justify-content:space-between;align-items:center;gap:10px;text-align:left;padding:12px 14px;border-radius:14px;border:0;background:#fff;cursor:pointer;font:600 15px/1.3 Inter,sans-serif;color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.ex:hover,.ex:focus-visible{background:#F3EEFF}.ex em{font-style:normal;font-size:12px;font-weight:700;color:var(--mut);white-space:nowrap}
+.tip{font-size:13px;color:var(--mut);margin:10px 2px 0}
 
 /* Social-Leiste + Footer */
 .follow{background:var(--fg);color:#fff;border-radius:var(--r);padding:20px;margin-top:40px;display:flex;flex-wrap:wrap;align-items:center;gap:14px;justify-content:space-between}
@@ -1226,7 +1230,7 @@ function group(t,arr){return arr.length?`<h4>${t}</h4>`+arr.map(hit).join(''):''
 function render(){
  const v=q.value.trim();
  if(!v){out.innerHTML='<h4>Vorschläge</h4><div class="sugg">'+data.sugg.map(s=>`<button class="chip" type="button" data-s="${esc(s)}">${esc(s)}</button>`).join('')+'</div>'
-  +group('Neueste Posts',data.items.filter(i=>i.type==='post').slice(0,4));return}
+  +((data.ex||[]).length?'<h4>So kannst du suchen</h4><div class="exs">'+data.ex.map(x=>`<button class="ex" type="button" data-s="${esc(x.t)}"><span>„${esc(x.t)}“</span><em>${x.n} Treffer</em></button>`).join('')+'</div><p class="tip">Tipp: Kombinier Land, Geschmack und Art einfach in einem Satz. Mit #Nummer springst du direkt zu einem Post.</p>':'');return}
  let res=fuse.search(v).map(r=>r.item);
  const n=v.replace(/^#/,'');
  if(/^\d{1,3}$/.test(n)){const id=n.padStart(2,'0');const p=data.items.find(i=>i.type==='post'&&i.id===id);
@@ -1947,7 +1951,50 @@ def search_index(live):
     cnt = facet_counts()
     sugg = [o["name"] for g in FILTER for o in sorted(g["options"], key=lambda o: -cnt.get((g["id"], o["id"]), 0))[:3]
             if cnt.get((g["id"], o["id"]))]
-    return {"items": items, "sugg": sugg, "facets": fac}
+    return {"items": items, "sugg": sugg, "facets": fac, "ex": search_examples(fac)}
+
+
+EXAMPLES = [  # (Suchsatz, erwartete Filter)
+    ("salzige Chips aus Asien", {"geschmack": "salzig", "art": "chips", "land": "asien"}),
+    ("Schokolade aus der Schweiz", {"art": "schokolade", "land": "schweiz"}),
+    ("saure Fruchtgummis aus den USA", {"geschmack": "sauer", "art": "gummi", "land": "usa"}),
+    ("Scharfes aus Mexiko", {"geschmack": "scharf", "land": "mexiko"}),
+    ("Kekse aus Japan", {"art": "kekse", "land": "japan"}),
+    ("Lakritz aus Skandinavien", {"geschmack": "lakritz", "land": "skandinavien"}),
+    ("Getränke aus Korea", {"art": "getraenke", "land": "korea"}),
+    ("Pralinen aus Italien", {"art": "pralinen", "land": "italien"}),
+    ("nussige Schokolade", {"geschmack": "nussig", "art": "schokolade"}),
+    ("Schokolade aus Österreich", {"art": "schokolade", "land": "oesterreich"}),
+    ("Bonbons aus Großbritannien", {"art": "bonbons", "land": "uk"}),
+    ("Tee aus Asien", {"art": "tee", "land": "asien"}),
+]
+_STOP = set("ich mag mich mir und oder eventuell evtl vielleicht was mit ohne gern gerne etwas irgendwas auch die der das den dem ein eine "
+            "einen liebsten mal bitte lust auf suche such haette habe hab aus von fuer sowas sachen zeug richtig sehr total eher bisschen "
+            "sind ist".split())
+
+
+def _parse(v, fac):
+    """Python-Nachbau von parse() aus der Suche: welche Filter erkennt die Suche in diesem Satz?"""
+    found = set()
+    for t in [t for t in re.split(r"[^a-z0-9]+", translit(v)) if len(t) >= 3 and t not in _STOP]:
+        st = re.sub(r"(en|er|es|em|e|n|s)$", "", t)
+        h = [x for x in fac if x["id"] in (t, st) or any(w in (t, st) for w in re.split(r"[^a-z0-9]+", translit(x["name"])))]
+        if not h:
+            h = [x for x in fac if any(t.startswith(k) or (len(st) >= 4 and k.startswith(st)) for k in x["kw"])]
+        found |= {(x["g"], x["id"]) for x in h}
+    return found
+
+
+def search_examples(fac, n=6):
+    """Nur Beispiele, die die Suche richtig versteht und zu denen es mindestens 6 Produkte gibt."""
+    out = []
+    for text, want in EXAMPLES:
+        if set(want.items()) != _parse(text, fac):  # genau das, sonst stimmen die Treffer nicht
+            continue
+        cnt = sum(1 for p in products if all(v in facets(p).get(g, ()) for g, v in want.items()))
+        if cnt >= 6:
+            out.append({"t": text, "n": cnt})
+    return out[:n]
 
 
 def write_llms(live, urls):
@@ -2153,8 +2200,9 @@ def build():
 
     # --- Startseite: Shop zuerst, Posts danach, Nummernsuche ganz unten
     SHOW, LIMIT = 4, 12  # erst 4 zeigen, per Knopf bis 12 aufklappen, Rest im Shop
-    def clip_grid(cards, gid, cls):
-        cells = [c if i < SHOW else (c.replace("<div ", "<div data-more ", 1) if c.startswith("<div") else c.replace("<a ", "<a data-more ", 1))
+    def clip_grid(cards, gid, cls, show=None):
+        show = show or SHOW
+        cells = [c if i < show else (c.replace("<div ", "<div data-more ", 1) if c.startswith("<div") else c.replace("<a ", "<a data-more ", 1))
                  for i, c in enumerate(cards)]
         return f'<div class="grid {cls} v-small clip" id="{gid}">{"".join(cells)}</div>'
 
@@ -2166,8 +2214,8 @@ def build():
 
     new_prods = products[:LIMIT]
     home_prods = (f'<section id="neu"><div class="head"><h2>Zum Entdecken</h2>{view_toggle("g-new", ["big", "small", "list"], "small")}</div>'
-                  f'{clip_grid(fill_slots([prod_card(p) for p in new_prods], 4), "g-new", "prods")}<p class="wl">{WL}</p>'
-                  f'{more_bar("g-new", len(new_prods), len(products), "/shop/", f"Alle {len(products)} im Shop")}</section>'
+                  f'{clip_grid(fill_slots([prod_card(p) for p in new_prods], 4), "g-new", "prods", show=LIMIT)}<p class="wl">{WL}</p>'
+                  f'<div class="morebar"><a class="btn dark" href="/shop/">Alle {len(products)} im Shop</a></div></section>'
                   ) if products else ""
     home_posts = newest[:LIMIT]
     # Stöbern: Tabs Woher / Geschmack / Art (nur Optionen mit Produkten), sonst alte Kategorien

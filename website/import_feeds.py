@@ -132,7 +132,9 @@ def fetch_images(prods):
         return p
 
     def runde1(p):
-        h = hashlib.sha1(p["image"].encode()).hexdigest()[:16]
+        # "v2": neue Dateinamen für alle Bilder. Unter den alten Namen lagen früher graue AWIN-Platzhalter,
+        # die in Browser-Caches bis zu 1 Jahr kleben (/i/ ist immutable). Bei einem neuen Bild-Problem: v3 usw.
+        h = hashlib.sha1((p["image"] + "|v2").encode()).hexdigest()[:16]
         dest = IMG_DIR / (h + ".jpg")
         p["_dest"] = dest
         # Shop-Ersatzbilder heißen anders ("…s.jpg"): Unter dem alten Namen lag früher der graue
