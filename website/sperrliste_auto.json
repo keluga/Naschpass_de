@@ -1,0 +1,15 @@
+{
+ "_info": "Automatisch (tools/check_links.py). Nicht von Hand bearbeiten, dafür gibt es sperrliste.json.",
+ "eintraege": {
+  "https://www.awin1.com/pclick.php?p=37742352354&a=3111189&m=79456": {
+   "shop": "Piccantino",
+   "seit": "2026-10-09",
+   "shop_url": "https://www.piccantino.de/yogi-tea/tao-tee-rose?sai=1756&utm_source=awin&utm_medium=cpc&utm_campaign=Preisvergleich"
+  },
+  "https://www.awin1.com/pclick.php?p=37742359701&a=3111189&m=79456": {
+   "shop": "Piccantino",
+   "seit": "2026-10-09",
+   "shop_url": "https://www.piccantino.de/alnatura/bio-dinkel-waffelblaetter-vollmilch?sai=27510&utm_source=awin&utm_medium=cpc&utm_campaign=Preisvergleich"
+  }
+ }
+}
