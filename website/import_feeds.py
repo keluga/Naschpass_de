@@ -148,14 +148,23 @@ def fetch_images(prods):
             pass
         return "shop"
 
+    ende = [0.0]  # Zeitbudget Runde 2: der Build darf nie hängen bleiben
+    haenger = {}  # Host -> Timeouts in Folge; ab 12 wird der Shop für diesen Build übersprungen
+
     def runde2(p):
         mimg = p.get("mimg", "")
         if not mimg.startswith("http"):
             return False, "kein Shop-Bild im Feed"
+        host = mimg.split("/")[2]
         why = "?"
-        for versuch in range(3):
+        for versuch in range(2):
+            if time.time() > ende[0]:
+                return False, "Zeitbudget aufgebraucht"
+            if haenger.get(host, 0) >= 12:
+                return False, f"{host} antwortet nicht (übersprungen)"
             try:
-                d, final = _get(mimg, timeout=45)
+                d, final = _get(mimg, timeout=20)
+                haenger[host] = 0
                 if _is_placeholder(d, final):
                     return False, f"Shop-Bild zu klein/Platzhalter ({len(d)} B)"
                 data = _shrink(d)
@@ -168,12 +177,15 @@ def fetch_images(prods):
                 why = f"{type(ex).__name__}: {str(ex)[:80]}"
                 if any(c in why for c in ("404", "410")):  # Bild beim Shop gelöscht: Produkt meist ausgelistet
                     break
-                time.sleep(3 + versuch * 5)
+                if "timed out" in why:
+                    haenger[host] = haenger.get(host, 0) + 1
+                time.sleep(3)
         return False, why
 
     with ThreadPoolExecutor(max_workers=24) as ex:
         res1 = list(ex.map(runde1, prods))
     nachholen = [p for p, r in zip(prods, res1) if r == "shop"]
+    ende[0] = time.time() + 8 * 60
     with ThreadPoolExecutor(max_workers=4) as ex:
         res2 = dict(zip(map(id, nachholen), ex.map(runde2, nachholen)))
     out = []
