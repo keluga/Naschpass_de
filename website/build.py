@@ -850,18 +850,60 @@ def follow_box():
             f'<div class="btns">{socials_btns()}</div></div>')
 
 
-def page(title, body, desc=None, path="/", og_img=None, script="", stamp=""):
+def clip(t, n=158):
+    """Description auf Google-Länge kürzen (an Wortgrenze)."""
+    t = re.sub(r"\s+", " ", (t or "").replace("*", "")).strip()
+    return t if len(t) <= n else t[:n - 1].rsplit(" ", 1)[0].rstrip(",.;:–-") + "…"
+
+
+ORG = {"@type": "Organization", "@id": f"{BASE}/#org", "name": "Naschpass", "url": f"{BASE}/",
+       "logo": f"{BASE}/static/logo.png", "sameAs": [x["url"] for x in site["socials"]]}
+NOINDEX_PATHS = ("/merkliste/", "/pruefen/", "/404")
+
+
+def ld_json(path, title, extra):
+    """Strukturierte Daten (schema.org): Startseite = WebSite + Organisation, Unterseiten = Brotkrumen-Pfad."""
+    g = []
+    if path == "/":
+        g += [ORG, {"@type": "WebSite", "@id": f"{BASE}/#website", "name": "Naschpass", "url": f"{BASE}/",
+                    "inLanguage": "de-DE", "publisher": {"@id": f"{BASE}/#org"},
+                    "potentialAction": {"@type": "SearchAction", "target": f"{BASE}/shop/?q={{search_term_string}}",
+                                        "query-input": "required name=search_term_string"}}]
+    elif path not in NOINDEX_PATHS:
+        crumbs = [("Naschpass", "/")]
+        if path.startswith("/kategorie/"):
+            crumbs.append(("Shop", "/shop/"))
+        elif path.startswith("/p/"):
+            crumbs.append(("Posts", "/posts/"))
+        crumbs.append((title.replace(" – Naschpass", ""), path))
+        g.append({"@type": "BreadcrumbList", "itemListElement": [
+            {"@type": "ListItem", "position": i + 1, "name": n, "item": f"{BASE}{u}"} for i, (n, u) in enumerate(crumbs)]})
+    g += extra or []
+    if not g:
+        return ""
+    data = json.dumps({"@context": "https://schema.org", "@graph": g}, ensure_ascii=False, separators=(",", ":"))
+    return f'<script type="application/ld+json">{data.replace("</", "<\\/")}</script>'
+
+
+def page(title, body, desc=None, path="/", og_img=None, script="", stamp="", ld=None, og_type="website"):
     desc = desc or site["intro"]
+    if len(desc) < 90:  # zu kurze Beschreibungen zeigt Google nicht gern: mit Seitenbeschreibung auffüllen
+        desc = desc.rstrip(".") + ". Naschpass zeigt dir Süßigkeiten und Snacks aus aller Welt und wo du sie in Deutschland bekommst."
+    desc = clip(desc)
     og = og_img or f"{BASE}/static/og.jpg"
+    og_size = ('<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">' if not og_img else
+               '<meta property="og:image:width" content="1080"><meta property="og:image:height" content="1350">')
+    robots = '<meta name="robots" content="noindex,follow">' if (PREVIEW or path in NOINDEX_PATHS) else \
+        '<meta name="robots" content="index,follow,max-image-preview:large">'
     return f"""<!doctype html><html lang="de"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>{e(title)}</title><meta name="description" content="{e(desc)}">
 <meta name="theme-color" content="#EAF6F1"><link rel="canonical" href="{BASE}{path}">
-<link rel="icon" href="/static/favicon.png"><link rel="apple-touch-icon" href="/static/logo.png">
+<link rel="icon" href="/favicon.ico" sizes="48x48"><link rel="icon" href="/static/favicon.png" type="image/png"><link rel="apple-touch-icon" href="/static/logo.png">{robots}
 <link rel="preload" href="/static/fonts/anton-latin.woff2" as="font" type="font/woff2" crossorigin>
-<meta property="og:type" content="website"><meta property="og:url" content="{BASE}{path}"><meta property="og:locale" content="de_DE">
+<meta property="og:type" content="{og_type}"><meta property="og:site_name" content="Naschpass"><meta property="og:url" content="{BASE}{path}"><meta property="og:locale" content="de_DE">
 <meta property="og:title" content="{e(title)}"><meta property="og:description" content="{e(desc)}">
-<meta property="og:image" content="{og}"><meta name="twitter:card" content="summary_large_image">
+<meta property="og:image" content="{og}">{og_size}<meta name="twitter:card" content="summary_large_image">{ld_json(path, title, ld)}
 <style>{CSS}{SPIN_CSS}{EXTRA_CSS}{EXTRA_CSS2}</style></head><body{stamp_attr(stamp)}>
 <div class="ad">{AD}</div>{'<div class="ad" style="background:#FFB547;color:#2B2350;font-weight:700">VORSCHAU mit Beispielprodukten – nicht live</div>' if DEMO else ''}
 <header><div class="wrap"><a class="logo" href="/"><img src="/static/logo-96.png" alt="" width="38" height="38">NASCHPASS</a>
@@ -1908,6 +1950,29 @@ def search_index(live):
     return {"items": items, "sugg": sugg, "facets": fac}
 
 
+def write_llms(live, urls):
+    """llms.txt: Kurzinfo für KI-Suchen (ChatGPT, Perplexity …), Format nach llmstxt.org."""
+    shops = sorted({p.get("shop", "") for p in products if p.get("shop")})
+    lines = [f"# Naschpass", "", f"> {site['intro']}", "",
+             f"Naschpass ({BASE}/) ist ein deutschsprachiger Guide für Süßigkeiten und Snacks aus aller Welt, "
+             f"verbunden mit dem Social-Media-Kanal @naschpass_de (Instagram, TikTok, Pinterest). "
+             f"Die Seite listet rund {len(products)} Produkte von Partner-Shops ({', '.join(shops)}). "
+             "Kaufbuttons sind Werbelinks (Affiliate, Awin); der Preis für Käufer ändert sich dadurch nicht. "
+             "Die Seite setzt keine Cookies und nutzt kein Tracking.", "",
+             "## Wichtige Seiten", "",
+             f"- [Shop]({BASE}/shop/): alle Produkte, filterbar nach Herkunft, Geschmack und Art",
+             f"- [Alle Posts]({BASE}/posts/): Fakten, Verbote und Kuriositäten rund um Süßigkeiten, mit Quellen",
+             f"- [Geschenk-Finder]({BASE}/geschenk/): passende Süßigkeiten in 3 Fragen",
+             f"- [Über Naschpass & für Partner]({BASE}/ueber/)",
+             f"- [Impressum]({BASE}/impressum/)", "", "## Themenwelten", ""]
+    lines += [f"- [{c['name']}]({BASE}/kategorie/{c['id']}/): {c['teaser']}" for c in cats]
+    lines += ["", "## Posts", ""]
+    lines += [f"- [#{p['id']} {plain(p['hook'])}]({BASE}/p/{p['id']}/): {plain(p.get('sub', ''))}" for p in reversed(live)]
+    lines += ["", "## Kontakt", "", f"- E-Mail: {site['impressum']['email']}",
+              f"- Betreiber: {site['impressum']['name']}, {site['impressum']['firma']}", ""]
+    write("llms.txt", "\n".join(lines))
+
+
 def build():
     if DIST.exists():
         shutil.rmtree(DIST)
@@ -1936,8 +2001,11 @@ def build():
                     if rel else "")
         others = "".join(f'<a class="sc" href="/kategorie/{o["id"]}/">{sticker(o["id"], 34)}{e(o["name"])}</a>'
                          for o in cats if o["id"] != c["id"])
+        cdesc = (f"{len(items)} Sorten {c['name']}: " if len(items) > 1 else "") + (c.get("text") or c["teaser"])
+        cld = [{"@type": "ItemList", "name": c["name"], "numberOfItems": len(items),
+                "itemListElement": [{"@type": "ListItem", "position": i + 1, "name": x["name"]} for i, x in enumerate(items[:20])]}] if items else []
         write(f"kategorie/{c['id']}/index.html", page(
-            f"{c['name']} – Naschpass",
+            f"{c['name']} online kaufen – Süßigkeiten aus aller Welt | Naschpass" if items else f"{c['name']} – Naschpass",
             f'<a class="back" href="/shop/">← Zum Shop</a>'
             f'<section style="padding-top:14px"><div style="display:flex;align-items:center;gap:14px;margin-bottom:6px">{sticker(c["id"], 64)}'
             f'<h1 style="margin:0">{e(c["name"])}</h1></div><p class="lead">{e(c.get("text") or c["teaser"])}</p>{inner}</section>{rel_html}'
@@ -1946,7 +2014,7 @@ def build():
                '<p>Vom 1. bis 24. Dezember jeden Tag ein Türchen.</p></div></a>'
                '<p style="margin-top:12px"><a class="btn dark" href="/geschenk/">🎁 Geschenk-Finder: passende Süßigkeiten in 3 Fragen</a></p></section>'
                if c["id"] in ("weihnachten", "boxen") else ""),
-            c["teaser"], f"/kategorie/{c['id']}/", stamp=c["id"]))
+            cdesc, f"/kategorie/{c['id']}/", stamp=c["id"], ld=cld))
 
     # --- Post-Seiten
     for k, p in enumerate(live):
@@ -1992,9 +2060,13 @@ def build():
                 f'{prods}{band(live, "Das könnte dir auch schmecken", "Mehr Posts")}'
                 f'<section><h2>Länder & Themen</h2><div class="stickers">{stick}</div></section>'
                 + (f'<section><h2>Quellen</h2><ul class="src">{srcs}</ul></section>' if srcs else "") + nav)
-        write(f"p/{p['id']}/index.html", page(f"#{p['id']} {plain(p['hook'])} – Naschpass", body, plain(p.get("sub", "")),
+        pdesc = " ".join(x for x in (plain(p.get("sub", "")), re.sub(r"[^\w\s.,!?:;–()'\"-]", "", html.unescape(plain(p.get("caption", ""))))) if x)
+        art = [{"@type": "Article", "headline": plain(p["hook"])[:110], "description": clip(pdesc),
+                "image": f"{BASE}/p/{p['id']}/01.jpg", "inLanguage": "de-DE", "url": f"{BASE}/p/{p['id']}/",
+                "author": {"@id": f"{BASE}/#org"}, "publisher": ORG}]
+        write(f"p/{p['id']}/index.html", page(f"#{p['id']} {plain(p['hook'])} – Naschpass", body, pdesc,
                                               f"/p/{p['id']}/", f"{BASE}/p/{p['id']}/01.jpg",
-                                              stamp=TAG_STAMP.get(p.get("tag", "").lower(), "")))
+                                              stamp=TAG_STAMP.get(p.get("tag", "").lower(), ""), ld=art, og_type="article"))
 
     # --- Gemeinsame Bausteine
     newest = list(reversed(live))
@@ -2062,13 +2134,13 @@ def build():
                 f'<div class="morebar"><button class="morebtn" type="button" id="fmore" hidden>Mehr zeigen</button></div>'
                 f'<p class="wl">{WL}</p>') if products else empty_shop
     write("shop/index.html", page(
-        "Shop – Naschpass",
+        "Shop: Süßigkeiten aus aller Welt kaufen – Naschpass",
         f'<section class="hero" style="padding-bottom:0">{SPRINKLES}<h1>Shop</h1>'
         f'<p class="sub">Such dir aus, worauf du Lust hast: nach Herkunft, Geschmack und Art, frei kombinierbar.</p>'
         f'<button class="fake" type="button" data-open-search>{ICON_SEARCH}<span>Snacks, Länder, Marken suchen …</span></button></section>'
         f'<nav class="themes" aria-label="Themenwelten"><h2>Themenwelten</h2><div class="trow">{theme_row}</div></nav>'
         f'<section id="alle" style="padding-top:18px">{shop_all}</section>',
-        "Süßigkeiten aus aller Welt nach Herkunft, Geschmack und Art.", "/shop/"))
+        f"Über {len(products)} Süßigkeiten und Snacks aus aller Welt: Japan, Korea, USA, Mexiko und mehr. Filter nach Herkunft, Geschmack und Art, direkt zum Partner-Shop.", "/shop/"))
 
     # --- Posts-Seite: alle Posts mit Filter, Nummernsuche unten
     write("posts/index.html", page(
@@ -2077,7 +2149,7 @@ def build():
         f'<p class="sub">Fakten, Verbote und Kuriositäten rund um Süßigkeiten aus aller Welt.</p></section>'
         f'<section style="padding-top:10px"><div class="tools">{post_chips}{view_toggle("g-posts", ["big", "small"], "small")}</div>'
         f'<div class="grid posts v-small" id="g-posts">{"".join(post_card(p) for p in newest)}</div></section>{jump}',
-        "Alle Naschpass-Posts auf einen Blick.", "/posts/"))
+        "Alle Naschpass-Posts: Fakten, Verbote und Kuriositäten rund um Süßigkeiten aus aller Welt, mit Quellen und den passenden Produkten.", "/posts/"))
 
     # --- Startseite: Shop zuerst, Posts danach, Nummernsuche ganz unten
     SHOW, LIMIT = 4, 12  # erst 4 zeigen, per Knopf bis 12 aufklappen, Rest im Shop
@@ -2194,7 +2266,7 @@ def build():
             f'<button class="fake" type="button" data-open-search>{ICON_SEARCH}<span>Snacks, Länder, Marken suchen …</span></button>{browse_html}</div>'
             f'<div class="hr">{minis_html}</div></section>'
             f'{season_html}{advent_teaser}{home_prods}{explore_html()}{spin_html(live)}{map_html()}{pass_html()}{band_html}{posts_html}{about_box}{jump}')
-    write("index.html", page("Naschpass – Süßigkeiten aus aller Welt", home, script=SPIN_JS + SHARE_JS + PASS_SHARE_JS))
+    write("index.html", page("Naschpass – Süßigkeiten aus aller Welt entdecken & kaufen", home, script=SPIN_JS + SHARE_JS + PASS_SHARE_JS))
 
     # --- Über Naschpass / Für Partner (ehrlich: neuer Kanal, keine Reichweitenzahlen)
     im = site["impressum"]
@@ -2279,7 +2351,7 @@ Vollständige Angaben im <a href="/impressum/">Impressum</a>.</p></section>"""
 <h2>Verantwortlich für den Inhalt</h2><p>{e(im["name"])}, Anschrift wie oben.</p>
 <h2>Werbelinks</h2><p>Links zu Online-Shops sind Affiliate-Links. Kaufst du darüber ein, erhalte ich eine Provision. Der Preis ändert sich für dich nicht.</p>
 <h2>Verbraucherstreitbeilegung</h2><p>Ich bin nicht bereit und nicht verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.</p>
-</section>""", "Impressum"))
+</section>""", "Impressum von Naschpass (OneFlow Solution, Kevin Agaschtschuk): Anbieterkennzeichnung nach § 5 DDG, Kontakt und Angaben zum Betreiber.", "/impressum/"))
 
     HOST_NAME = "Cloudflare" if ON_CF else "Netlify"
     HOST_TEXT = (("Die Website wird bei Cloudflare, Inc., 101 Townsend St, San Francisco, CA 94107, USA gehostet (Cloudflare Workers). "
@@ -2308,12 +2380,19 @@ Vollständige Angaben im <a href="/impressum/">Impressum</a>.</p></section>"""
 <h2>5. Social-Media-Links</h2><p>Links zu Instagram, TikTok und Pinterest sind einfache Verlinkungen, keine eingebetteten Inhalte. Daten werden erst übertragen, wenn du den Link anklickst und die jeweilige Plattform besuchst; dort gelten deren Datenschutzbestimmungen.</p>
 <h2>6. Kontakt per E-Mail</h2><p>Schreibst du uns eine E-Mail, verarbeiten wir deine Angaben nur, um deine Anfrage zu beantworten (Art. 6 Abs. 1 lit. b bzw. f DSGVO), und löschen sie, wenn sie nicht mehr benötigt werden.</p>
 <h2>7. Deine Rechte</h2><p>Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit und Widerspruch (Art. 15–21 DSGVO). Außerdem kannst du dich bei einer Datenschutz-Aufsichtsbehörde beschweren, z. B. bei der Landesbeauftragten für Datenschutz und Informationsfreiheit Nordrhein-Westfalen.</p>
-<p style="color:var(--mut);font-size:14px">Stand: Oktober 2026</p></section>""", "Datenschutz"))
+<p style="color:var(--mut);font-size:14px">Stand: Oktober 2026</p></section>""", "Datenschutzerklärung von Naschpass: keine Cookies, kein Tracking, Suche und Merkliste nur in deinem Browser. Alles zu Hosting, Werbelinks und deinen Rechten.", "/datenschutz/"))
 
 
-    urls = sorted({"/" + str(f.relative_to(DIST)).replace("index.html", "") for f in DIST.rglob("index.html")})
+    urls = sorted({"/" + str(f.relative_to(DIST)).replace("index.html", "") for f in DIST.rglob("index.html")} - set(NOINDEX_PATHS))
+    lm = TODAY.isoformat()  # Produkte und Preise ändern sich täglich
     (DIST / "sitemap.xml").write_text('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-                                      + "".join(f"<url><loc>{BASE}{u}</loc></url>\n" for u in urls) + "</urlset>\n", encoding="utf-8")
+                                      + "".join(f"<url><loc>{BASE}{u}</loc><lastmod>{lm}</lastmod></url>\n" for u in urls) + "</urlset>\n", encoding="utf-8")
+    write_llms(live, urls)
+    try:  # /favicon.ico (manche Suchmaschinen fragen nur diese Adresse ab)
+        from PIL import Image
+        Image.open(HERE / "static" / "favicon.png").convert("RGBA").save(DIST / "favicon.ico", sizes=[(16, 16), (32, 32), (48, 48)])
+    except Exception as ex:
+        print("WARNUNG: favicon.ico nicht erzeugt:", ex)
     if (HERE / "img_cache").exists():
         shutil.copytree(HERE / "img_cache", DIST / "i", dirs_exist_ok=True)
     if THUMBS:
@@ -2327,7 +2406,10 @@ Vollständige Angaben im <a href="/impressum/">Impressum</a>.</p></section>"""
                     im.save(f.with_name(f.stem + "_t.jpg"), quality=80, optimize=True)
         except ImportError:
             print("WARNUNG: Pillow fehlt, Vorschaubilder der Posts nicht verkleinert (Original wird geladen)")
-    (DIST / "robots.txt").write_text(f"User-agent: *\nAllow: /\nSitemap: {BASE}/sitemap.xml\n", encoding="utf-8")
+    # Vorschau-Seiten (*.workers.dev) sollen nie in Google landen; live: interne Dateien ausschließen
+    (DIST / "robots.txt").write_text("User-agent: *\nDisallow: /\n" if PREVIEW else
+                                     "User-agent: *\nAllow: /\nDisallow: /merkliste/\nDisallow: /pruefen/\nDisallow: /check.json\n"
+                                     f"Disallow: /static/_dump/\n\nSitemap: {BASE}/sitemap.xml\n", encoding="utf-8")
     # Sicherheits-Header: Seite darf nur Dinge von der eigenen Domain laden (plus freigegebene Partner-Bildserver nach Einwilligung)
     img_hosts = " ".join(f"https://{h}" for h in sorted(PARTNERS))
     csp = ("default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; "
@@ -2342,6 +2424,7 @@ Vollständige Angaben im <a href="/impressum/">Impressum</a>.</p></section>"""
         "  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()\n"
         "  Strict-Transport-Security: max-age=31536000\n"
         "  Cross-Origin-Opener-Policy: same-origin\n"
+        + ("  X-Robots-Tag: noindex, nofollow\n" if PREVIEW else "") +
         "/static/*\n  Cache-Control: public, max-age=2592000\n"
         "/i/*\n  Cache-Control: public, max-age=31536000, immutable\n", encoding="utf-8")
     for w in WARN:
