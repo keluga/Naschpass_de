@@ -1263,7 +1263,7 @@ def spin_items(live):
         arts = facets(p).get("art", set())
         i = prod_img(p, 240)
         st = _stem(p["name"])
-        if not arts or arts & SPIN_SKIP or st in seen or not i:
+        if not arts or arts & SPIN_SKIP or st in seen or not i or (p.get("imgkb") or 99) < 7:
             continue
         seen.add(st)
         a = next((x for x in ART_COLORS if x in arts), "")
@@ -1384,15 +1384,19 @@ setVol(vol);
 /* Lust auf …: Treffer aus allen Produkten (search.json, beste zuerst), je Sorte nur einmal */
 function stem(t){return t.toLowerCase().replace(/[^a-zäöüß ]/g,' ').split(/\s+/).filter(Boolean).slice(0,3).join(' ')}
 function pool(m){var toks=SD.m[m]||[],out=[],seen={};
- ALL.forEach(function(i){if(out.length>=150||!(i.img||i.ext))return;var f=' '+(i.f||'')+' ',has=function(t){return f.indexOf(' '+t+' ')>=0};
+ ALL.forEach(function(i){if(out.length>=150||!(i.img||(i.ext&&window.npImgOK&&window.npImgOK())))return;var f=' '+(i.f||'')+' ',has=function(t){return f.indexOf(' '+t+' ')>=0};
   if(toks.length?!toks.some(has):SD.skip.some(function(a){return has('art:'+a)}))return;
   if(m!=='trinken'&&has('art:getraenke'))return;var k=stem(i.title);if(seen[k])return;seen[k]=1;
   var a=Object.keys(SD.a).filter(function(x){return has('art:'+x)})[0],c=a?SD.a[a]:['Süßigkeit','#9C94C7'];
   out.push({t:i.title,u:i.url,k:'p',c:c[1],l:c[0],img:i.img,ext:i.ext,s:(i.sub||'').split(' · ')[0]})});return out}
 root.querySelectorAll('[data-mood]').forEach(function(b){b.addEventListener('click',function(){if(busy)return;
  root.querySelectorAll('[data-mood]').forEach(function(x){x.setAttribute('aria-pressed',x===b)});var m=b.dataset.mood;
- function go(){var p=m==='alles'?base:pool(m);items=p.length>=3?p:base;
-  track.innerHTML=deal(14).map(card).join('');setX(-40)}
+ function go(){var p=m==='alles'?base:pool(m);if(p.length<3){items=base;show0();return}
+  /* nur Sorten mit Bild, das wirklich lädt (kaputte/leere Bilder fliegen raus) */
+  btn.disabled=true;var ok=[],left=Math.min(p.length,80);p=p.slice(0,80);
+  p.forEach(function(it){var im=new Image(),done=false;function fin(g){if(done)return;done=true;if(g)ok.push(it);if(--left===0){items=ok.length>=3?ok:base;btn.disabled=false;show0()}}
+   im.onload=function(){fin(im.naturalWidth>40)};im.onerror=function(){fin(false)};setTimeout(function(){fin(false)},4000);im.src=it.img||it.ext})}
+ function show0(){track.innerHTML=deal(14).map(card).join('');setX(-40)}
  if(m==='alles'||ALL){go();return}
  btn.disabled=true;fetch('/search.json').then(function(r){return r.json()}).then(function(j){
   ALL=j.items.filter(function(i){return i.type==='product'});btn.disabled=false;go()}).catch(function(){btn.disabled=false})})});

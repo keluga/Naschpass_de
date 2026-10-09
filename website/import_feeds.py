@@ -98,6 +98,7 @@ NONFOOD = re.compile(
     r"\b(tasse|becher|teller|schale|geschirr|porzellan|st[äa]bchen|messer|gabel|l[öo]ffel|topf|pfanne|buch|kochbuch|t-?shirt|"
     r"shirt|hoodie|socken|kerze|deko|dekoration|vase|gutschein|geschenkgutschein|spielzeug|pl[üu]sch|kosmetik|seife|duft|"
     r"backform|ausstecher|dose leer|grill)\b", re.I)
+ADV_RAW, ADV_NO = {}, {}
 NO = {"0", "no", "nein", "false", "n", "out of stock", "outofstock", "out_of_stock", "nicht verfügbar"}
 
 ALIASES = {
@@ -344,6 +345,11 @@ def main():
                                           col(row, "brand")[:40], col(row, "desc")[:160], col(row, "stock")[:12], 1 if img else 0])
                     if not name or not url:
                         continue
+                    if "advent" in name.lower():  # Diagnose: wie viele Adventskalender liefern die Feeds wirklich?
+                        sh = a.get("shop", "")
+                        ADV_RAW[sh] = ADV_RAW.get(sh, 0) + 1
+                        if col(row, "stock").lower() in NO:
+                            ADV_NO[sh] = ADV_NO.get(sh, 0) + 1
                     if col(row, "stock").lower() in NO:
                         stats["lager"] += 1
                         continue
@@ -427,6 +433,12 @@ def main():
     if (os.environ.get("WORKERS_CI") or os.environ.get("CF_PAGES")) and len(result) < mindest:
         log(f"ABBRUCH: nur {len(result)} Produkte (Minimum {mindest}). Alte Seite bleibt online.")
         sys.exit(1)
+    adv_ok = {}
+    for p in result:
+        if "advent" in p["name"].lower():
+            adv_ok[p["shop"]] = adv_ok.get(p["shop"], 0) + 1
+    log("Advent (roh / nicht vorrätig / übernommen): " + ", ".join(
+        f"{k} {v}/{ADV_NO.get(k, 0)}/{adv_ok.get(k, 0)}" for k, v in sorted(ADV_RAW.items())) if ADV_RAW else "Advent: keine Zeilen in den Feeds")
     log("Aussortiert: " + ", ".join(f"{k} {v}" for k, v in stats.items()))
 
 
