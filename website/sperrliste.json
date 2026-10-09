@@ -1,0 +1,4 @@
+{
+  "_info": "Produkte, die nie auf die Seite sollen (z. B. beim Shop ausgelistet, obwohl noch im Feed). Ein Eintrag = Teil des Namens oder der Link-Adresse, Groß/klein egal.",
+  "eintraege": []
+}

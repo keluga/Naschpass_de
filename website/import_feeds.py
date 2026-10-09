@@ -99,6 +99,10 @@ NONFOOD = re.compile(
     r"shirt|hoodie|socken|kerze|deko|dekoration|vase|gutschein|geschenkgutschein|spielzeug|pl[üu]sch|kosmetik|seife|duft|"
     r"backform|ausstecher|dose leer|grill)\b", re.I)
 ADV_RAW, ADV_NO = {}, {}
+try:  # Sperrliste: von Hand gemeldete Produkte (ausgelistet, falsch, unpassend)
+    SPERR = [x.lower() for x in json.loads((Path(__file__).parent / "sperrliste.json").read_text(encoding="utf-8")).get("eintraege", []) if x]
+except Exception:
+    SPERR = []
 NO = {"0", "no", "nein", "false", "n", "out of stock", "outofstock", "out_of_stock", "nicht verfügbar"}
 
 ALIASES = {
@@ -350,6 +354,9 @@ def main():
                         ADV_RAW[sh] = ADV_RAW.get(sh, 0) + 1
                         if col(row, "stock").lower() in NO:
                             ADV_NO[sh] = ADV_NO.get(sh, 0) + 1
+                    if SPERR and any(x in name.lower() or x in url.lower() for x in SPERR):
+                        stats["gesperrt"] = stats.get("gesperrt", 0) + 1
+                        continue
                     if col(row, "stock").lower() in NO:
                         stats["lager"] += 1
                         continue
