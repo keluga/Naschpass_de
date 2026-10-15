@@ -536,7 +536,7 @@ def main():
                     pr = parse_price(col(row, "sale")) or parse_price(col(row, "price"))
                     if pr:
                         p["price"] = round(pr, 2)
-                    w = welt_of(name, brand, f"{mcat} {cat}")
+                    w = welt_of(name, brand, f"{mcat} {cat}") or a.get("land")  # Shop-Herkunft als Rückfall (feeds.json "land")
                     if w:
                         p["land"] = w
                     if a.get("themen"):
