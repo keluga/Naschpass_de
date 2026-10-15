@@ -37,8 +37,6 @@ WELTEN = {
     "italien": ("Italienische Süßigkeiten", "aus Italien", "italienische Süßigkeiten, Panettone, Cantucci, Torrone"),
     "schweiz": ("Schweizer Schokolade", "aus der Schweiz", "Schweizer Schokolade, Pralinen, Lindt, Toblerone"),
     "sauer-scharf": ("Saure & scharfe Snacks", "sauer & scharf", "saure Süßigkeiten, scharfe Chips, Sour Candy"),
-    "getraenke": ("Limo & Getränke aus aller Welt", "zum Trinken", "Ramune, Limonade, Soda aus aller Welt"),
-    "snacks": ("Nüsse & Fruchtsnacks", "Nüsse & Früchte", "Nüsse, Trockenfrüchte, gefriergetrocknete Früchte"),
 }
 ANLASS = {
     "filmabend": ("Snacks für den Filmabend", "FILMABEND?", "Snacks, die auf den Tisch gehören", "Filmabend Snacks, Knabberzeug, Chips, Popcorn"),
@@ -48,6 +46,13 @@ ANLASS = {
     "geburtstag": ("Süße Geburtstagsideen", "GEBURTSTAG?", "Süße Ideen zum Verschenken", "Geburtstagsgeschenk Süßigkeiten, Naschbox"),
 }
 SPAR_BOARD = "Snacks günstiger finden – Preisvergleich"
+try:
+    BRANDS = {k.lower(): v.get("welt") for k, v in json.loads((HERE / "brands.json").read_text(encoding="utf-8"))["brands"].items()}
+except Exception:
+    BRANDS = {}
+# Welche Herkunft eine Entdecken-Welt wirklich zeigen soll (sonst landen z. B. Nacho-Chips aus Österreich bei „Mexiko“)
+ECHT = {"japan": {"japan", "korea", "asien"}, "usa": {"usa"}, "mexiko": {"mexiko"}, "skandinavien": {"skandinavien"},
+        "italien": {"italien"}, "schweiz": {"schweiz"}}
 
 
 def font(name, size, weight=None):
@@ -215,8 +220,20 @@ def make(dist, products, cats, cat_items, facets, euro, today, top_brands, log=p
         if cid not in by_cat:
             continue
         items = [p for p in cat_items(by_cat[cid]) if usable(p)]
+        echt = ECHT.get(cid)
+
+        def neu(p):  # „Hast du das schon probiert?“: echte Herkunft, keine Supermarkt-Riesen, Marke nicht aus DE/AT
+            b = (p.get("brand") or "").lower()
+            if echt and p.get("land") not in echt:
+                return False
+            if BRANDS.get(b) in ("deutschland", "oesterreich"):
+                return False
+            return not (b in top_brands and cid not in ("japan",))
+        pool = [p for p in items if neu(p)]
+        if len(pool) < 4:
+            pool = items
         seen, sel = set(), []
-        for p in items:  # Abwechslung: nicht 4x dieselbe Marke
+        for p in pool:  # Abwechslung: nicht 4x dieselbe Marke
             b = (p.get("brand") or p["name"].split()[0]).lower()
             if b in seen:
                 continue
@@ -242,8 +259,9 @@ def make(dist, products, cats, cat_items, facets, euro, today, top_brands, log=p
         lo = min([o["p"] for o in p["offers"]] + [p["price"]])
         spread = hi - lo
         if spread >= 0.4 and hi / lo >= 1.15:
-            cands.append((spread / hi, p, hi))
-    cands.sort(key=lambda x: -x[0])
+            cands.append((len(p["offers"]), spread / hi, p, hi))
+    cands.sort(key=lambda x: (-x[0], -x[1]))
+    cands = [(r, p, hi) for _, r, p, hi in cands]
     seen = set()
     for rel, p, hi in cands:
         st = clean_name(p["name"], 60).lower()
