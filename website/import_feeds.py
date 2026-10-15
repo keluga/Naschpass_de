@@ -278,7 +278,7 @@ ALK_WORT = re.compile(r"\w*(lik[öo]r|likoer|glühwein|gluehwein|portwein|weinbr
 NONFOOD = re.compile(
     r"\b(tasse|becher|teller|schale|geschirr|porzellan|st[äa]bchen|messer|gabel|l[öo]ffel|topf|pfanne|buch|kochbuch|t-?shirt|"
     r"shirt|hoodie|socken|kerze|deko|dekoration|vase|gutschein|geschenkgutschein|spielzeug|pl[üu]sch|kosmetik|seife|duft|"
-    r"backform|ausstecher|dose leer|grill)\b", re.I)
+    r"backform|ausstecher|dose leer|grill|dirndl|kost[üu]m|dessous|unterw[äa]sche|socke)\b", re.I)
 ADV_RAW, ADV_NO = {}, {}
 # Saisonware darf immer rein (Shop-Kategorie egal), solange kein anderer Filter greift
 SAISON = re.compile(r"advent|weihnacht|nikolaus|christmas|xmas|lebkuchen|spekulatius|stollen|halloween|oster", re.I)
