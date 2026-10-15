@@ -245,6 +245,10 @@ def in_cat(p, c):
     """Gehört ein Produkt zu einer Themenwelt? (Hand-Kategorie, themen, Facetten oder Stichwörter)"""
     if p.get("category") == c["id"] or c["id"] in p.get("themen", []):
         return True
+    if c.get("not_facets"):  # Ausschluss, z. B. Tee/Kakao nicht in "Schokolade"
+        f = facets(p)
+        if any(x.split(":")[1] in f.get(x.split(":")[0], set()) for x in c["not_facets"]):
+            return False
     if c.get("facets"):
         f = facets(p)
         if any(x.split(":")[1] in f.get(x.split(":")[0], set()) for x in c["facets"]):

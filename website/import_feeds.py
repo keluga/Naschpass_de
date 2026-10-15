@@ -231,7 +231,7 @@ def fetch_images(prods):
 
 ALKOHOL = re.compile(
     r"\b(wein|weine|rotwein|weißwein|weisswein|ros[eé]wein|sekt|prosecco|champagner|cava|spirituose\w*|lik[öo]r\w*|likoer\w*|"
-    r"bier|biere|gin|rum|wodka|vodka|whisk(e)?y|tequila|mezcal|grappa|limoncello|amaro|brandy|cognac|schnaps|aperitif|"
+    r"liqueur|secco|frizzante|cider|cidre|glühwein|gluehwein|eierlik[öo]r|kräuterlik[öo]r|bier|biere|gin|rum|wodka|vodka|whisk(e)?y|tequila|mezcal|grappa|limoncello|amaro|brandy|cognac|schnaps|aperitif|"
     r"vermouth|wermut|sake|alkohol\w*|vol\.?\s*%|\d+([.,]\d+)?\s*%\s*vol)\b", re.I)
 NONFOOD = re.compile(
     r"\b(tasse|becher|teller|schale|geschirr|porzellan|st[äa]bchen|messer|gabel|l[öo]ffel|topf|pfanne|buch|kochbuch|t-?shirt|"

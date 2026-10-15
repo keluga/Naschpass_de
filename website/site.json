@@ -129,14 +129,17 @@
       "teaser": "Tafeln, Riegel und Pralinen aus aller Welt.",
       "facets": [
         "art:schokolade",
-        "art:pralinen",
-        "geschmack:schoko"
+        "art:pralinen"
       ],
       "text": "Von der Tafel über den Riegel bis zur Praline aus der Manufaktur: Schokolade schmeckt in jedem Land ein bisschen anders. In unseren Posts geht es zum Beispiel darum, warum das Überraschungsei in den USA verboten ist und was hinter Japans Schoko-Streit zwischen Pilz und Bambussprosse steckt.",
       "posts": [
         "01",
         "02",
         "03"
+      ],
+      "not_facets": [
+        "art:tee",
+        "art:getraenke"
       ]
     },
     {
@@ -229,16 +232,62 @@
       "facets": [
         "art:getraenke"
       ],
-      "text": "Limos, Sodas und Sirupe aus aller Welt, von japanischer Ramune mit Murmel-Verschluss bis zu amerikanischen Sodas. Alkohol gibt es hier bewusst nicht."
+      "text": "Limos, Sodas und Sirupe aus aller Welt, von japanischer Ramune mit Murmel-Verschluss bis zu amerikanischen Sodas. Alkohol gibt es hier bewusst nicht.",
+      "not_facets": [
+        "art:tee"
+      ]
     },
     {
       "id": "snacks",
       "name": "Nuss- & Fruchtsnacks",
       "teaser": "Nüsse, Riegel, Trockenfrüchte und Gefriergetrocknetes.",
-      "facets": [
-        "art:snacks"
+      "text": "Nüsse, Trockenfrüchte, Riegel und Gefriergetrocknetes. Beim Gefriertrocknen wird Obst oder Süßes tiefgefroren und das Wasser im Vakuum entzogen, übrig bleibt etwas Leichtes, Knuspriges.",
+      "keywords": [
+        "nüsse",
+        "nuesse",
+        "haselnüsse",
+        "haselnuesse",
+        "walnüsse",
+        "walnuesse",
+        "erdnüsse",
+        "erdnuesse",
+        "erdnusskerne",
+        "cashew",
+        "mandeln",
+        "pistazie",
+        "macadamia",
+        "pekannuss",
+        "paranüsse",
+        "studentenfutter",
+        "nussmix",
+        "nuss-mix",
+        "trockenfrücht",
+        "trockenfruecht",
+        "trockenobst",
+        "getrocknete",
+        "gefriergetrocknet",
+        "freeze dried",
+        "fruchtchips",
+        "apfelchips",
+        "bananenchips",
+        "datteln",
+        "feigen",
+        "aprikosen",
+        "rosinen",
+        "cranberries",
+        "kürbiskerne",
+        "kuerbiskerne",
+        "sonnenblumenkerne"
       ],
-      "text": "Nüsse, Trockenfrüchte, Riegel und Gefriergetrocknetes. Beim Gefriertrocknen wird Obst oder Süßes tiefgefroren und das Wasser im Vakuum entzogen, übrig bleibt etwas Leichtes, Knuspriges."
+      "not_facets": [
+        "art:schokolade",
+        "art:pralinen",
+        "art:gummi",
+        "art:kekse",
+        "art:tee",
+        "art:getraenke",
+        "art:bonbons"
+      ]
     },
     {
       "id": "boxen",
@@ -315,9 +364,7 @@
         "1kg",
         "family",
         "großpackung",
-        "teilen",
-        "sour",
-        "sauer"
+        "teilen"
       ]
     },
     {
@@ -334,8 +381,6 @@
         "praesent",
         "geschenk",
         "box",
-        "dose",
-        "tafel",
         "mozartkugel",
         "merci"
       ],
