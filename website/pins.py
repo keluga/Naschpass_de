@@ -46,6 +46,27 @@ ANLASS = {
     "geburtstag": ("Süße Geburtstagsideen", "GEBURTSTAG?", "Süße Ideen zum Verschenken", "Geburtstagsgeschenk Süßigkeiten, Naschbox"),
 }
 SPAR_BOARD = "Snacks günstiger finden – Preisvergleich"
+# Suchbegriffe vorn im Titel (so suchen Leute auf Pinterest) und 5–8 Hashtags je Pin
+SEO_TITEL = {"japan": "Japanische Süßigkeiten", "usa": "Amerikanische Süßigkeiten", "mexiko": "Mexikanische Süßigkeiten",
+             "skandinavien": "Skandinavische Süßigkeiten & Lakritz", "italien": "Italienische Süßigkeiten", "schweiz": "Schweizer Schokolade & Süßes",
+             "sauer-scharf": "Saure & scharfe Süßigkeiten"}
+TAGS = {
+    "japan": "#japanischesüßigkeiten #asiansnacks #pocky #mochi #japanfood",
+    "usa": "#amerikanischesüßigkeiten #americancandy #ussnacks #candy #süßigkeiten",
+    "mexiko": "#mexikanischesüßigkeiten #mexicancandy #scharf #takis #tamarind",
+    "skandinavien": "#lakritz #salmiak #skandinavien #schwedischesüßigkeiten #lakrids",
+    "italien": "#italienischesüßigkeiten #cantuccini #amaretti #italienfood",
+    "schweiz": "#schweizerschokolade #schokolade #swisschocolate #toblerone",
+    "sauer-scharf": "#saurebonbons #sourcandy #scharfesnacks #challenge",
+    "vergleich": "#preisvergleich #sparen #sparfuchs #süßigkeiten #snacks",
+    "guenstig": "#günstig #snacks #süßigkeiten #ausprobieren",
+    "filmabend": "#filmabend #snacks #knabberzeug #movienight #chips",
+    "mitbringsel": "#mitbringsel #geschenkidee #danke #pralinen #schokolade",
+    "adventskalender": "#adventskalender #adventskalenderideen #weihnachten #advent #süßigkeiten",
+    "halloween": "#halloween #halloweenparty #halloweensüßigkeiten #süßesodersaures #gruselparty",
+    "geburtstag": "#geburtstag #geburtstagsgeschenk #geschenkidee #naschbox",
+    "quiz": "#quiz #snacks #süßigkeiten #naschen",
+}
 try:
     BRANDS = {k.lower(): v.get("welt") for k, v in json.loads((HERE / "brands.json").read_text(encoding="utf-8"))["brands"].items()}
 except Exception:
@@ -264,7 +285,7 @@ def make(dist, products, cats, cat_items, facets, euro, today, top_brands, log=p
             n = len(items)
             plans.append(dict(kind="entdecken", slug=f"entdecken-{cid}", board=board, items=sel, cid=cid, wo=wo, n=n,
                               link=f"/kategorie/{cid}/",
-                              title=f"Süßigkeiten {wo}: {', '.join(clean_name(p['name'], 22) for p in sel[:3])} & mehr",
+                              title=f"{SEO_TITEL.get(cid, 'Süßigkeiten ' + wo)} – {', '.join(clean_name(p['name'], 18) for p in sel[:2])} & mehr",
                               desc=f"Hast du die schon probiert? {n} Sorten {wo} an einem Ort entdecken – mit Preisvergleich zwischen den Shops. {kw}. Anzeige: Links zu Partner-Shops."))
     # 2) Preisvergleich: bekannte Marken, gleiche Packung, deutlicher Unterschied
     cands = []
@@ -292,7 +313,7 @@ def make(dist, products, cats, cat_items, facets, euro, today, top_brands, log=p
         n = len(p["offers"]) + 1
         plans.append(dict(kind="vergleich", slug="vergleich-" + re.sub(r"[^a-z0-9]+", "-", st).strip("-")[:40], board=SPAR_BOARD, items=[p],
                           link="/shop/?q=" + urllib.request.quote(clean_name(p["name"], 60)),
-                          title=f"{name}: {n} Shops im Preisvergleich",
+                          title=f"{name} günstig kaufen? {n} Shops im Preisvergleich",
                           desc=f"Gleiche Packung {name}, {n} Online-Shops im Vergleich (Preise Stand {datum}, ggf. zzgl. Versand). "
                                f"Naschpass zeigt bei über 12.000 Süßigkeiten, wo du am wenigsten zahlst. Anzeige: Links zu Partner-Shops."))
         if sum(1 for x in plans if x["kind"] == "vergleich") >= 12:
@@ -312,9 +333,9 @@ def make(dist, products, cats, cat_items, facets, euro, today, top_brands, log=p
             if len(sel) == 6:
                 break
         if len(sel) == 6:
-            plans.append(dict(kind="guenstig", slug=f"unter-3-euro-{cid}", board=board, items=sel, wo=wo,
+            plans.append(dict(kind="guenstig", slug=f"unter-3-euro-{cid}", board=board, items=sel, wo=wo, cid=cid,
                               link=f"/kategorie/{cid}/",
-                              title=f"Snacks {wo} unter 3 € – zum Ausprobieren",
+                              title=f"{SEO_TITEL.get(cid, 'Snacks ' + wo)} unter 3 € – günstig Neues probieren",
                               desc=f"6 Sorten {wo} für unter 3 € (Preise Stand {datum}): klein anfangen, Neues probieren. {kw}. Anzeige: Links zu Partner-Shops."))
     # 4) Anlässe (Saison nur in der Saison)
     for cid, (board, head, sub, kw) in ANLASS.items():
@@ -338,7 +359,7 @@ def make(dist, products, cats, cat_items, facets, euro, today, top_brands, log=p
         if len(sel) >= 4:
             plans.append(dict(kind="anlass", slug=f"anlass-{cid}", board=board, items=sel, head=head, sub=sub, n=len(items),
                               link=f"/kategorie/{cid}/",
-                              title=f"{board}: {len(items)} Ideen aus aller Welt",
+                              title=f"{board}: {len(items)} Ideen – Süßigkeiten aus aller Welt",
                               desc=f"{sub}: {len(items)} Ideen aus aller Welt an einem Ort, mit Preisvergleich zwischen den Shops. {kw}. Anzeige: Links zu Partner-Shops."))
     # 5) Quiz
     quiz_items = []
@@ -450,7 +471,8 @@ def make(dist, products, cats, cat_items, facets, euro, today, top_brands, log=p
         img.convert("RGB").save(out / f"{pl['slug']}.jpg", "JPEG", quality=88, optimize=True)
         names = ", ".join(clean_name(p["name"], 40) for p in pl["items"])
         manifest.append({"slug": pl["slug"], "kind": k, "board": pl["board"], "image": f"/pins/{pl['slug']}.jpg",
-                         "link": f"https://{DOMAIN}{pl['link']}", "title": pl["title"][:100], "description": pl["desc"][:500],
+                         "link": f"https://{DOMAIN}{pl['link']}", "title": pl["title"][:100],
+                         "description": (pl["desc"][:430].rstrip() + " " + (TAGS.get(pl.get("cid") or pl["slug"].split("-", 1)[-1]) or TAGS.get(k, "")) + " #naschpass").strip()[:500],
                          "alt": f"Naschpass-Pin: {pl['title']}. Zu sehen: {names}."[:500], "stand": today.isoformat()})
     (out / "pins.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=1), encoding="utf-8")
     log(f"[Pins] {len(manifest)} Pins: " + ", ".join(f"{k} {sum(1 for m in manifest if m['kind'] == k)}" for k in ("entdecken", "vergleich", "guenstig", "anlass", "quiz")))
