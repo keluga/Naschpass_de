@@ -3987,6 +3987,15 @@
   },
   "Nordthy": {
    "welt": "skandinavien"
+  },
+  "Pitú": {
+   "alkohol": true
+  },
+  "Pitu": {
+   "alkohol": true
+  },
+  "Carlsberg": {
+   "alkohol": true
   }
  }
 }
