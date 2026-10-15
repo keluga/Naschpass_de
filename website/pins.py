@@ -215,7 +215,13 @@ def make(dist, products, cats, cat_items, facets, euro, today, top_brands, log=p
             return cache / im[3:]
         return None
 
-    usable = lambda p: p.get("source") == "awin" and local(p) and (p.get("imgkb") or 99) >= 7
+    # Pins zeigen nur klassisches Naschzeug: kein Öl/Tee/Feinkost, nichts, was nach Kostüm/Erotik klingt.
+    # Lizenzfiguren (Peppa, Minions …) sind ok: Zielgruppe sind Eltern, Texte sprechen nie Kinder direkt an.
+    BAD = re.compile(r"sexy|erotik|dessous|dirndl|kost[üu]m|\b[öo]l\b|kernöl|kernoel|essig|tee\b|kaffee|gewürz", re.I)
+    KERN = {"schokolade", "pralinen", "gummi", "bonbons", "chips", "snacks", "kekse", "getraenke", "boxen", "eis"}
+    usable = lambda p: (p.get("source") == "awin" and local(p) and (p.get("imgkb") or 99) >= 7
+                        and not BAD.search(p["name"])
+                        and bool(KERN & facets(p).get("art", set())))
 
     # Große Bilder nur für die Produkte holen, die wirklich auf Pins landen
     picked = {}
