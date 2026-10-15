@@ -2661,7 +2661,7 @@ Vollständige Angaben im <a href="/impressum/">Impressum</a>.</p></section>"""
                                      "User-agent: *\nAllow: /\nDisallow: /merkliste/\nDisallow: /pruefen/\nDisallow: /check.json\nDisallow: /sortiment.json\n"
                                      f"Disallow: /static/_dump/\n\nSitemap: {BASE}/sitemap.xml\n", encoding="utf-8")
     # Sicherheits-Header: Seite darf nur Dinge von der eigenen Domain laden (plus freigegebene Partner-Bildserver nach Einwilligung)
-    img_hosts = " ".join(f"https://{h}" for h in sorted(PARTNERS))
+    img_hosts = " ".join(f"https://{h} https://www.{h}" for h in sorted(PARTNERS))  # mit und ohne www (host_of entfernt www)
     csp = ("default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; "
            f"img-src 'self' data: blob: {img_hosts}; font-src 'self'; connect-src 'self'; media-src 'self'; object-src 'none'; "
            "base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests")
