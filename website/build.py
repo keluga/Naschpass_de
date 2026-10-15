@@ -1049,7 +1049,7 @@ def clip(t, n=158):
 
 ORG = {"@type": "Organization", "@id": f"{BASE}/#org", "name": "Naschpass", "url": f"{BASE}/",
        "logo": f"{BASE}/static/logo.png", "sameAs": [x["url"] for x in site["socials"]]}
-NOINDEX_PATHS = ("/merkliste/", "/pruefen/", "/pruefen/sortiment/", "/404")
+NOINDEX_PATHS = ("/merkliste/", "/pruefen/", "/pruefen/sortiment/", "/pruefen/pins/", "/404")
 
 
 def ld_json(path, title, extra):
@@ -2571,6 +2571,16 @@ Vollständige Angaben im <a href="/impressum/">Impressum</a>.</p></section>"""
               f'<th>Themen</th><th>Feed-Kategorie</th></tr></thead><tbody>{rows}</tbody></table></div></section>'
               '<style>.pt{border-collapse:collapse;font-size:12.5px;width:100%}.pt td,.pt th{border-bottom:1px solid var(--line);padding:4px 6px;text-align:left;vertical-align:top}</style>',
               "Prüfliste", "/pruefen/"))
+    try:  # Pinterest-Pins aus den echten Daten (dist/pins/, Übersicht /pruefen/pins/)
+        import pins
+        pm = pins.make(DIST, products, cats, cat_items, facets, euro, TODAY, TOP_BRANDS)
+        grid = "".join(f'<figure style="margin:0"><a href="{e(m["link"])}"><img src="{e(m["image"])}" alt="{e(m["alt"])}" loading="lazy" style="width:100%;border-radius:14px"></a>'
+                       f'<figcaption style="font-size:12.5px"><b>{e(m["title"])}</b><br>Board: {e(m["board"])}</figcaption></figure>' for m in pm)
+        write("pruefen/pins/index.html", page("Pins – Naschpass (intern)",
+              f'<section class="prose" style="max-width:none"><h1>Pinterest-Pins ({len(pm)})</h1><p>Automatisch aus den Shop-Daten, Stand {TODAY.strftime("%d.%m.%Y")}. Daten: <a href="/pins/pins.json">pins.json</a></p>'
+              f'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px">{grid}</div></section>', "Interne Pin-Übersicht.", "/pruefen/pins/"))
+    except Exception as ex:  # Pins dürfen den Build nie kaputt machen
+        print(f"[Pins] übersprungen ({type(ex).__name__}: {ex})")
     write("geschenk/index.html", page("Geschenk-Finder – Naschpass", finder_page(),
                                       "Drei Fragen, passende Süßigkeiten zum Verschenken.", "/geschenk/", script=FINDER_JS))
     write("quiz/index.html", page("Welcher Snack-Typ bist du? – Naschpass", quiz_page(),
