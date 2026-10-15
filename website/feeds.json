@@ -1,10 +1,11 @@
 {
-  "_hinweis": "AWIN-Advertiser mit Produktfeed. active=true bei Zusage. 'include' = Regex auf 'Shop-Kategorie || Feed-Kategorie': nur passende Zeilen kommen rein (fehlt es, kommt alles). 'include_name' = zusätzlich Regex auf den Produktnamen (für gemischte Kategorien). 'exclude_name' = Regex, die trotzdem raus. 'boost' = Extra-Punkte für die Reihenfolge (Exoten-Shops höher). Alkohol, Tierfutter und Non-Food fliegen immer raus (brands.json + Regeln in import_feeds.py). Keine Mengen-Kappung. Der Feed-Link mit API-Schlüssel steht NUR in Netlify (AWIN_FEED_URL, AWIN_FEED_URL_2 ...), nie hier. 'fid' = Produktdatenfeed-ID aus AWIN (Create-a-Feed, Spalte 'Produktdatenfeed-ID'). Der erste Awin-Format-Link dient nur als Vorlage (Schlüssel + Format): Der Import holt automatisch alle aktiven 'fid' (Ziffern) damit. Neue Partner im Awin-Format brauchen also keinen neuen Link. Google-Format-Feeds (z. B. F4010) brauchen weiter einen eigenen Link (AWIN_FEED_URL_2 ...).",
+  "_hinweis": "AWIN-Advertiser mit Produktfeed. active=true bei Zusage. 'include' = Regex auf 'Shop-Kategorie || Feed-Kategorie': nur passende Zeilen kommen rein (fehlt es, kommt alles). 'include_name' = zusätzlich Regex auf den Produktnamen (für gemischte Kategorien). 'exclude_name' = Regex, die trotzdem raus. 'land' = Herkunft als Rückfall, wenn Marke/Name/Kategorie nichts verraten (z. B. 'oesterreich'). 'boost' = Extra-Punkte für die Reihenfolge (Exoten-Shops höher). Alkohol, Tierfutter und Non-Food fliegen immer raus (brands.json + Regeln in import_feeds.py). Keine Mengen-Kappung. Der Feed-Link mit API-Schlüssel steht NUR in Netlify (AWIN_FEED_URL, AWIN_FEED_URL_2 ...), nie hier. 'fid' = Produktdatenfeed-ID aus AWIN (Create-a-Feed, Spalte 'Produktdatenfeed-ID'). Der erste Awin-Format-Link dient nur als Vorlage (Schlüssel + Format): Der Import holt automatisch alle aktiven 'fid' (Ziffern) damit. Neue Partner im Awin-Format brauchen also keinen neuen Link. Google-Format-Feeds (z. B. F4010) brauchen weiter einen eigenen Link (AWIN_FEED_URL_2 ...).",
   "advertisers": [
     {
       "id": 112586,
       "shop": "World of Sweets",
-      "active": false
+      "active": true,
+      "fid": "101641"
     },
     {
       "id": 11652,
@@ -134,6 +135,25 @@
       "active": true,
       "boost": 1,
       "fid": "103286"
+    },
+    {
+      "id": 83939,
+      "shop": "Haushalt-und-Genuss",
+      "active": true,
+      "land": "oesterreich",
+      "fid": "117069"
+    },
+    {
+      "id": 103075,
+      "shop": "myfruits",
+      "active": false,
+      "_hinweis": "kein Feed, Produkte per Hand in products.json"
+    },
+    {
+      "id": 15939,
+      "shop": "Asiafoodland",
+      "active": false,
+      "_hinweis": "kein Feed, Produkte per Hand in products.json"
     }
   ]
 }
