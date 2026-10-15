@@ -141,7 +141,10 @@
       "shop": "Haushalt-und-Genuss",
       "active": true,
       "land": "oesterreich",
-      "fid": "117069"
+      "fid": "117069",
+      "include": "Süßigkeiten & Schokolade|Vorspeisen & Snacks|Nüsse & Samen|Backwaren|Tees & Aufgüsse|Kakao|Limonaden|Getränkepulver|Getrocknete Fr|Schokofrüchte|Marmel|Konfitüre|Honig|Sirup",
+      "include_name": "meinl|manner\\b|ölz|darbo|kelly|soletti|casali|niemetz|schwedenbombe|heindl|\\bhaas\\b|\\bpez\\b|mozartkugel",
+      "exclude_name": "zahn|inkontinenz|shampoo|seife|lotion|reiniger|reinigung|\\bfond\\b|bolognese|ragu|hundefutter|katzenfutter"
     },
     {
       "id": 103075,
