@@ -1,7 +1,7 @@
 # Partner-Liste (AWIN, Publisher-ID 3111189)
 
-Eine Zeile pro Partner. Stand: 08.10.2026. Wer was ändert, trägt es hier ein.
-Technik dazu: `website/feeds.json` (welche Shops aktiv sind) und Netlify-Variablen `AWIN_FEED_URL`, `AWIN_FEED_URL_2` … (Feed-Links, **nie** ins Repo oder in den Chat).
+Eine Zeile pro Partner. Stand: 15.10.2026. Wer was ändert, trägt es hier ein.
+Technik dazu: `website/feeds.json` (welche Shops aktiv sind) und Cloudflare-Variablen `AWIN_FEED_URL`, `AWIN_FEED_URL_2` … (Feed-Links, **nie** ins Repo oder in den Chat).
 
 ## Zugelassen
 
@@ -14,9 +14,13 @@ Technik dazu: `website/feeds.json` (welche Shops aktiv sind) und Netlify-Variabl
 | SugarGang | 127807 | **Google** | F4010 | ~120 | `AWIN_FEED_URL_2` ✅ | anderes Format, eigener Link, läuft. Exoten-Kern (Boost +4) |
 | Sodapop | 42806 | Awin | 95717 (Default CSV) | ~80 | `AWIN_FEED_URL` | nur Sirupe/Getränke. Feed 82227 (XML) ist derselbe Inhalt, weglassen |
 | my-choco-world | 16944 | kein Feed | – | 2 per Hand | `products.json` | Fotos nur nach Einwilligung |
+| World of Sweets | 112586 | Awin | 101641 (Default) | ~8.400 | `AWIN_FEED_URL` | Zusage 14.10. Größter Partner, alles Süßes; Länder-Kategorien (GB, Italien, Japan, Mexiko, NL, AT, SE, KR, TH, TR). Brand Bidding verboten |
+| Haushalt-und-Genuss | 83939 | Awin | 117069 (Dynamic/Live) | ~2.200 | `AWIN_FEED_URL` | Zusage 15.10. Nur Food (Manner, Ölz, Meinl), Herkunft Österreich per `land` in feeds.json. Feed 98990 ist eine alte Kopie (Juli), weglassen |
+| myfruits | 103075 | kein Feed | – | per Hand | `products.json` | Zusage 15.10. Gefriergetrocknete Früchte. Kev schickt 3–5 Produktlinks |
+| Asiafoodland | 15939 | kein Feed | – | per Hand | `products.json` | Zusage 14.10. Japan & Asien. Kev schickt 3–5 Produktlinks, Bild-Server in `site.json → partner_shops` |
 
 ## Abgelehnt
-Zotter, Mexhaus (01.10., „URL nicht relevant“, alte Seite). Neu bewerben, wenn die neue Seite live ist.
+Zotter, italienisch-einkaufen, Mexhaus, Venchi, BOS FOOD, Netto, unverträglich.de (nicht weiter verfolgen). Rest der Runde 2 offen, siehe `BEWERBUNG_RUNDE2.md`.
 
 ## Offen
 Siehe `WEBSITE_VISION.md`, Abschnitt 6.
@@ -29,4 +33,4 @@ Siehe `WEBSITE_VISION.md`, Abschnitt 6.
    - **Kein Feed:** Kev schickt 3–5 Produktseiten, Claude trägt sie per Hand ein.
 3. Claude prüft die Vorschau (`/pruefen/`) und aktualisiert diese Liste.
 
-Variablen liegen in Cloudflare: Workers & Pages → naschpass → Settings → Build → Variables (Netlify nur noch bis zur Umstellung).
+Variablen liegen in Cloudflare: Workers & Pages → naschpass → Settings → Build → Variables.
