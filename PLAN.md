@@ -15,9 +15,9 @@ Für den nächsten Chat. Erst `CLAUDE.md` lesen, dann das hier. Technik-Details:
 
 ## Phase 2: Sortiment verstehen und Seite ausreizen (läuft)
 Kernidee: Der Build liefert bei jedem Lauf selbst den Sortiments-Bericht, Inventar-Check = ein Blick statt Handarbeit.
-1. **Sortiments-Bericht im Build** (Branch `sortiment`): `/sortiment.json` + Seite `/pruefen/sortiment/` (Shop × Herkunft × Art × Geschmack, Preise, ohne Herkunft/Art, unbekannte Marken, Dubletten über Shops, Themenwelt-Größen). Die nächtliche Action schreibt die Kurzfassung nach `SORTIMENT.md` (Verlauf im Git).
-2. **Lücken schließen nach Bericht:** Top-Marken ohne Herkunft in `brands.json`, `WELT_HINTS` erweitern; Piccantino-Bilder mit „410 Gone“ direkt als ausgelistet sperren.
-3. **„Günstigster Shop“:** gleiche Sorte bei mehreren Shops → eine Karte, mehrere Preise.
+1. ✅ **Sortiments-Bericht im Build** (PR #14): `/sortiment.json` + Seite `/pruefen/sortiment/` (Shop × Herkunft × Art × Geschmack, Preise, ohne Herkunft/Art, unbekannte Marken, Dubletten über Shops, Themenwelt-Größen). Die nächtliche Action schreibt die Kurzfassung nach `SORTIMENT.md` (Verlauf im Git).
+2. ✅ (PR #15: 20 Marken, Sammelkategorie raus, Art-Stichwörter; ohne Herkunft 3.380 → 2.509) **Lücken schließen nach Bericht:** Top-Marken ohne Herkunft in `brands.json`, `WELT_HINTS` erweitern; Piccantino-Bilder mit „410 Gone“ direkt als ausgelistet sperren.
+3. ✅ (PR #16: 265 Karten mit mehreren Shops, 273 Doppel-Karten weniger) **„Günstigster Shop“:** gleiche Sorte bei mehreren Shops → eine Karte, mehrere Preise.
 4. **Themenwelten nach den Zahlen:** leere ausblenden, Riesen teilen (Schokolade 7.000+), Saison vorn.
 5. **Build stabil:** Bild-Cache zwischen Builds behalten (z. B. GitHub-Release-Datei, kostenlos, braucht Token in Cloudflare).
 - Danach Bewerbungsrunde 3 (Lauenstein, Dallmayr, Swiss Finest, Gustini …) mit vollem Sortiment.

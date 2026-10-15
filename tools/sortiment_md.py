@@ -25,7 +25,7 @@ def main():
     shops = sorted(r["shops"].items(), key=lambda x: -x[1]["n"])
     md = [f"# Sortiment – Stand {r['stand']}", "",
           "Automatisch aus `/sortiment.json` (nächtliche Action, `tools/sortiment_md.py`). Volle Tabellen: `/pruefen/sortiment/` auf der Seite.", "",
-          f"**{r['gesamt']} Produkte** · ohne Herkunft {r['ohne_land']} · ohne Art {r['ohne_art']} · Sorten bei mehreren Shops {r['dubletten']}", "",
+          f"**{r['gesamt']} Produkte** · ohne Herkunft {r['ohne_land']} · ohne Art {r['ohne_art']} · Preisvergleich-Karten {r.get('preisvergleich', {}).get('gruppen', 0)} ({r.get('preisvergleich', {}).get('weg', 0)} Doppel-Karten zusammengefasst) · übrige Sorten bei mehreren Shops {r['dubletten']}", "",
           "## Je Shop", tabelle(["Shop", "Produkte", "ohne Herkunft", "ohne Art", "ohne Preis", "Bild schwach", "Preis median"],
                                 [[s, v["n"], v["ohne_land"], v["ohne_art"], v["ohne_preis"], v["bild_klein"], f"{v['preis'][1]:.2f} €" if v.get("preis") else "–"] for s, v in shops]),
           "## Herkunft", tabelle(["Herkunft", "Produkte"], list(r["land"].items())),
