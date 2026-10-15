@@ -233,6 +233,7 @@ ALKOHOL = re.compile(
     r"\b(wein|weine|rotwein|weißwein|weisswein|ros[eé]wein|sekt|prosecco|champagner|cava|spirituose\w*|lik[öo]r\w*|likoer\w*|"
     r"liqueur|secco|frizzante|cider|cidre|glühwein|gluehwein|eierlik[öo]r|kräuterlik[öo]r|bier|biere|gin|rum|wodka|vodka|whisk(e)?y|tequila|mezcal|grappa|limoncello|amaro|brandy|cognac|schnaps|aperitif|"
     r"vermouth|wermut|sake|alkohol\w*|vol\.?\s*%|\d+([.,]\d+)?\s*%\s*vol)\b", re.I)
+ALK_WORT = re.compile(r"\w*(lik[öo]r|likoer|glühwein|gluehwein|portwein|weinbrand)\b", re.I)  # Wortteile: Kokoslikör, Fruchtglühwein
 NONFOOD = re.compile(
     r"\b(tasse|becher|teller|schale|geschirr|porzellan|st[äa]bchen|messer|gabel|l[öo]ffel|topf|pfanne|buch|kochbuch|t-?shirt|"
     r"shirt|hoodie|socken|kerze|deko|dekoration|vase|gutschein|geschenkgutschein|spielzeug|pl[üu]sch|kosmetik|seife|duft|"
@@ -510,7 +511,7 @@ def main():
                     brand = brand_of(name, col(row, "brand"), a.get("shop", ""))
                     binfo = BRANDS.get(brand, {})
                     hay = f"{name} {mcat} {cat}"
-                    if binfo.get("alkohol") or ALKOHOL.search(hay) or re.search(r"alkoholische getränke|\bwein\b|spirituos|\bbier\b", f"{mcat} {cat}", re.I):
+                    if binfo.get("alkohol") or ALKOHOL.search(hay) or ALK_WORT.search(name) or re.search(r"alkoholische getränke|\bwein\b|spirituos|\bbier\b", f"{mcat} {cat}", re.I):
                         stats["alkohol"] += 1
                         continue
                     if binfo.get("tier") or TIER.search(hay) or re.search(r"tierbedarf|tiernahrung", mcat, re.I):

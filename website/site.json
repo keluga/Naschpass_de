@@ -234,7 +234,11 @@
       ],
       "text": "Limos, Sodas und Sirupe aus aller Welt, von japanischer Ramune mit Murmel-Verschluss bis zu amerikanischen Sodas. Alkohol gibt es hier bewusst nicht.",
       "not_facets": [
-        "art:tee"
+        "art:tee",
+        "art:gummi",
+        "art:kekse",
+        "art:bonbons",
+        "art:schokolade"
       ]
     },
     {
@@ -287,6 +291,13 @@
         "art:tee",
         "art:getraenke",
         "art:bonbons"
+      ],
+      "not_keywords": [
+        "oliven",
+        "olive",
+        "pesto",
+        "antipasti",
+        "kapern"
       ]
     },
     {
@@ -1025,7 +1036,15 @@
             "matcha",
             "kaffee",
             "espresso",
-            "cappuccino"
+            "cappuccino",
+            "rotbuschtee",
+            "rooibos",
+            "früchtetee",
+            "kräutertee",
+            "schwarztee",
+            "grüntee",
+            "ingwertee",
+            "pfefferminztee"
           ]
         },
         {

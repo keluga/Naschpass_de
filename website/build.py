@@ -249,6 +249,10 @@ def in_cat(p, c):
         f = facets(p)
         if any(x.split(":")[1] in f.get(x.split(":")[0], set()) for x in c["not_facets"]):
             return False
+    if c.get("not_keywords"):
+        nk = _CAT_KW.setdefault("!" + c["id"], [_kw_re(k) for k in c["not_keywords"]])
+        if any(r.search(translit(p.get("name", ""))) for r in nk):
+            return False
     if c.get("facets"):
         f = facets(p)
         if any(x.split(":")[1] in f.get(x.split(":")[0], set()) for x in c["facets"]):
