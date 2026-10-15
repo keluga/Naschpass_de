@@ -346,6 +346,92 @@ def order_products():
     products[:] = out
 
 
+def sortiment_report():
+    """Sortiments-Bericht: was ist da, was fehlt (Herkunft/Art), Dubletten über Shops, Preise, Themenwelten.
+    Liegt als /sortiment.json (für tools/sortiment_md.py) und als Seite /pruefen/sortiment/ (noindex)."""
+    import statistics
+    def land_of(p):
+        l = facets(p).get("land", set())
+        return next((x for x in sorted(l) if x != "europa"), "europa") if l else ""
+    def art_of(p):
+        a = facets(p).get("art", set())
+        return next((x for x in ART_ORDER if x in a), "")
+    def cnt(d, k, n=1):
+        d[k] = d.get(k, 0) + n
+    shops, land, art, gesch, matrix = {}, {}, {}, {}, {}
+    ohne_land_marke, ohne_art_namen, preise = {}, {}, {}
+    stems = {}
+    for p in products:
+        sh = p.get("shop", "?")
+        s = shops.setdefault(sh, {"n": 0, "ohne_land": 0, "ohne_art": 0, "ohne_preis": 0, "bild_klein": 0})
+        s["n"] += 1
+        l, a = land_of(p), art_of(p)
+        if l:
+            cnt(land, l)
+        else:
+            s["ohne_land"] += 1
+            cnt(ohne_land_marke, p.get("brand") or "(ohne Marke)")
+        if a:
+            cnt(art, a)
+        else:
+            s["ohne_art"] += 1
+            cnt(ohne_art_namen, _stem(p.get("name", "")))
+        cnt(matrix.setdefault(l or "-", {}), a or "-")
+        for g in facets(p).get("geschmack", set()):
+            cnt(gesch, g)
+        if p.get("price"):
+            preise.setdefault(sh, []).append(p["price"])
+        else:
+            s["ohne_preis"] += 1
+        if p.get("imgkb") and p["imgkb"] < 7:
+            s["bild_klein"] += 1
+        st = _stem(p.get("name", ""))
+        if st:
+            stems.setdefault(st, []).append(p)
+    for sh, pr in preise.items():
+        pr.sort()
+        shops[sh]["preis"] = [pr[0], round(statistics.median(pr), 2), pr[-1]]
+    dubl = []
+    for st, ps in stems.items():
+        sh = {x.get("shop", "") for x in ps}
+        if len(sh) >= 2:
+            pr = sorted(x["price"] for x in ps if x.get("price"))
+            dubl.append({"name": st, "shops": sorted(sh), "n": len(ps), "preis": [pr[0], pr[-1]] if pr else None})
+    dubl.sort(key=lambda d: (-len(d["shops"]), -d["n"]))
+    themen = [{"id": c["id"], "titel": c.get("name") or c.get("title") or c["id"], "n": len(cat_items(c)), "saison": in_season(c)} for c in cats]
+    top = lambda d, n: sorted(d.items(), key=lambda x: -x[1])[:n]
+    return {"stand": TODAY.isoformat(), "gesamt": len(products), "shops": shops,
+            "land": dict(top(land, 99)), "art": dict(top(art, 99)), "geschmack": dict(top(gesch, 99)),
+            "matrix": matrix, "themen": themen,
+            "ohne_land": sum(s["ohne_land"] for s in shops.values()), "ohne_land_marken": top(ohne_land_marke, 60),
+            "ohne_art": sum(s["ohne_art"] for s in shops.values()), "ohne_art_namen": top(ohne_art_namen, 60),
+            "dubletten": len(dubl), "dubletten_top": dubl[:80]}
+
+
+def sortiment_html(r):
+    def tbl(head, rows):
+        return ('<div style="overflow-x:auto"><table class="pt"><thead><tr>' + "".join(f"<th>{e(str(h))}</th>" for h in head) + "</tr></thead><tbody>"
+                + "".join("<tr>" + "".join(f"<td>{e(str(c))}</td>" for c in row) + "</tr>" for row in rows) + "</tbody></table></div>")
+    shops = sorted(r["shops"].items(), key=lambda x: -x[1]["n"])
+    arts = [a for a in ART_ORDER if a in r["art"]] + ["-"]
+    laender = sorted(r["matrix"], key=lambda l: -sum(r["matrix"][l].values()))
+    h = [f'<h1>Sortiment ({r["gesamt"]} Produkte, Stand {r["stand"]})</h1>',
+         '<p>Nur intern. Ohne Herkunft/Art = die Regeln (brands.json, Stichwörter) haben nichts erkannt. Dubletten = gleiche Sorte bei mehreren Shops.</p>',
+         "<h2>Je Shop</h2>", tbl(["Shop", "Produkte", "ohne Herkunft", "ohne Art", "ohne Preis", "Bild schwach", "Preis min / median / max"],
+                                [[sh, s["n"], s["ohne_land"], s["ohne_art"], s["ohne_preis"], s["bild_klein"],
+                                  " / ".join(f"{x:.2f} €" for x in s["preis"]) if s.get("preis") else "–"] for sh, s in shops]),
+         "<h2>Herkunft × Art</h2>", tbl(["Herkunft", "gesamt"] + arts, [[l, sum(r["matrix"][l].values())] + [r["matrix"][l].get(a, "") for a in arts] for l in laender]),
+         "<h2>Geschmack</h2>", tbl(["Geschmack", "Produkte"], list(r["geschmack"].items())),
+         "<h2>Themenwelten</h2>", tbl(["Welt", "Produkte", "Saison aktiv"], [[t["titel"], t["n"], "ja" if t["saison"] else ""] for t in r["themen"]]),
+         f'<h2>Ohne Herkunft: {r["ohne_land"]} – häufigste Marken</h2>', tbl(["Marke", "Produkte"], r["ohne_land_marken"]),
+         f'<h2>Ohne Art: {r["ohne_art"]} – häufigste Namen</h2>', tbl(["Name (Anfang)", "Produkte"], r["ohne_art_namen"]),
+         f'<h2>Dubletten über Shops: {r["dubletten"]}</h2>', tbl(["Sorte", "Shops", "Varianten", "Preis von – bis"],
+                                                                 [[d["name"], ", ".join(d["shops"]), d["n"], f'{d["preis"][0]:.2f} – {d["preis"][1]:.2f} €' if d["preis"] else "–"] for d in r["dubletten_top"]]),
+         '<style>.pt{border-collapse:collapse;font-size:12.5px}.pt td,.pt th{border-bottom:1px solid var(--line);padding:3px 8px;text-align:left;vertical-align:top}.pt td:not(:first-child){text-align:right}</style>']
+    return '<section class="prose" style="max-width:none">' + "".join(h) + "</section>"
+
+
+
 def cats_sorted():
     """Reihenfolge aus site.json; saisonale Themenwelt in ihrer Saison ganz vorn."""
     return sorted(cats, key=lambda c: 0 if in_season(c) else 1)
@@ -862,7 +948,7 @@ def clip(t, n=158):
 
 ORG = {"@type": "Organization", "@id": f"{BASE}/#org", "name": "Naschpass", "url": f"{BASE}/",
        "logo": f"{BASE}/static/logo.png", "sameAs": [x["url"] for x in site["socials"]]}
-NOINDEX_PATHS = ("/merkliste/", "/pruefen/", "/404")
+NOINDEX_PATHS = ("/merkliste/", "/pruefen/", "/pruefen/sortiment/", "/404")
 
 
 def ld_json(path, title, extra):
@@ -2354,6 +2440,9 @@ Vollständige Angaben im <a href="/impressum/">Impressum</a>.</p></section>"""
     # Für den nächtlichen Verfügbarkeits-Check (GitHub-Action): Werbelink + direkte Shop-Adresse
     write("check.json", json.dumps([{"u": p["url"], "m": p["murl"], "s": p.get("shop", "")} for p in products if p.get("murl")],
                                    ensure_ascii=False, separators=(",", ":")))
+    rep = sortiment_report()  # Sortiments-Bericht (Phase 2: Inventar im Blick behalten)
+    write("sortiment.json", json.dumps(rep, ensure_ascii=False, separators=(",", ":")))
+    write("pruefen/sortiment/index.html", page("Sortiment – Naschpass (intern)", sortiment_html(rep), "Interner Sortiments-Bericht.", "/pruefen/sortiment/"))
     write("merkliste/index.html", page("Merkliste – Naschpass", MERK_HTML, "Deine gemerkten Süßigkeiten, sortiert nach Shop.",
                                        "/merkliste/", script=MERK_JS))
     if PREVIEW:
@@ -2456,7 +2545,7 @@ Vollständige Angaben im <a href="/impressum/">Impressum</a>.</p></section>"""
             print("WARNUNG: Pillow fehlt, Vorschaubilder der Posts nicht verkleinert (Original wird geladen)")
     # Vorschau-Seiten (*.workers.dev) sollen nie in Google landen; live: interne Dateien ausschließen
     (DIST / "robots.txt").write_text("User-agent: *\nDisallow: /\n" if PREVIEW else
-                                     "User-agent: *\nAllow: /\nDisallow: /merkliste/\nDisallow: /pruefen/\nDisallow: /check.json\n"
+                                     "User-agent: *\nAllow: /\nDisallow: /merkliste/\nDisallow: /pruefen/\nDisallow: /check.json\nDisallow: /sortiment.json\n"
                                      f"Disallow: /static/_dump/\n\nSitemap: {BASE}/sitemap.xml\n", encoding="utf-8")
     # Sicherheits-Header: Seite darf nur Dinge von der eigenen Domain laden (plus freigegebene Partner-Bildserver nach Einwilligung)
     img_hosts = " ".join(f"https://{h}" for h in sorted(PARTNERS))
