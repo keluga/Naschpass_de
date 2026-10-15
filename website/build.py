@@ -346,6 +346,77 @@ def order_products():
     products[:] = out
 
 
+# --- Preisvergleich: gleiche Sorte + gleiche Packungsgröße bei mehreren Shops -> eine Karte, weitere Shops darunter
+_SIZE = re.compile(r"(\d+(?:[.,]\d+)?)\s*(kg|gramm|gr|g|ml|liter|l|stueck|stk)(?![a-z])")
+_OSTOP = {"und", "mit", "der", "die", "das", "von", "im", "in", "x", "packung", "pack", "beutel", "dose", "tuete", "box", "stueck", "stk",
+          "g", "gr", "gramm", "kg", "ml", "l", "liter", "er", "je", "a", "fuer", "the", "of"}
+MERGED = {"gruppen": 0, "weg": 0}
+
+
+def offer_key(p):
+    full = translit(p.get("name", "").lower())
+    n = full.split(" - ")[0]  # Zusätze der Shops ("- Stapelchips - Knabberspaß") weglassen
+    sizes = []
+    for a, u in (_SIZE.findall(n) or _SIZE.findall(full)):
+        x = float(a.replace(",", "."))
+        u = {"gramm": "g", "gr": "g", "liter": "l", "stk": "stueck"}.get(u, u)
+        if u == "kg":
+            x, u = x * 1000, "g"
+        if u == "l":
+            x, u = x * 1000, "ml"
+        sizes.append((round(x, 1), u))
+    if not sizes:
+        return None  # ohne Packungsgröße kein Vergleich (sonst 100 g neben 1 kg)
+    rest = _SIZE.sub(" ", n)
+    rest = re.sub(r"\b\d+\s*x\b|\bx\s*\d+\b", lambda m: " " + re.sub(r"\D", "", m.group(0)) + "x ", rest)  # 4 x / x4 -> "4x"
+    toks = frozenset(w for w in re.findall(r"[a-z0-9]+", rest) if len(w) > 1 and w not in _OSTOP)
+    if len([w for w in toks if not w.isdigit()]) < 2:
+        return None
+    return (toks, tuple(sorted(sizes)))
+
+
+def merge_offers():
+    """Gleiches Produkt (gleiche Wörter + gleiche Packungsgröße) bei mehreren Shops: Die günstigste Karte bleibt,
+    die anderen Shops stehen als „Auch bei …“ darunter. Vorsichtig: nur mit Preis, Preise höchstens Faktor 2 auseinander."""
+    groups = {}
+    for p in products:
+        k = offer_key(p) if p.get("price") and p.get("source") == "awin" else None
+        if k:
+            groups.setdefault(k, []).append(p)
+    drop = set()
+    for g in groups.values():
+        best = {}
+        for p in g:  # je Shop nur das günstigste Angebot
+            sh = p.get("shop", "")
+            if sh not in best or p["price"] < best[sh]["price"]:
+                best[sh] = p
+        if len(best) < 2:
+            continue
+        cand = sorted(best.values(), key=lambda p: p["price"])
+        head = cand[0]
+        others = [p for p in cand[1:] if p["price"] <= head["price"] * 2]
+        if not others:
+            continue
+        head["offers"] = [{"s": p.get("shop", ""), "p": p["price"], "u": p["url"]} for p in others]
+        head["score"] = max(p.get("score", 0) for p in [head] + others) + 1  # Vergleich = echter Nutzen, leicht nach vorn
+        if head.get("imgkb") and any((p.get("imgkb") or 0) > head["imgkb"] for p in others):
+            better = max(others, key=lambda p: p.get("imgkb") or 0)
+            head["image"], head["imgkb"] = better["image"], better.get("imgkb")  # schönstes Bild der Gruppe
+        drop.update(id(p) for p in others)
+        MERGED["gruppen"] += 1
+    MERGED["weg"] = len(drop)
+    products[:] = [p for p in products if id(p) not in drop]
+    print(f"[Preisvergleich] {MERGED['gruppen']} Produkte mit mehreren Shops zusammengefasst, {MERGED['weg']} Doppel-Karten weniger")
+
+
+def offers_html(p):
+    if not p.get("offers"):
+        return ""
+    links = " · ".join(f'<a href="{e(o["u"])}" rel="sponsored noopener" target="_blank">{e(o["s"])} {euro(o["p"])}*</a>' for o in p["offers"])
+    return f'<p class="offers">Auch bei: {links}<small>Preise laut Shop am {TODAY.strftime("%d.%m.")}, ggf. zzgl. Versand</small></p>'
+
+
+
 def sortiment_report():
     """Sortiments-Bericht: was ist da, was fehlt (Herkunft/Art), Dubletten über Shops, Preise, Themenwelten.
     Liegt als /sortiment.json (für tools/sortiment_md.py) und als Seite /pruefen/sortiment/ (noindex)."""
@@ -405,7 +476,7 @@ def sortiment_report():
             "matrix": matrix, "themen": themen,
             "ohne_land": sum(s["ohne_land"] for s in shops.values()), "ohne_land_marken": top(ohne_land_marke, 60),
             "ohne_art": sum(s["ohne_art"] for s in shops.values()), "ohne_art_namen": top(ohne_art_namen, 60),
-            "dubletten": len(dubl), "dubletten_top": dubl[:80]}
+            "dubletten": len(dubl), "dubletten_top": dubl[:80], "preisvergleich": dict(MERGED)}
 
 
 def sortiment_html(r):
@@ -425,7 +496,8 @@ def sortiment_html(r):
          "<h2>Themenwelten</h2>", tbl(["Welt", "Produkte", "Saison aktiv"], [[t["titel"], t["n"], "ja" if t["saison"] else ""] for t in r["themen"]]),
          f'<h2>Ohne Herkunft: {r["ohne_land"]} – häufigste Marken</h2>', tbl(["Marke", "Produkte"], r["ohne_land_marken"]),
          f'<h2>Ohne Art: {r["ohne_art"]} – häufigste Namen</h2>', tbl(["Name (Anfang)", "Produkte"], r["ohne_art_namen"]),
-         f'<h2>Dubletten über Shops: {r["dubletten"]}</h2>', tbl(["Sorte", "Shops", "Varianten", "Preis von – bis"],
+         f'<h2>Preisvergleich: {r["preisvergleich"]["gruppen"]} Karten mit mehreren Shops ({r["preisvergleich"]["weg"]} Doppel-Karten zusammengefasst)</h2>',
+         f'<h2>Übrige Dubletten über Shops: {r["dubletten"]}</h2>', tbl(["Sorte", "Shops", "Varianten", "Preis von – bis"],
                                                                  [[d["name"], ", ".join(d["shops"]), d["n"], f'{d["preis"][0]:.2f} – {d["preis"][1]:.2f} €' if d["preis"] else "–"] for d in r["dubletten_top"]]),
          '<style>.pt{border-collapse:collapse;font-size:12.5px}.pt td,.pt th{border-bottom:1px solid var(--line);padding:3px 8px;text-align:left;vertical-align:top}.pt td:not(:first-child){text-align:right}</style>']
     return '<section class="prose" style="max-width:none">' + "".join(h) + "</section>"
@@ -771,7 +843,7 @@ font-size:26px;line-height:1;cursor:pointer;box-shadow:0 4px 14px rgba(43,35,80,
 @media(min-width:620px){.prods.v-big{grid-template-columns:repeat(2,1fr)}.prods.v-small{grid-template-columns:repeat(3,1fr)}.prods.v-list{grid-template-columns:repeat(2,1fr)}}
 @media(min-width:960px){.prods.v-big{grid-template-columns:repeat(3,1fr)}.prods.v-small{grid-template-columns:repeat(4,1fr)}}
 .favlink{white-space:nowrap;color:#E8457A!important}.mrow2 .btn{background:var(--vio);color:#fff;border-radius:12px;text-decoration:none;font-weight:800}
-.pcw{position:relative;display:flex}.pcw .pi,.pcw h3{cursor:zoom-in}
+.pcw{position:relative;display:flex}.pcw.has-o{flex-direction:column}.offers{margin:-10px 0 0;padding:16px 12px 8px;background:#FFF6D6;border-radius:0 0 18px 18px;font-size:12.5px;line-height:1.45;font-weight:600}.offers a{color:var(--fg);white-space:nowrap}.offers small{display:block;font-weight:400;color:var(--mut);font-size:11px}.pcw .pi,.pcw h3{cursor:zoom-in}
 .qv{border:0;border-radius:22px 22px 0 0;padding:0;width:100%;max-width:640px;max-height:88vh;margin:auto auto 0;background:var(--bg);color:var(--fg)}
 @media(min-width:700px){.qv{border-radius:22px;margin:auto}}
 .qv::backdrop{background:rgba(43,35,80,.5)}
@@ -1039,7 +1111,7 @@ def prod_card(p):
     shop = p.get("shop", "")
     btn = f"Bei {e(shop)} ansehen*" if shop else "Zum Shop*"
     reg = REGION_NOTE.get(shop)
-    return (f'<div class="pcw" data-cat="{e(cid)}"{facet_attrs(p)}><a class="prod" href="{e(p["url"])}" rel="sponsored noopener" target="_blank" style="--c:{cat_color.get(cid, "#CFE7DD")}">'
+    return (f'<div class="pcw{" has-o" if p.get("offers") else ""}" data-cat="{e(cid)}"{facet_attrs(p)}><a class="prod" href="{e(p["url"])}" rel="sponsored noopener" target="_blank" style="--c:{cat_color.get(cid, "#CFE7DD")}">'
             f'<div class="pi">{pic}' + (f'<span class="pc"><i></i>{e(cname)}</span>' if cname else "") + '</div>'
             f'<div class="pb"><h3>{e(p["name"])}</h3>'
             + (f'<p class="note">{e(p["note"])}</p>' if p.get("note") else "")
@@ -1047,7 +1119,7 @@ def prod_card(p):
             + (f'<span class="shop">bei {e(shop)}</span>' if shop else "")
             + (f'<span class="reg">{e(reg)}</span>' if reg else "")
             + f'<div class="cta"><span><em class="l">{btn}</em><em class="s">Zum Shop*</em></span></div></div></a>'
-            f'<button class="fav" type="button" aria-pressed="false" aria-label="Merken" data-fav="{fav_data(p)}">♡</button></div>')
+            f'<button class="fav" type="button" aria-pressed="false" aria-label="Merken" data-fav="{fav_data(p)}">♡</button>{offers_html(p)}</div>')
 
 
 def partner_card():
@@ -1200,11 +1272,12 @@ if(fl){var grid=document.getElementById(fl.dataset.grid),PAGE=24,shown=48,sel={}
  function esc2(x){return String(x).replace(/[&<>"']/g,function(c){return'&#'+c.charCodeAt(0)+';'})}
  function card(i){var im=i.img||(i.ext&&window.npImgOK&&window.npImgOK()?i.ext:'');var sh=(i.sub||'').split(' · ')[0];
   var fav=esc2(JSON.stringify({u:i.url,n:i.title,s:sh,i:i.img||'',v:i.v||'',p:i.pr||''}));
-  return '<div class="pcw"><a class="prod" href="'+esc2(i.url)+'" rel="sponsored noopener" target="_blank"><div class="pi">'
+  return '<div class="pcw'+(i.o?' has-o':'')+'"><a class="prod" href="'+esc2(i.url)+'" rel="sponsored noopener" target="_blank"><div class="pi">'
    +(im?'<img src="'+esc2(im)+'" alt="'+esc2(i.title)+'" loading="lazy">':'<span class="svgw">'+(i.svg||'')+'</span>')+'</div><div class="pb"><h3>'+esc2(i.title)+'</h3>'
    +(i.pr?'<span class="pr">'+esc2(i.pr)+'</span>':'')+(sh?'<span class="shop">bei '+esc2(sh)+'</span>':'')+(i.reg?'<span class="reg">'+esc2(i.reg)+'</span>':'')
    +'<div class="cta"><span><em class="l">'+(sh?'Bei '+esc2(sh)+' ansehen*':'Zum Shop*')+'</em><em class="s">Zum Shop*</em></span></div></div></a>'
-   +'<button class="fav" type="button" aria-pressed="false" aria-label="Merken" data-fav="'+fav+'">♡</button></div>'}
+   +'<button class="fav" type="button" aria-pressed="false" aria-label="Merken" data-fav="'+fav+'">♡</button>'
+   +(i.o?'<p class="offers">Auch bei: '+i.o.map(function(o){return '<a href="'+esc2(o[2])+'" rel="sponsored noopener" target="_blank">'+esc2(o[0])+' '+esc2(o[1])+'*</a>'}).join(' · ')+'<small>Preise laut Shop, ggf. zzgl. Versand</small></p>':'')+'</div>'}
  function load(cb){if(data){cb();return}if(loading)return;loading=true;
   fetch('/search.json').then(function(r){return r.json()}).then(function(j){data=j.items.filter(function(i){return i.type==='product'}).map(function(i){
    var o={i:i};(i.f||'').split(' ').forEach(function(x){var kv=x.split(':');if(kv[1])o[kv[0]]=(o[kv[0]]?o[kv[0]]+' ':'')+kv[1]});o.t=(i.th||'');return o});cb()})}
@@ -2020,7 +2093,7 @@ def search_index(live):
                       "alt": translit(p["name"]), "tags": " ".join([cname, cid] + p.get("tags", [])),
                       "text": p.get("note", ""),
                       "f": " ".join(f"{g}:{i}" for g, v in facets(p).items() for i in sorted(v)),
-                      "th": " ".join(themes_of(p)), "pr": euro(p.get("price")), "v": p.get("vid", ""), **({"reg": REGION_NOTE[p.get("shop")]} if p.get("shop") in REGION_NOTE else {})})
+                      "th": " ".join(themes_of(p)), "pr": euro(p.get("price")), "v": p.get("vid", ""), **({"o": [[o["s"], euro(o["p"]), o["u"]] for o in p["offers"]]} if p.get("offers") else {}), **({"reg": REGION_NOTE[p.get("shop")]} if p.get("shop") in REGION_NOTE else {})})
     for c in cats:
         items.append({"type": "cat", "title": c["name"], "url": f"/kategorie/{c['id']}/", "svg": sticker(c["id"], 52),
                       "sub": c["teaser"], "alt": translit(c["name"]), "tags": c["id"].replace("-", " "), "text": c["teaser"]})
@@ -2113,6 +2186,7 @@ def build():
     if DEMO:
         shutil.copytree(HERE / "demo", DIST / "static" / "demo")
     live = [p for p in posts if (ROOT / "fertige_posts" / post_folder(p)).exists()]
+    merge_offers()
     order_products()
     _CAT_CACHE.clear()  # Themenwelten in der neuen Reihenfolge
 
