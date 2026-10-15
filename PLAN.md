@@ -19,7 +19,9 @@ Kernidee: Der Build liefert bei jedem Lauf selbst den Sortiments-Bericht, Invent
 2. ✅ (PR #15: 20 Marken, Sammelkategorie raus, Art-Stichwörter; ohne Herkunft 3.380 → 2.509) **Lücken schließen nach Bericht:** Top-Marken ohne Herkunft in `brands.json`, `WELT_HINTS` erweitern; Piccantino-Bilder mit „410 Gone“ direkt als ausgelistet sperren.
 3. ✅ (PR #16: 265 Karten mit mehreren Shops, 273 Doppel-Karten weniger) **„Günstigster Shop“:** gleiche Sorte bei mehreren Shops → eine Karte, mehrere Preise.
 4. ✅ (PR #18: Welten genauer statt kleiner – Schokolade ohne Tee, Getränke ohne Süßes/Tee, Nusssnacks 3.538 → 500 echte; `not_facets`/`not_keywords`; Alkoholfilter mit Wortteilen, Root/Ginger Beer bleiben) **Themenwelten nach den Zahlen:** leere ausblenden, Riesen teilen (Schokolade 7.000+), Saison vorn.
-5. **Build stabil:** Bild-Cache zwischen Builds behalten (z. B. GitHub-Release-Datei, kostenlos, braucht Token in Cloudflare).
+5. ✅ **Build stabil:** Bilder-Vorrat als GitHub-Release, ohne Token (nächtliche Action holt die Bilder von der Live-Seite).
+6. ✅ **Doppelte Karten:** gleiche Sorte über Shops UND Größen = eine Karte; Themenwelten ohne 48er-Grenze („Mehr zeigen“).
+7. Asiafoodland + myfruits: Claude wählt Produkte selbst aus und baut AWIN-Deeplinks (`cread.php?awinmid=…&awinaffid=3111189&ued=…`), Kev muss nichts aussuchen.
 - Danach Bewerbungsrunde 3 (Lauenstein, Dallmayr, Swiss Finest, Gustini …) mit vollem Sortiment.
 
 ## Phase 3: Marketing (Besucher, die kaufen)
