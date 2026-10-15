@@ -2574,10 +2574,18 @@ Vollständige Angaben im <a href="/impressum/">Impressum</a>.</p></section>"""
     try:  # Pinterest-Pins aus den echten Daten (dist/pins/, Übersicht /pruefen/pins/)
         import pins
         pm = pins.make(DIST, products, cats, cat_items, facets, euro, TODAY, TOP_BRANDS)
+        from urllib.parse import quote as _q
+        def _pinit(m):  # Pinterest-Merken-Dialog mit Bild, Link und Text vorausgefüllt
+            return ("https://de.pinterest.com/pin/create/button/?url=" + _q(m["link"], safe="") + "&media=" + _q(BASE + m["image"], safe="")
+                    + "&description=" + _q(m["title"] + " – " + m["description"], safe=""))
         grid = "".join(f'<figure style="margin:0"><a href="{e(m["link"])}"><img src="{e(m["image"])}" alt="{e(m["alt"])}" loading="lazy" style="width:100%;border-radius:14px"></a>'
-                       f'<figcaption style="font-size:12.5px"><b>{e(m["title"])}</b><br>Board: {e(m["board"])}</figcaption></figure>' for m in pm)
+                       f'<figcaption style="font-size:12.5px"><b>{e(m["title"])}</b><br>Board: <b>{e(m["board"])}</b><br>'
+                       f'<a class="morebtn" style="display:inline-block;margin-top:6px;font-size:13px;padding:6px 12px" href="{e(_pinit(m))}" target="_blank" rel="noopener">Auf Pinterest merken</a>'
+                       f'</figcaption></figure>' for m in pm)
         write("pruefen/pins/index.html", page("Pins – Naschpass (intern)",
-              f'<section class="prose" style="max-width:none"><h1>Pinterest-Pins ({len(pm)})</h1><p>Automatisch aus den Shop-Daten, Stand {TODAY.strftime("%d.%m.%Y")}. Daten: <a href="/pins/pins.json">pins.json</a></p>'
+              f'<section class="prose" style="max-width:none"><h1>Pinterest-Pins ({len(pm)})</h1><p>Automatisch aus den Shop-Daten, Stand {TODAY.strftime("%d.%m.%Y")}. '
+              f'So postest du einen Pin: „Auf Pinterest merken“ antippen, das angezeigte Board wählen (gibt es das noch nicht: „Pinnwand erstellen“ mit genau dem Namen), „Merken“. Bild, Link und Text sind schon drin. '
+              f'Daten: <a href="/pins/pins.json">pins.json</a></p>'
               f'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px">{grid}</div></section>', "Interne Pin-Übersicht.", "/pruefen/pins/"))
     except Exception as ex:  # Pins dürfen den Build nie kaputt machen
         print(f"[Pins] übersprungen ({type(ex).__name__}: {ex})")
