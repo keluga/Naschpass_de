@@ -24,9 +24,11 @@ jobs:
         env:
           ALLE: ${{ inputs.alle && '1' || '0' }}
         run: python3 tools/check_links.py
+      - name: Sortiments-Bericht nach SORTIMENT.md
+        run: python3 tools/sortiment_md.py || echo "Bericht nicht erreichbar, SORTIMENT.md bleibt"
       - name: Ergebnis speichern
         run: |
           git config user.name "naschpass-bot"
           git config user.email "naschpass-bot@users.noreply.github.com"
-          git add website/sperrliste_auto.json
-          git diff --cached --quiet && echo "Nichts Neues." || (git commit -m "Verfügbarkeits-Check: Sperrliste aktualisiert" && git push origin main)
+          git add website/sperrliste_auto.json SORTIMENT.md
+          git diff --cached --quiet && echo "Nichts Neues." || (git commit -m "Nächtlich: Sperrliste und Sortiments-Bericht aktualisiert" && git push origin main)
