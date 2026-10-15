@@ -409,7 +409,7 @@ _STRONG = re.compile(r"\b(japan|japanisch\w*|korea|koreanisch\w*|usa|amerikanisc
 
 FERN = {"usa", "japan", "korea", "mexiko", "asien", "orient", "uk"}
 WELT_BONUS = {**{w: 4 for w in FERN}, **{w: 1 for w in ("oesterreich", "schweiz", "italien", "frankreich", "benelux", "spanien", "skandinavien", "osteuropa")}}
-_GENERIC = re.compile(r"^(nahrungsmittel, getränke & tabak|food, beverages & tobacco|lebensmittel|food items|food)$", re.I)
+_GENERIC = re.compile(r"^(nahrungsmittel, getränke & tabak|food, beverages & tobacco|lebensmittel|food items|food|süßigkeiten & schokolade|süßwaren & snacks)$", re.I)
 
 
 def _cat_tail(c):
