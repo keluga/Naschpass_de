@@ -51,6 +51,16 @@ try:
 except Exception:
     BRANDS = {}
 # Welche Herkunft eine Entdecken-Welt wirklich zeigen soll (sonst landen z. B. Nacho-Chips aus Österreich bei „Mexiko“)
+# Typische Marken/Sorten je Welt: Entdecken-Pins sollen „Was ist DAS?“ auslösen, nicht „Kenn ich vom Supermarkt“
+TYPISCH = {
+    "japan": r"pocky|pepero|hi-?chew|ramune|mochi|koikeya|karamucho|calbee|meiji|glico|buldak|samyang|yan ?yan|kinoko|matcha|tao kae noi|choco ?pie",
+    "usa": r"reese|hershey|twinkie|jolly rancher|warheads|airheads|nerds|takis|cheetos|lucky charms|pop-?tarts|sour patch|swedish fish|jelly belly|root beer|dr\.? ?pepper|mountain dew|fluff|goldfish|cheez-?it|trolli crawlers|kool-?aid",
+    "mexiko": r"takis|pulparindo|lucas|vero|de la rosa|mazap[aá]n|pel[oó]n|duvalin|rockaleta|taj[ií]n|valentina|barcel|tamarind|chamoy|jarritos",
+    "skandinavien": r"lakrids|salmiak|fazer|malaco|cloetta|ahlgren|djungelvr|l[äa]kerol|toms|nordthy|marabou|kanelbull|turkisk|pantteri|haribo salt",
+    "italien": r"baci|perugina|loacker|panettone|pandoro|cantucci|amaretti|torrone|baiocchi|pan di stelle|ringo|kinder bueno|galbusera|novi|venchi|fabbri",
+    "schweiz": r"lindt|toblerone|spr[üu]ngli|ragusa|k[äa]gi|cailler|frey|ovomaltine|ricola|halba|camille bloch|villars",
+    "sauer-scharf": r"warheads|takis|toxic waste|sour patch|buldak|hot chip|cry ?baby|mega sour|reaper|carolina|sour|chili|scharf|extreme",
+}
 ECHT = {"japan": {"japan", "korea", "asien"}, "usa": {"usa"}, "mexiko": {"mexiko"}, "skandinavien": {"skandinavien"},
         "italien": {"italien"}, "schweiz": {"schweiz"}}
 
@@ -229,7 +239,10 @@ def make(dist, products, cats, cat_items, facets, euro, today, top_brands, log=p
             if BRANDS.get(b) in ("deutschland", "oesterreich"):
                 return False
             return not (b in top_brands and cid not in ("japan",))
-        pool = [p for p in items if neu(p)]
+        rx = re.compile(TYPISCH.get(cid, r"$^"), re.I)
+        pool = [p for p in items if rx.search(p["name"] + " " + (p.get("brand") or ""))]
+        if len(pool) < 4:
+            pool = [p for p in items if neu(p)]
         if len(pool) < 4:
             pool = items
         seen, sel = set(), []
