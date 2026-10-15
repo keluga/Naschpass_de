@@ -174,6 +174,7 @@ def fetch_images(prods):
         # "v2": neue Dateinamen für alle Bilder. Unter den alten Namen lagen früher graue AWIN-Platzhalter,
         # die in Browser-Caches bis zu 1 Jahr kleben (/i/ ist immutable). Bei einem neuen Bild-Problem: v3 usw.
         h = hashlib.sha1((p["image"] + "|v2").encode()).hexdigest()[:16]
+        p["isrc"] = small_img(p["image"], 800)  # große Fassung, nur für Pinterest-Pins (pins.py)
         dest = IMG_DIR / (h + ".jpg")
         p["_dest"] = dest
         # Shop-Ersatzbilder heißen anders ("…s.jpg"): Unter dem alten Namen lag früher der graue
@@ -235,6 +236,7 @@ def fetch_images(prods):
                         return False, "Shop-Bild nicht lesbar"
                     p["_shopdest"].write_bytes(data)
                     p["_dest"] = p["_shopdest"]
+                    p["isrc"] = mimg
                     stats["shop"] += 1
                     return True, ""
                 except Exception as ex:
