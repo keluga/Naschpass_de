@@ -833,7 +833,12 @@
             "trüffel",
             "trueffel",
             "konfekt",
-            "bonbonniere"
+            "bonbonniere",
+            "marzipan",
+            "dominostein",
+            "stollenkonfekt",
+            "lebkuchenkonfekt",
+            "bratapfelkonfekt"
           ]
         },
         {
@@ -854,7 +859,9 @@
             "chewy",
             "sour patch",
             "gummibär",
-            "marshmallow"
+            "marshmallow",
+            "lakritz",
+            "salzdiamant"
           ]
         },
         {
@@ -924,7 +931,11 @@
             "kinoko",
             "takenoko",
             "pop-tarts",
-            "mochi"
+            "mochi",
+            "lebkuchen",
+            "stollen",
+            "spekulatius",
+            "printen"
           ]
         },
         {
