@@ -1090,7 +1090,7 @@ def page(title, body, desc=None, path="/", og_img=None, script="", stamp="", ld=
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>{e(title)}</title><meta name="description" content="{e(desc)}">
 <meta name="theme-color" content="#EAF6F1"><link rel="canonical" href="{BASE}{path}">
-<link rel="icon" href="/favicon.ico" sizes="48x48"><link rel="icon" href="/static/favicon.png" type="image/png"><link rel="apple-touch-icon" href="/static/logo.png">{robots}
+<link rel="icon" href="/favicon.ico" sizes="48x48"><link rel="icon" href="/static/favicon.png" type="image/png"><link rel="apple-touch-icon" href="/static/logo.png">{robots}<meta name="p:domain_verify" content="78aadb63136c2bf6dace7f2bbfd45f00">
 <link rel="preload" href="/static/fonts/anton-latin.woff2" as="font" type="font/woff2" crossorigin>
 <meta property="og:type" content="{og_type}"><meta property="og:site_name" content="Naschpass"><meta property="og:url" content="{BASE}{path}"><meta property="og:locale" content="de_DE">
 <meta property="og:title" content="{e(title)}"><meta property="og:description" content="{e(desc)}">
