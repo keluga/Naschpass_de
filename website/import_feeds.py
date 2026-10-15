@@ -159,45 +159,59 @@ def fetch_images(prods):
         return "shop"
 
     ende = [0.0]  # Zeitbudget Runde 2: der Build darf nie hängen bleiben
-    haenger = {}  # Host -> Timeouts in Folge; ab 12 wird der Shop für diesen Build übersprungen
+    haenger = {}  # Host -> Timeouts in Folge
+    pause = {}  # Host -> schon einmal abgekühlt? (zweite Chance statt sofortigem Aus)
+    je_host = {}  # Host -> Semaphore: höchstens 2 gleichzeitige Abrufe pro Shop, sonst drosselt er (gourvita.com)
+    import threading
+    sperre = threading.Lock()
 
     def runde2(p):
         mimg = p.get("mimg", "")
         if not mimg.startswith("http"):
             return False, "kein Shop-Bild im Feed"
         host = mimg.split("/")[2]
+        with sperre:
+            sem = je_host.setdefault(host, threading.Semaphore(2))
         why = "?"
-        for versuch in range(2):
+        for versuch in range(3):
             if time.time() > ende[0]:
                 return False, "Zeitbudget aufgebraucht"
             if haenger.get(host, 0) >= 12:
-                return False, f"{host} antwortet nicht (übersprungen)"
-            try:
-                d, final = _get(mimg, timeout=20)
-                haenger[host] = 0
-                if _is_placeholder(d, final):
-                    return False, f"Shop-Bild zu klein/Platzhalter ({len(d)} B)"
-                data = _shrink(d)
-                if not data:
-                    return False, "Shop-Bild nicht lesbar"
-                p["_shopdest"].write_bytes(data)
-                p["_dest"] = p["_shopdest"]
-                stats["shop"] += 1
-                return True, ""
-            except Exception as ex:
-                why = f"{type(ex).__name__}: {str(ex)[:80]}"
-                if any(c in why for c in ("404", "410")):  # Bild beim Shop gelöscht: Produkt meist ausgelistet
-                    break
-                if "timed out" in why:
-                    haenger[host] = haenger.get(host, 0) + 1
-                time.sleep(3)
+                if pause.get(host):
+                    return False, f"{host} antwortet nicht (übersprungen)"
+                with sperre:  # ein Thread wartet 45 s, die anderen sehen danach den Reset
+                    if haenger.get(host, 0) >= 12 and not pause.get(host):
+                        log(f"Bilder: {host} drosselt, 45 s Abkühlpause")
+                        time.sleep(45)
+                        pause[host] = True
+                        haenger[host] = 0
+            with sem:
+                try:
+                    d, final = _get(mimg, timeout=25)
+                    haenger[host] = 0
+                    if _is_placeholder(d, final):
+                        return False, f"Shop-Bild zu klein/Platzhalter ({len(d)} B)"
+                    data = _shrink(d)
+                    if not data:
+                        return False, "Shop-Bild nicht lesbar"
+                    p["_shopdest"].write_bytes(data)
+                    p["_dest"] = p["_shopdest"]
+                    stats["shop"] += 1
+                    return True, ""
+                except Exception as ex:
+                    why = f"{type(ex).__name__}: {str(ex)[:80]}"
+                    if any(c in why for c in ("404", "410")):  # Bild beim Shop gelöscht: Produkt meist ausgelistet
+                        break
+                    if "timed out" in why:
+                        haenger[host] = haenger.get(host, 0) + 1
+                    time.sleep(4)  # innerhalb der Semaphore: der Shop bekommt Luft
         return False, why
 
     with ThreadPoolExecutor(max_workers=24) as ex:
         res1 = list(ex.map(runde1, prods))
     nachholen = [p for p, r in zip(prods, res1) if r == "shop"]
     ende[0] = time.time() + 8 * 60
-    with ThreadPoolExecutor(max_workers=4) as ex:
+    with ThreadPoolExecutor(max_workers=6) as ex:  # 6 Threads, aber je Shop nur 2 (Semaphore oben)
         res2 = dict(zip(map(id, nachholen), ex.map(runde2, nachholen)))
     out = []
     for p in prods:
