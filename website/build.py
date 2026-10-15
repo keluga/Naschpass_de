@@ -362,6 +362,8 @@ MERGED = {"gruppen": 0, "weg": 0}
 
 
 def offer_key(p):
+    """Schlüssel einer Sorte: die Wörter des Namens ohne Packungsgröße und ohne Shop-Zusätze nach ' - '.
+    Gibt (Wörter, Größe) zurück; Größe kann None sein."""
     full = translit(p.get("name", "").lower())
     n = full.split(" - ")[0]  # Zusätze der Shops ("- Stapelchips - Knabberspaß") weglassen
     sizes = []
@@ -373,56 +375,75 @@ def offer_key(p):
         if u == "l":
             x, u = x * 1000, "ml"
         sizes.append((round(x, 1), u))
-    if not sizes:
-        return None  # ohne Packungsgröße kein Vergleich (sonst 100 g neben 1 kg)
     rest = _SIZE.sub(" ", n)
     rest = re.sub(r"\b\d+\s*x\b|\bx\s*\d+\b", lambda m: " " + re.sub(r"\D", "", m.group(0)) + "x ", rest)  # 4 x / x4 -> "4x"
     toks = frozenset(w for w in re.findall(r"[a-z0-9]+", rest) if len(w) > 1 and w not in _OSTOP)
     if len([w for w in toks if not w.isdigit()]) < 2:
-        return None
-    return (toks, tuple(sorted(sizes)))
+        return None, None
+    return toks, (tuple(sorted(sizes)) or None)
+
+
+def size_label(sz):
+    if not sz:
+        return ""
+    x, u = sz[0]
+    if u == "g":
+        return f"{x / 1000:g} kg".replace(".", ",") if x >= 1000 else f"{x:g} g"
+    if u == "ml":
+        return f"{x / 1000:g} l".replace(".", ",") if x >= 1000 else f"{x:g} ml"
+    return f"{x:g} Stück"
 
 
 def merge_offers():
-    """Gleiches Produkt (gleiche Wörter + gleiche Packungsgröße) bei mehreren Shops: Die günstigste Karte bleibt,
-    die anderen Shops stehen als „Auch bei …“ darunter. Vorsichtig: nur mit Preis, Preise höchstens Faktor 2 auseinander."""
+    """Doppelte Karten vermeiden: gleiche Sorte (gleiche Wörter im Namen) bei mehreren Shops oder in mehreren Größen
+    wird zu EINER Karte. Vorn steht das Angebot mit den meisten Punkten (bei Gleichstand das günstigste),
+    darunter „Auch bei …“ bzw. „Weitere Größen & Shops …“. Multipacks (6x …) bleiben eigene Sorten."""
     groups = {}
     for p in products:
-        k = offer_key(p) if p.get("price") and p.get("source") == "awin" else None
+        if not (p.get("price") and p.get("source") == "awin"):
+            continue
+        k, sz = offer_key(p)
         if k:
+            p["_sz"] = sz
             groups.setdefault(k, []).append(p)
     drop = set()
     for g in groups.values():
-        best = {}
-        for p in g:  # je Shop nur das günstigste Angebot
-            sh = p.get("shop", "")
-            if sh not in best or p["price"] < best[sh]["price"]:
-                best[sh] = p
-        if len(best) < 2:
+        uniq = {}
+        for p in g:  # gleiche Größe im selben Shop: nur das günstigste
+            key = (p.get("shop", ""), p["_sz"])
+            if key not in uniq or p["price"] < uniq[key]["price"]:
+                uniq[key] = p
+        drop.update(id(p) for p in g if uniq.get((p.get("shop", ""), p["_sz"])) is not p)
+        cand = list(uniq.values())
+        if len(cand) < 2:
             continue
-        cand = sorted(best.values(), key=lambda p: p["price"])
-        head = cand[0]
-        others = [p for p in cand[1:] if p["price"] <= head["price"] * 2]
-        if not others:
-            continue
-        head["offers"] = [{"s": p.get("shop", ""), "p": p["price"], "u": p["url"]} for p in others]
-        head["score"] = max(p.get("score", 0) for p in [head] + others) + 1  # Vergleich = echter Nutzen, leicht nach vorn
+        head = max(cand, key=lambda p: (p.get("score", 0), -p["price"]))
+        others = sorted((p for p in cand if p is not head), key=lambda p: ((p["_sz"] or ((0, ""),))[0][0], p["price"]))
+        same = all(p["_sz"] == head["_sz"] for p in others)
+        head["offers"] = [{"s": p.get("shop", ""), "p": p["price"], "u": p["url"], "g": "" if same else size_label(p["_sz"])} for p in others]
+        head["offers_same"] = same
+        head["score"] = max(p.get("score", 0) for p in cand) + 1
         if head.get("imgkb") and any((p.get("imgkb") or 0) > head["imgkb"] for p in others):
             better = max(others, key=lambda p: p.get("imgkb") or 0)
-            head["image"], head["imgkb"] = better["image"], better.get("imgkb")  # schönstes Bild der Gruppe
+            head["image"], head["imgkb"] = better["image"], better.get("imgkb")
         drop.update(id(p) for p in others)
         MERGED["gruppen"] += 1
+    for p in products:
+        p.pop("_sz", None)
     MERGED["weg"] = len(drop)
     products[:] = [p for p in products if id(p) not in drop]
-    print(f"[Preisvergleich] {MERGED['gruppen']} Produkte mit mehreren Shops zusammengefasst, {MERGED['weg']} Doppel-Karten weniger")
+    print(f"[Preisvergleich] {MERGED['gruppen']} Sorten zusammengefasst, {MERGED['weg']} doppelte Karten weniger")
 
 
 def offers_html(p):
     if not p.get("offers"):
         return ""
-    links = " · ".join(f'<a href="{e(o["u"])}" rel="sponsored noopener" target="_blank">{e(o["s"])} {euro(o["p"])}*</a>' for o in p["offers"])
-    return f'<p class="offers">Auch bei: {links}<small>Preise laut Shop am {TODAY.strftime("%d.%m.")}, ggf. zzgl. Versand</small></p>'
-
+    head = "Auch bei" if p.get("offers_same") else "Weitere Größen &amp; Shops"
+    shown = p["offers"][:6]
+    links = " · ".join(f'<a href="{e(o["u"])}" rel="sponsored noopener" target="_blank">{e(o["s"])}{" " + e(o["g"]) if o.get("g") else ""} {euro(o["p"])}*</a>'
+                       for o in shown)
+    rest = f" · +{len(p['offers']) - 6} weitere" if len(p["offers"]) > 6 else ""
+    return f'<p class="offers">{head}: {links}{rest}<small>Preise laut Shop am {TODAY.strftime("%d.%m.")}, ggf. zzgl. Versand</small></p>'
 
 
 def sortiment_report():
@@ -1269,14 +1290,6 @@ document.querySelectorAll('[role=tab]').forEach(function(t){t.addEventListener('
  n.querySelectorAll('[data-panel]').forEach(function(p){p.hidden=p.dataset.panel!==t.dataset.tab})})});
 /* Shop-Filter: innerhalb einer Gruppe ODER, zwischen Gruppen UND; Zustand steht in der Adresse (teilbar) */
 var fl=document.getElementById('flt');
-if(fl){var grid=document.getElementById(fl.dataset.grid),PAGE=24,shown=48,sel={},data=null,loading=false;
- var cnt=document.getElementById('fcount'),rst=document.getElementById('freset'),more=document.getElementById('fmore'),emp=document.getElementById('fempty');
- var total=+grid.dataset.total||grid.children.length;
- fl.querySelectorAll('[data-g]').forEach(function(b){sel[b.dataset.g]=[]});
- var u=new URLSearchParams(location.search);Object.keys(sel).forEach(function(k){var v=u.get(k);if(v)sel[k]=v.split(',')});
- function any(){return Object.keys(sel).some(function(k){return sel[k].length})}
- function okD(d){return Object.keys(sel).every(function(k){if(!sel[k].length)return true;var h=' '+(d[k]||'')+' ';
-  return sel[k].some(function(v){return h.indexOf(' '+v+' ')>=0})})}
  function esc2(x){return String(x).replace(/[&<>"']/g,function(c){return'&#'+c.charCodeAt(0)+';'})}
  function card(i){var im=i.img||(i.ext&&window.npImgOK&&window.npImgOK()?i.ext:'');var sh=(i.sub||'').split(' · ')[0];
   var fav=esc2(JSON.stringify({u:i.url,n:i.title,s:sh,i:i.img||'',v:i.v||'',p:i.pr||''}));
@@ -1285,7 +1298,24 @@ if(fl){var grid=document.getElementById(fl.dataset.grid),PAGE=24,shown=48,sel={}
    +(i.pr?'<span class="pr">'+esc2(i.pr)+'</span>':'')+(sh?'<span class="shop">bei '+esc2(sh)+'</span>':'')+(i.reg?'<span class="reg">'+esc2(i.reg)+'</span>':'')
    +'<div class="cta"><span><em class="l">'+(sh?'Bei '+esc2(sh)+' ansehen*':'Zum Shop*')+'</em><em class="s">Zum Shop*</em></span></div></div></a>'
    +'<button class="fav" type="button" aria-pressed="false" aria-label="Merken" data-fav="'+fav+'">♡</button>'
-   +(i.o?'<p class="offers">Auch bei: '+i.o.map(function(o){return '<a href="'+esc2(o[2])+'" rel="sponsored noopener" target="_blank">'+esc2(o[0])+' '+esc2(o[1])+'*</a>'}).join(' · ')+'<small>Preise laut Shop, ggf. zzgl. Versand</small></p>':'')+'</div>'}
+   +(i.o?'<p class="offers">'+(i.os?'Auch bei':'Weitere Größen &amp; Shops')+': '+i.o.map(function(o){return '<a href="'+esc2(o[2])+'" rel="sponsored noopener" target="_blank">'+esc2(o[0])+' '+esc2(o[1])+'*</a>'}).join(' · ')+'<small>Preise laut Shop, ggf. zzgl. Versand</small></p>':'')+'</div>'}
+ /* Themenwelt-Seite: kein Limit, "Mehr zeigen" lädt die übrigen Sorten aus search.json nach */
+ var cm=document.getElementById('cmore');
+ if(cm){var cg=document.getElementById(cm.dataset.grid),cid=cm.dataset.cat,cd=null;
+  cm.addEventListener('click',function(){cm.disabled=true;cm.textContent='Lädt …';
+   var go=function(){var add=cd.splice(0,48);cg.insertAdjacentHTML('beforeend',add.map(card).join(''));if(window.npFavSync)window.npFavSync(cg);
+    cm.disabled=false;cm.hidden=!cd.length;cm.textContent='Mehr zeigen ('+cd.length+')'};
+   if(cd){go();return}
+   fetch('/search.json').then(function(r){return r.json()}).then(function(j){var have={};cg.querySelectorAll('a.prod').forEach(function(a){have[a.getAttribute('href')]=1});
+    cd=j.items.filter(function(i){return i.type==='product'&&(' '+(i.th||'')+' ').indexOf(' '+cid+' ')>=0&&!have[i.url]});go()})})}
+if(fl){var grid=document.getElementById(fl.dataset.grid),PAGE=24,shown=48,sel={},data=null,loading=false;
+ var cnt=document.getElementById('fcount'),rst=document.getElementById('freset'),more=document.getElementById('fmore'),emp=document.getElementById('fempty');
+ var total=+grid.dataset.total||grid.children.length;
+ fl.querySelectorAll('[data-g]').forEach(function(b){sel[b.dataset.g]=[]});
+ var u=new URLSearchParams(location.search);Object.keys(sel).forEach(function(k){var v=u.get(k);if(v)sel[k]=v.split(',')});
+ function any(){return Object.keys(sel).some(function(k){return sel[k].length})}
+ function okD(d){return Object.keys(sel).every(function(k){if(!sel[k].length)return true;var h=' '+(d[k]||'')+' ';
+  return sel[k].some(function(v){return h.indexOf(' '+v+' ')>=0})})}
  function load(cb){if(data){cb();return}if(loading)return;loading=true;
   fetch('/search.json').then(function(r){return r.json()}).then(function(j){data=j.items.filter(function(i){return i.type==='product'}).map(function(i){
    var o={i:i};(i.f||'').split(' ').forEach(function(x){var kv=x.split(':');if(kv[1])o[kv[0]]=(o[kv[0]]?o[kv[0]]+' ':'')+kv[1]});o.t=(i.th||'');return o});cb()})}
@@ -2101,7 +2131,7 @@ def search_index(live):
                       "alt": translit(p["name"]), "tags": " ".join([cname, cid] + p.get("tags", [])),
                       "text": p.get("note", ""),
                       "f": " ".join(f"{g}:{i}" for g, v in facets(p).items() for i in sorted(v)),
-                      "th": " ".join(themes_of(p)), "pr": euro(p.get("price")), "v": p.get("vid", ""), **({"o": [[o["s"], euro(o["p"]), o["u"]] for o in p["offers"]]} if p.get("offers") else {}), **({"reg": REGION_NOTE[p.get("shop")]} if p.get("shop") in REGION_NOTE else {})})
+                      "th": " ".join(themes_of(p)), "pr": euro(p.get("price")), "v": p.get("vid", ""), **({"o": [[o["s"] + (" " + o["g"] if o.get("g") else ""), euro(o["p"]), o["u"]] for o in p["offers"][:6]], "os": 1 if p.get("offers_same") else 0} if p.get("offers") else {}), **({"reg": REGION_NOTE[p.get("shop")]} if p.get("shop") in REGION_NOTE else {})})
     for c in cats:
         items.append({"type": "cat", "title": c["name"], "url": f"/kategorie/{c['id']}/", "svg": sticker(c["id"], 52),
                       "sub": c["teaser"], "alt": translit(c["name"]), "tags": c["id"].replace("-", " "), "text": c["teaser"]})
@@ -2201,7 +2231,8 @@ def build():
     # --- Kategorie-Seiten
     for c in cats:
         items = cat_items(c)
-        more_link = (f'<div class="morebar"><a class="morebtn" href="/shop/?t={c["id"]}#alle">Alle {len(items)} {e(c["name"])}-Sorten im Shop</a></div>'
+        more_link = (f'<div class="morebar"><button class="morebtn" type="button" id="cmore" data-grid="g-cat" data-cat="{e(c["id"])}">Mehr zeigen ({len(items) - 48})</button>'
+                     f' <a class="morebtn" href="/shop/?t={c["id"]}#alle">Im Shop filtern</a></div>'
                      if len(items) > 48 else "")
         inner = (f'<div class="tools"><span>{len(items)} Sorten</span>{view_toggle("g-cat", ["big", "small", "list"], "small")}</div>'
                  + prod_grid(items[:48], "g-cat") + more_link) if items else (
@@ -2630,7 +2661,7 @@ Vollständige Angaben im <a href="/impressum/">Impressum</a>.</p></section>"""
                                      "User-agent: *\nAllow: /\nDisallow: /merkliste/\nDisallow: /pruefen/\nDisallow: /check.json\nDisallow: /sortiment.json\n"
                                      f"Disallow: /static/_dump/\n\nSitemap: {BASE}/sitemap.xml\n", encoding="utf-8")
     # Sicherheits-Header: Seite darf nur Dinge von der eigenen Domain laden (plus freigegebene Partner-Bildserver nach Einwilligung)
-    img_hosts = " ".join(f"https://{h}" for h in sorted(PARTNERS))
+    img_hosts = " ".join(f"https://{h} https://www.{h}" for h in sorted(PARTNERS))  # mit und ohne www (host_of entfernt www)
     csp = ("default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; "
            f"img-src 'self' data: blob: {img_hosts}; font-src 'self'; connect-src 'self'; media-src 'self'; object-src 'none'; "
            "base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests")

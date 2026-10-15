@@ -16,8 +16,8 @@ Technik dazu: `website/feeds.json` (welche Shops aktiv sind) und Cloudflare-Vari
 | my-choco-world | 16944 | kein Feed | – | 2 per Hand | `products.json` | Fotos nur nach Einwilligung |
 | World of Sweets | 112586 | Awin | 101641 (Default) | ~8.400 | `AWIN_FEED_URL` | Zusage 14.10. Größter Partner, alles Süßes; Länder-Kategorien (GB, Italien, Japan, Mexiko, NL, AT, SE, KR, TH, TR). Brand Bidding verboten |
 | Haushalt-und-Genuss | 83939 | Awin | 117069 (Dynamic/Live) | ~2.200 | `AWIN_FEED_URL` | Zusage 15.10. Nur Food (Manner, Ölz, Meinl), Herkunft Österreich per `land` in feeds.json. Feed 98990 ist eine alte Kopie (Juli), weglassen |
-| myfruits | 103075 | kein Feed | – | per Hand | `products.json` | Zusage 15.10. Gefriergetrocknete Früchte. Kev schickt 3–5 Produktlinks |
-| Asiafoodland | 15939 | kein Feed | – | per Hand | `products.json` | Zusage 14.10. Japan & Asien. Kev schickt 3–5 Produktlinks, Bild-Server in `site.json → partner_shops` |
+| myfruits | 103075 | kein Feed | – | – | – | Zusage 15.10. myfruits.de leitet am 15.10. auf Google um (Shop offline?) → noch nichts eingebaut, später erneut prüfen |
+| Asiafoodland | 15939 | kein Feed | – | 12 per Hand | `products.json` | Zusage 14.10. Claude hat Mochi, Koikeya-Chips, Ramune, Buldak-Chips u. a. ausgewählt (Deeplinks `cread.php?awinmid=15939&awinaffid=3111189&ued=…`). Bild-Server asiafoodland.de (ShaNoo GmbH) in `partner_shops`, Fotos nur nach Einwilligung |
 
 ## Abgelehnt
 Zotter, italienisch-einkaufen, Mexhaus, Venchi, BOS FOOD, Netto, unverträglich.de (nicht weiter verfolgen). Rest der Runde 2 offen, siehe `BEWERBUNG_RUNDE2.md`.

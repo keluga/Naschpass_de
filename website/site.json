@@ -442,7 +442,8 @@
     }
   ],
   "partner_shops": {
-    "my-choco-world.com": "my world of products GmbH, Agnes-Bernauer-Straße 151, 80687 München"
+    "my-choco-world.com": "my world of products GmbH, Agnes-Bernauer-Straße 151, 80687 München",
+    "asiafoodland.de": "ShaNoo GmbH, Berliner Straße 26-36, 58135 Hagen"
   },
   "_filter_hinweis": "Filter für Shop und Suche. Produkte werden automatisch über 'keywords' (Name, Beschreibung, Shop-Kategorie) zugeordnet. Per Hand überschreiben: im Produkt 'land', 'geschmack', 'art' (id oder Liste). 'includes' = Oberbegriff (Asien enthält Japan). 'categories' = alte Kategorie-ids aus 'categories', die automatisch dazugehören.",
   "filter": [

@@ -1,0 +1,32 @@
+# Speichert nachts alle Produktbilder der Live-Seite als Vorrat (GitHub-Release "bilder-cache", kostenlos, öffentlich).
+# Der Cloudflare-Build lädt diesen Vorrat zuerst (import_feeds.py → vorrat) und muss nur neue Bilder bei den Shops holen.
+# Vorteil: Produkte verschwinden nicht mehr, nur weil ein Shop beim Build langsam ist (z. B. gourvita.com).
+name: Bilder-Vorrat sichern
+on:
+  schedule:
+    - cron: "37 6 * * *"   # nach dem täglichen Neubau (04:17 UTC)
+  workflow_dispatch: {}
+permissions:
+  contents: write
+jobs:
+  vorrat:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Bilder der Live-Seite holen
+        run: |
+          mkdir -p img
+          curl -sSf https://naschpass.oneflowsolution.de/search.json -o search.json
+          python3 -c "import json;d=json.load(open('search.json'));print('\n'.join(sorted({i['img'] for i in d['items'] if i.get('type')=='product' and str(i.get('img','')).startswith('/i/')})))" > liste.txt
+          echo "Bilder in der Liste: $(wc -l < liste.txt)"
+          xargs -P 16 -I{} sh -c 'curl -sSf --max-time 30 "https://naschpass.oneflowsolution.de{}" -o "img/$(basename {})" || true' < liste.txt
+          echo "Geladen: $(ls img | wc -l)"
+          tar -cf img_cache.tar -C img .
+          ls -lh img_cache.tar
+      - name: Als Release-Datei speichern
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view bilder-cache -R "$GITHUB_REPOSITORY" >/dev/null 2>&1 || \
+            gh release create bilder-cache -R "$GITHUB_REPOSITORY" --title "Bilder-Vorrat (automatisch)" --notes "Wird nachts von der Action 'Bilder-Vorrat sichern' überschrieben. Nicht von Hand ändern." --latest=false
+          gh release upload bilder-cache img_cache.tar -R "$GITHUB_REPOSITORY" --clobber

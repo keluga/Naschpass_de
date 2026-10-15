@@ -111,6 +111,44 @@ def _get(url, timeout=30):
         return r.read(), r.geturl()
 
 
+CACHE_URL = os.environ.get("IMG_CACHE_URL", "https://github.com/keluga/naschpass_de/releases/download/bilder-cache/img_cache.tar")
+
+
+def vorrat(ziel):
+    """Bilder-Vorrat vom letzten Lauf (GitHub-Release, öffentlich, kein Schlüssel nötig) in den Cache legen.
+    So hängen Produkte nicht mehr davon ab, ob ein Shop beim Build gerade schnell antwortet.
+    Die nächtliche Action .github/workflows/bilder-vorrat.yml füllt den Vorrat aus der Live-Seite."""
+    import tarfile
+    if any(ziel.glob("*.jpg")):
+        return
+    try:
+        tmp = tempfile.NamedTemporaryFile(prefix="vorrat_", suffix=".tar", delete=False)
+        req = urllib.request.Request(CACHE_URL, headers={"User-Agent": "naschpass-build"})
+        with urllib.request.urlopen(req, timeout=180) as r, tmp:
+            while True:
+                chunk = r.read(1 << 20)
+                if not chunk:
+                    break
+                tmp.write(chunk)
+        n = 0
+        with tarfile.open(tmp.name) as t:
+            for m in t.getmembers():
+                name = os.path.basename(m.name)
+                if m.isfile() and re.fullmatch(r"[0-9a-f]{16}s?\.jpg", name) and m.size < 400_000:
+                    data = t.extractfile(m).read()
+                    if not _is_placeholder(data):
+                        (ziel / name).write_bytes(data)
+                        n += 1
+        log(f"Bilder-Vorrat: {n} Bilder aus dem letzten Lauf übernommen")
+    except Exception as ex:
+        log(f"Bilder-Vorrat nicht geladen ({type(ex).__name__}), Bilder werden neu geholt")
+    finally:
+        try:
+            os.unlink(tmp.name)
+        except Exception:
+            pass
+
+
 IMG_FAIL = []  # nur Vorschau: warum ein Bild fehlte (landet in static/_dump/img_fail.json)
 
 
@@ -124,6 +162,7 @@ def fetch_images(prods):
     import time
     from concurrent.futures import ThreadPoolExecutor
     IMG_DIR.mkdir(exist_ok=True)
+    vorrat(IMG_DIR)
     stats = {"awin": 0, "shop": 0, "weg": 0}
 
     def done(p, dest):
