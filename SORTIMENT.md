@@ -1,19 +1,19 @@
-# Sortiment – Stand 2026-10-15
+# Sortiment – Stand 2026-10-16
 
 Automatisch aus `/sortiment.json` (nächtliche Action, `tools/sortiment_md.py`). Volle Tabellen: `/pruefen/sortiment/` auf der Seite.
 
-**12601 Produkte** · ohne Herkunft 2335 · ohne Art 547 · Preisvergleich-Karten 961 (1343 Doppel-Karten zusammengefasst) · übrige Sorten bei mehreren Shops 285
+**12605 Produkte** · ohne Herkunft 2334 · ohne Art 552 · Preisvergleich-Karten 960 (1342 Doppel-Karten zusammengefasst) · übrige Sorten bei mehreren Shops 284
 
 ## Je Shop
 | Shop | Produkte | ohne Herkunft | ohne Art | ohne Preis | Bild schwach | Preis median |
 | --- | --- | --- | --- | --- | --- | --- |
-| World of Sweets | 6991 | 2021 | 464 | 0 | 14 | 3.39 € |
+| World of Sweets | 6993 | 2021 | 464 | 0 | 14 | 3.29 € |
 | REWE | 1883 | 214 | 36 | 0 | 0 | 2.94 € |
 | Piccantino | 1831 | 43 | 7 | 0 | 41 | 4.49 € |
-| GOURVITA | 981 | 21 | 9 | 1 | 6 | 6.49 € |
+| GOURVITA | 986 | 21 | 14 | 1 | 6 | 6.49 € |
 | Haushalt-und-Genuss | 637 | 0 | 28 | 0 | 0 | 4.09 € |
 | Burghardt Delicious | 144 | 27 | 0 | 3 | 1 | 14.95 € |
-| SugarGang | 82 | 8 | 0 | 0 | 0 | 4.74 € |
+| SugarGang | 79 | 7 | 0 | 0 | 0 | 4.99 € |
 | Sodapop | 38 | 0 | 0 | 0 | 0 | 12.50 € |
 | Asiafoodland | 12 | 0 | 3 | 12 | 0 | – |
 | my-choco-world | 2 | 1 | 0 | 2 | 0 | – |
@@ -21,15 +21,15 @@ Automatisch aus `/sortiment.json` (nächtliche Action, `tools/sortiment_md.py`).
 ## Herkunft
 | Herkunft | Produkte |
 | --- | --- |
-| deutschland | 5462 |
+| deutschland | 5467 |
 | oesterreich | 1127 |
-| usa | 732 |
+| usa | 731 |
 | italien | 625 |
 | schweiz | 553 |
 | skandinavien | 435 |
 | asien | 370 |
 | uk | 304 |
-| benelux | 233 |
+| benelux | 234 |
 | frankreich | 154 |
 | spanien | 104 |
 | orient | 87 |
@@ -42,13 +42,13 @@ Automatisch aus `/sortiment.json` (nächtliche Action, `tools/sortiment_md.py`).
 | --- | --- |
 | schokolade | 3673 |
 | getraenke | 2527 |
-| kekse | 1319 |
-| bonbons | 1017 |
-| gummi | 984 |
+| kekse | 1317 |
+| bonbons | 1019 |
+| gummi | 983 |
 | feinkost | 772 |
 | snacks | 738 |
-| chips | 635 |
-| boxen | 123 |
+| chips | 634 |
+| boxen | 124 |
 | eis | 121 |
 | tee | 92 |
 | pralinen | 53 |
@@ -57,33 +57,33 @@ Automatisch aus `/sortiment.json` (nächtliche Action, `tools/sortiment_md.py`).
 | Welt | Produkte | Saison |
 | --- | --- | --- |
 | Halloween | 123 | aktiv |
-| Adventskalender | 203 | aktiv |
-| Weihnachten & Geschenke | 1075 |  |
+| Adventskalender | 204 | aktiv |
+| Weihnachten & Geschenke | 1078 |  |
 | Schokolade & Pralinen | 3289 |  |
 | Japan & Asien | 370 |  |
-| USA | 732 |  |
+| USA | 731 |  |
 | Italien | 625 |  |
 | Schweiz | 553 |  |
 | Mexiko | 70 |  |
 | Skandinavien | 435 |  |
 | Anders in der EU | 0 |  |
-| Sauer & scharf | 1056 |  |
+| Sauer & scharf | 1058 |  |
 | Getränke | 1154 |  |
-| Nuss- & Fruchtsnacks | 447 |  |
-| Boxen & Geschenke | 1054 |  |
+| Nuss- & Fruchtsnacks | 448 |  |
+| Boxen & Geschenke | 1055 |  |
 | Supermarkt-Klassiker | 1883 |  |
-| Filmabend | 1886 |  |
-| Party & Teilen | 1383 |  |
+| Filmabend | 1887 |  |
+| Party & Teilen | 1384 |  |
 | Mitbringsel & Danke | 1352 |  |
-| Geburtstag | 1079 |  |
-| Für Naschkatzen | 1172 |  |
+| Geburtstag | 1080 |  |
+| Für Naschkatzen | 1171 |  |
 
 ## Lücken
 Häufigste Marken ohne Herkunft (Kandidaten für `brands.json`):
 
 | Marke | Produkte |
 | --- | --- |
-| (ohne Marke) | 187 |
+| (ohne Marke) | 186 |
 | Milka | 119 |
 | Yummi Yummi | 32 |
 | World of Sweets | 31 |
@@ -128,6 +128,7 @@ Häufigste Namen ohne Art (Kandidaten für Stichwörter in `site.json → filter
 | sweet balloon zuckerwatte | 3 |
 | carstens lübecker marzipan | 3 |
 | vitalis knusper müsli | 3 |
+| hussel marzipan figur | 2 |
 | ölz mini bussi | 2 |
 | ölz edel marzipan | 2 |
 | kellogg s tr | 2 |
@@ -137,7 +138,6 @@ Häufigste Namen ohne Art (Kandidaten für Stichwörter in `site.json → filter
 | ölz super soft | 2 |
 | haribo salino vegetarisch | 2 |
 | bill john peanut | 2 |
-| ga jol ren | 2 |
 
 ## Dubletten (gleiche Sorte, mehrere Shops)
 | Sorte | Shops | Preis |
