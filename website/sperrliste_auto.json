@@ -1,15 +1,15 @@
 {
  "_info": "Automatisch (tools/check_links.py). Nicht von Hand bearbeiten, dafür gibt es sperrliste.json.",
  "eintraege": {
-  "https://www.awin1.com/pclick.php?p=41889812109&a=3111189&m=112586": {
+  "https://www.awin1.com/pclick.php?p=41889810889&a=3111189&m=112586": {
    "shop": "World of Sweets",
-   "seit": "2026-10-18",
-   "shop_url": "https://www.worldofsweets.de/Kaiser-Japanische-Minze-90g.325982.html"
+   "seit": "2026-10-19",
+   "shop_url": "https://www.worldofsweets.de/Halls-Extra-Strong-zuckerfrei-65g.315851.html"
   },
-  "https://www.awin1.com/pclick.php?p=45989544087&a=3111189&m=112586": {
+  "https://www.awin1.com/pclick.php?p=46253712054&a=3111189&m=112586": {
    "shop": "World of Sweets",
-   "seit": "2026-10-18",
-   "shop_url": "https://www.worldofsweets.de/Haribo-Kiss-Cola-vegan-150er.100209.html"
+   "seit": "2026-10-19",
+   "shop_url": "https://www.worldofsweets.de/World-of-Sweets-Ostalgie-Box.320702.html"
   }
  }
 }
