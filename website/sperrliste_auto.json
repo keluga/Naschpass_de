@@ -1,10 +1,4 @@
 {
  "_info": "Automatisch (tools/check_links.py). Nicht von Hand bearbeiten, dafür gibt es sperrliste.json.",
- "eintraege": {
-  "https://www.awin1.com/pclick.php?p=41889812720&a=3111189&m=112586": {
-   "shop": "World of Sweets",
-   "seit": "2026-10-21",
-   "shop_url": "https://www.worldofsweets.de/Milka-Joghurt-100g.305117.html"
-  }
- }
+ "eintraege": {}
 }
