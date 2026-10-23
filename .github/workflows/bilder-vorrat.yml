@@ -13,20 +13,47 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
-      - name: Bilder der Live-Seite holen
+      - name: Bilder und Feed-Vorrat der Live-Seite holen
+        # Python statt curl: Cloudflare blockt curl von GitHub-Servern (Fehler 403, Mails seit 16.10.).
+        # Gleicher Absender wie der Verfügbarkeits-Check, der durchkommt.
         run: |
-          mkdir -p img
-          curl -sSf https://naschpass.oneflowsolution.de/search.json -o search.json
-          python3 -c "import json;d=json.load(open('search.json'));print('\n'.join(sorted({i['img'] for i in d['items'] if i.get('type')=='product' and str(i.get('img','')).startswith('/i/')})))" > liste.txt
-          echo "Bilder in der Liste: $(wc -l < liste.txt)"
-          xargs -P 16 -I{} sh -c 'curl -sSf --max-time 30 "https://naschpass.oneflowsolution.de{}" -o "img/$(basename {})" || true' < liste.txt
-          echo "Geladen: $(ls img | wc -l)"
-          tar -cf img_cache.tar -C img .
-          ls -lh img_cache.tar
+          python3 - <<'PY'
+          import json, os, sys, tarfile, urllib.request
+          from concurrent.futures import ThreadPoolExecutor
+          BASE = "https://naschpass.oneflowsolution.de"
+          UA = {"User-Agent": "Mozilla/5.0 (compatible; NaschpassVorrat/1.0; +https://naschpass.oneflowsolution.de/impressum/)"}
+          def get(path, timeout=60):
+              with urllib.request.urlopen(urllib.request.Request(BASE + path, headers=UA), timeout=timeout) as r:
+                  return r.read()
+          items = json.loads(get("/search.json", 120))["items"]
+          liste = sorted({i["img"] for i in items if i.get("type") == "product" and str(i.get("img", "")).startswith("/i/")})
+          print("Bilder in der Liste:", len(liste))
+          os.makedirs("img", exist_ok=True)
+          def hol(p):
+              try:
+                  open("img/" + os.path.basename(p), "wb").write(get(p, 30))
+                  return 1
+              except Exception:
+                  return 0
+          with ThreadPoolExecutor(16) as ex:
+              n = sum(ex.map(hol, liste))
+          print("Geladen:", n)
+          if n < 0.8 * len(liste):
+              sys.exit("Zu wenige Bilder geladen, alter Vorrat bleibt")
+          with tarfile.open("img_cache.tar", "w") as t:
+              t.add("img", arcname=".")
+          try:
+              fb = get("/feed_backup.json.gz", 120)
+              open("feed_backup.json.gz", "wb").write(fb)
+              print("Feed-Vorrat:", round(len(fb) / 1e6, 1), "MB")
+          except Exception as e:
+              print("Feed-Vorrat (noch) nicht auf der Live-Seite:", type(e).__name__)
+          PY
+          ls -lh img_cache.tar feed_backup.json.gz 2>/dev/null || true
       - name: Als Release-Datei speichern
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release view bilder-cache -R "$GITHUB_REPOSITORY" >/dev/null 2>&1 || \
             gh release create bilder-cache -R "$GITHUB_REPOSITORY" --title "Bilder-Vorrat (automatisch)" --notes "Wird nachts von der Action 'Bilder-Vorrat sichern' überschrieben. Nicht von Hand ändern." --latest=false
-          gh release upload bilder-cache img_cache.tar -R "$GITHUB_REPOSITORY" --clobber
+          gh release upload bilder-cache img_cache.tar $( [ -f feed_backup.json.gz ] && echo feed_backup.json.gz ) -R "$GITHUB_REPOSITORY" --clobber

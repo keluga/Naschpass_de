@@ -46,7 +46,7 @@
       "id": 14403,
       "shop": "GOURVITA",
       "active": true,
-      "include": "Schokolade|Pralinen|Trüffel|Süßes|Gebäck|Plätzchen|Hussel|Nüsse|Kakao|Trinkschokolade|Geschenk|Sparsets|Tee|Eilles|Marmelade|Konfitüre|Schwartau|Aufstrich|Asiatische|Mexikanische|Griechische|Italienische|Arabische|Indische|Feinkost|Aromasirup",
+      "include": "Schokolade|Pralinen|Trüffel|Süßes|Gebäck|Plätzchen|Hussel|Nüsse|Kakao|Trinkschokolade|Geschenk|Sparsets|Marmelade|Konfitüre|Schwartau|Aufstrich|Asiatische|Mexikanische|Griechische|Italienische|Arabische|Indische|Feinkost|Aromasirup",
       "fid": "54723"
     },
     {
@@ -105,7 +105,7 @@
       "id": 79456,
       "shop": "Piccantino",
       "active": true,
-      "include": "Süßigkeiten|Vorspeisen & Snacks|Nüsse & Samen|Getrocknete Fr|Dips & Brotaufstriche|Honig|Limonaden|Saft|Sirup|Tees & Aufgüsse|Kakao|Schokolade",
+      "include": "Süßigkeiten|Vorspeisen & Snacks|Nüsse & Samen|Getrocknete Fr|Dips & Brotaufstriche|Honig|Limonaden|Saft|Sirup|Kakao|Schokolade",
       "exclude_name": "stevia|streusüße|erythrit|xylit|zuckerersatz|süßstoff|kandisin|babybrei|pouchy|säugling",
       "fid": "93446"
     },
@@ -142,7 +142,7 @@
       "active": true,
       "land": "oesterreich",
       "fid": "117069",
-      "include": "Süßigkeiten & Schokolade|Vorspeisen & Snacks|Nüsse & Samen|Backwaren|Tees & Aufgüsse|Kakao|Limonaden|Getränkepulver|Getrocknete Fr|Schokofrüchte|Marmel|Konfitüre|Honig|Sirup",
+      "include": "Süßigkeiten & Schokolade|Vorspeisen & Snacks|Nüsse & Samen|Backwaren|Kakao|Limonaden|Getränkepulver|Getrocknete Fr|Schokofrüchte|Marmel|Konfitüre|Honig|Sirup",
       "include_name": "meinl|manner\\b|ölz|darbo|kelly|soletti|casali|niemetz|schwedenbombe|heindl|\\bhaas\\b|\\bpez\\b|mozartkugel",
       "exclude_name": "zahn|inkontinenz|shampoo|seife|lotion|reiniger|reinigung|\\bfond\\b|bolognese|ragu|hundefutter|katzenfutter"
     },

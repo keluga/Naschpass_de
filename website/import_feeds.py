@@ -149,6 +149,69 @@ def vorrat(ziel):
             pass
 
 
+BACKUP_URL = os.environ.get("FEED_BACKUP_URL", "https://github.com/keluga/naschpass_de/releases/download/bilder-cache/feed_backup.json.gz")
+BACKUP_TAGE = 7  # so lange dürfen Produkte eines ausgefallenen Feeds aus dem Vorrat kommen
+
+
+def name_ok(name):
+    """Dieselben Namensregeln wie beim Import, für Produkte aus dem Vorrat (Regeln können sich seitdem geändert haben)."""
+    low = name.lower()
+    if SPERR and any(x in low for x in SPERR):
+        return False
+    if ALKOHOL.search(name) or ALK_WORT.search(name) or ALK_EXTRA.search(name) or TIER.search(name) or NONFOOD.search(name):
+        return False
+    if KAFFEE_TEE.search(name) and ((KT_HART.search(name) and not KT_SUESS.search(name)) or not KT_RETTEN.search(name)):
+        return False
+    return not (HART.search(name) or (WEICH.search(name) and not NASCH.search(name)))
+
+
+def auffuellen(result, adv):
+    """Fällt ein Shop-Feed aus oder liefert deutlich weniger als beim letzten Lauf (AWIN-Abbruch, Bilder-Zeitbudget),
+    kommen seine fehlenden Produkte aus dem Vorrat vom letzten guten Lauf (GitHub-Release, von bilder-vorrat.yml).
+    Nur mit vorhandenem Bild, höchstens BACKUP_TAGE alt. So verschwindet kein Shop mehr über Nacht."""
+    try:
+        req = urllib.request.Request(BACKUP_URL, headers={"User-Agent": "naschpass-build"})
+        with urllib.request.urlopen(req, timeout=120) as r:
+            raw = r.read()
+        if raw[:2] == b"\x1f\x8b":
+            raw = gzip.decompress(raw)
+        alt = json.loads(raw.decode("utf-8")).get("products", [])
+    except Exception as ex:
+        log(f"Feed-Vorrat nicht geladen ({type(ex).__name__}), kein Auffüllen")
+        return result
+    heute = datetime.now(timezone.utc).date()
+    jetzt, vorher = {}, {}
+    for p in result:
+        jetzt[p.get("shop")] = jetzt.get(p.get("shop"), 0) + 1
+    for p in alt:
+        vorher[p.get("shop")] = vorher.get(p.get("shop"), 0) + 1
+    shops = {a.get("shop") for a in adv.values()}
+    have = {p.get("url") for p in result} | {norm(p.get("name", "")) for p in result}
+    dazu = {}
+    for shop, n_alt in vorher.items():
+        n = jetzt.get(shop, 0)
+        if shop not in shops or n_alt < 30 or n >= 0.8 * n_alt:
+            continue
+        for p in alt:
+            if p.get("shop") != shop or p.get("url") in have or norm(p.get("name", "")) in have:
+                continue
+            seit = p.get("vorrat_seit") or heute.isoformat()
+            try:
+                if (heute - datetime.fromisoformat(seit).date()).days > BACKUP_TAGE:
+                    continue
+            except ValueError:
+                continue
+            img = str(p.get("image", ""))
+            if not (img.startswith("/i/") and (IMG_DIR / img[3:]).exists()) or not name_ok(p.get("name", "")):
+                continue
+            p["vorrat_seit"] = seit
+            result.append(p)
+            have.update({p.get("url"), norm(p.get("name", ""))})
+            dazu[shop] = dazu.get(shop, 0) + 1
+        log(f"WARNUNG: {shop} lieferte {n} statt {n_alt} Produkte, {dazu.get(shop, 0)} aus dem Vorrat ergänzt")
+    return result
+
+
 IMG_FAIL = []  # nur Vorschau: warum ein Bild fehlte (landet in static/_dump/img_fail.json)
 
 
@@ -279,6 +342,19 @@ NONFOOD = re.compile(
     r"\b(tasse|becher|teller|schale|geschirr|porzellan|st[äa]bchen|messer|gabel|l[öo]ffel|topf|pfanne|buch|kochbuch|t-?shirt|"
     r"shirt|hoodie|socken|kerze|deko|dekoration|vase|gutschein|geschenkgutschein|spielzeug|pl[üu]sch|kosmetik|seife|duft|"
     r"backform|ausstecher|dose leer|grill|dirndl|kost[üu]m|dessous|unterw[äa]sche|socke)\b", re.I)
+# Nachgeschärft 23.10.: rutschten über REWE durch (Ouzo, Disaronno, Wein-Spritz …)
+ALK_EXTRA = re.compile(r"\b(ouzo|raki|rakı|pastis|sambuca|aperitivo|disaronno|spritz)\b|amaretto\b.*\b0[,.]\d+\s*l\b", re.I)
+# Tee, Kaffee, Kapseln: kein Naschzeug (Kevs Entscheidung 23.10.). Eistee, Bubble Tea und Süßes mit Kaffee/Tee-Geschmack bleiben.
+KAFFEE_TEE = re.compile(r"kaffee|espresso|cappuccino|latte macchiato|nespresso|dolce gusto|tassimo|kapseln|\bpads\b|"
+                        r"\btee\b|teebeutel|\btea\b|\bchai\b|rooibos|kräutertee|früchtetee|grüntee|schwarztee|teemischung|teehaus|aufguss|aufgüsse", re.I)
+# Eindeutig Tee/Kaffee zum Aufbrühen: raus, auch mit Naschwort im Namen ("Lebkuchen Früchtetee", "Caramel Kaffeekapseln")
+KT_HART = re.compile(r"teebeutel|pyramidenbeutel|tea diamonds|teeglas|früchtetee|kräutertee|grüntee|grüner tee|schwarzer tee|rotbuschtee|"
+                     r"rooibos|genuss-tee|\btee\b.*\b\d+\s*g\b|kaffeekapseln|kapseln|kaffeepads|\bpads\b|\bbohnen\b|löslicher kaffee|"
+                     r"instant|kaffee typ|gemahlen|teemischung|schwarztee|\d+\s*beutel|cappuccino|cannabis|\bcbd\b", re.I)
+KT_SUESS = re.compile(r"waffel|schokolade|mochi|cookies|praline|trüffel|bonbon|nougat|creme|kekse", re.I)
+KT_RETTEN = re.compile(r"eistee|ice ?tea|iced|bubble|arizona|lipton ice|schoko|choco|praline|trüffel|bonbon|keks|cookie|riegel|waffel|"
+                       r"marzipan|nougat|karamell|caramel|toffee|gummi|lakritz|kerne|bohnen in|mandel|nuss|candy|kuchen|lebkuchen|"
+                       r"adventskalender|geschenk|sirup", re.I)
 ADV_RAW, ADV_NO = {}, {}
 # Saisonware darf immer rein (Shop-Kategorie egal), solange kein anderer Filter greift
 SAISON = re.compile(r"advent|weihnacht|nikolaus|christmas|xmas|lebkuchen|spekulatius|stollen|halloween|oster", re.I)
@@ -335,7 +411,19 @@ def open_feed(path):
 
 
 def download(url, n):
-    """Lädt einen Feed in eine temporäre Datei. Die URL wird nie ausgegeben."""
+    """Lädt einen Feed, bei Fehler ein zweiter Versuch nach 30 s (AWIN baut große Feeds beim Abruf zusammen
+    und bricht dabei ab und zu ab, z. B. World of Sweets am 23.10.). Die URL wird nie ausgegeben."""
+    import time
+    for versuch in (1, 2):
+        path = _download(url, n, versuch)
+        if path:
+            return path
+        if versuch == 1:
+            time.sleep(30)
+    return None
+
+
+def _download(url, n, versuch):
     tmp = tempfile.NamedTemporaryFile(prefix="awin_", suffix=".feed", delete=False)
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "naschpass-build"})
@@ -348,7 +436,7 @@ def download(url, n):
         return tmp.name
     except Exception as ex:  # bewusst ohne str(ex): könnte die URL enthalten
         code = getattr(ex, "code", "")
-        log(f"Feed {n}: Download fehlgeschlagen ({type(ex).__name__} {code}). Weiter ohne diesen Feed.")
+        log(f"Feed {n}: Download fehlgeschlagen ({type(ex).__name__} {code}), Versuch {versuch}/2.")
         os.unlink(tmp.name)
         return None
 
@@ -552,7 +640,7 @@ def main():
                     brand = brand_of(name, col(row, "brand"), a.get("shop", ""))
                     binfo = BRANDS.get(brand, {})
                     hay = f"{name} {mcat} {cat}"
-                    if binfo.get("alkohol") or ALKOHOL.search(hay) or ALK_WORT.search(name) or re.search(r"alkoholische getränke|\bwein\b|spirituos|\bbier\b", f"{mcat} {cat}", re.I):
+                    if binfo.get("alkohol") or ALKOHOL.search(hay) or ALK_EXTRA.search(name) or ALK_WORT.search(name) or re.search(r"alkoholische getränke|\bwein\b|spirituos|\bbier\b", f"{mcat} {cat}", re.I):
                         stats["alkohol"] += 1
                         continue
                     if binfo.get("tier") or TIER.search(hay) or re.search(r"tierbedarf|tiernahrung", mcat, re.I):
@@ -560,6 +648,9 @@ def main():
                         continue
                     if NONFOOD.search(name) or re.search(r"heim & garten|küche & esszimmer|drogerie|baby & klein|haushalt", f"{mcat} {cat}", re.I):
                         stats["nonfood"] += 1
+                        continue
+                    if KAFFEE_TEE.search(name) and ((KT_HART.search(name) and not KT_SUESS.search(name)) or not KT_RETTEN.search(name)):
+                        stats["kaffee_tee"] = stats.get("kaffee_tee", 0) + 1
                         continue
                     if HART.search(name) or (WEICH.search(name) and not NASCH.search(name)):
                         stats["thema"] += 1
@@ -610,6 +701,8 @@ def main():
 
     if IMG_LOCAL and result:
         result = fetch_images(result)
+    if IMG_LOCAL:
+        result = auffuellen(result, adv)
     if DUMP and DUMP_ROWS:
         d = HERE / "static" / "_dump"
         d.mkdir(exist_ok=True)

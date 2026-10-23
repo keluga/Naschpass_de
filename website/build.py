@@ -2553,6 +2553,9 @@ Vollständige Angaben im <a href="/impressum/">Impressum</a>.</p></section>"""
     # Für den nächtlichen Verfügbarkeits-Check (GitHub-Action): Werbelink + direkte Shop-Adresse
     write("check.json", json.dumps([{"u": p["url"], "m": p["murl"], "s": p.get("shop", "")} for p in products if p.get("murl")],
                                    ensure_ascii=False, separators=(",", ":")))
+    if _ff.exists():  # Feed-Vorrat: die nächtliche Action sichert ihn, import_feeds.py füllt damit ausgefallene Shops auf
+        import gzip
+        (DIST / "feed_backup.json.gz").write_bytes(gzip.compress(_ff.read_bytes(), 6))
     rep = sortiment_report()  # Sortiments-Bericht (Phase 2: Inventar im Blick behalten)
     write("sortiment.json", json.dumps(rep, ensure_ascii=False, separators=(",", ":")))
     write("pruefen/sortiment/index.html", page("Sortiment – Naschpass (intern)", sortiment_html(rep), "Interner Sortiments-Bericht.", "/pruefen/sortiment/"))
@@ -2676,7 +2679,7 @@ Vollständige Angaben im <a href="/impressum/">Impressum</a>.</p></section>"""
             print("WARNUNG: Pillow fehlt, Vorschaubilder der Posts nicht verkleinert (Original wird geladen)")
     # Vorschau-Seiten (*.workers.dev) sollen nie in Google landen; live: interne Dateien ausschließen
     (DIST / "robots.txt").write_text("User-agent: *\nDisallow: /\n" if PREVIEW else
-                                     "User-agent: *\nAllow: /\nDisallow: /merkliste/\nDisallow: /pruefen/\nDisallow: /check.json\nDisallow: /sortiment.json\n"
+                                     "User-agent: *\nAllow: /\nDisallow: /merkliste/\nDisallow: /pruefen/\nDisallow: /check.json\nDisallow: /sortiment.json\nDisallow: /feed_backup.json.gz\n"
                                      f"Disallow: /static/_dump/\n\nSitemap: {BASE}/sitemap.xml\n", encoding="utf-8")
     # Sicherheits-Header: Seite darf nur Dinge von der eigenen Domain laden (plus freigegebene Partner-Bildserver nach Einwilligung)
     img_hosts = " ".join(f"https://{h} https://www.{h}" for h in sorted(PARTNERS))  # mit und ohne www (host_of entfernt www)

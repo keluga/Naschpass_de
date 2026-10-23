@@ -1,6 +1,6 @@
 # Partner-Liste (AWIN, Publisher-ID 3111189)
 
-Eine Zeile pro Partner. Stand: 15.10.2026. Wer was ändert, trägt es hier ein.
+Eine Zeile pro Partner. Stand: 23.10.2026. Wer was ändert, trägt es hier ein.
 Technik dazu: `website/feeds.json` (welche Shops aktiv sind) und Cloudflare-Variablen `AWIN_FEED_URL`, `AWIN_FEED_URL_2` … (Feed-Links, **nie** ins Repo oder in den Chat).
 
 ## Zugelassen
@@ -18,6 +18,12 @@ Technik dazu: `website/feeds.json` (welche Shops aktiv sind) und Cloudflare-Vari
 | Haushalt-und-Genuss | 83939 | Awin | 117069 (Dynamic/Live) | ~2.200 | `AWIN_FEED_URL` | Zusage 15.10. Nur Food (Manner, Ölz, Meinl), Herkunft Österreich per `land` in feeds.json. Feed 98990 ist eine alte Kopie (Juli), weglassen |
 | myfruits | 103075 | kein Feed | – | – | – | Zusage 15.10. myfruits.de leitet am 15.10. auf Google um (Shop offline?) → noch nichts eingebaut, später erneut prüfen |
 | Asiafoodland | 15939 | kein Feed | – | 12 per Hand | `products.json` | Zusage 14.10. Claude hat Mochi, Koikeya-Chips, Ramune, Buldak-Chips u. a. ausgewählt (Deeplinks `cread.php?awinmid=15939&awinaffid=3111189&ued=…`). Bild-Server asiafoodland.de (ShaNoo GmbH) in `partner_shops`, Fotos nur nach Einwilligung |
+| Der Feinschmecker Shop | 42164 | ? | **fehlt** | ~6.500 | – | Zusage (AWIN-Liste 23.10.). Bücher ausfiltern. Feed-ID von Kev nötig |
+| decocino | 74168 | ? | **fehlt** | ~1.000 | – | Zusage (AWIN-Liste 23.10.). Backdeko → Weihnachten/Backen. Feed-ID von Kev nötig |
+| glytter | 77590 | ? | **fehlt** | ~50 | – | Zusage (AWIN-Liste 23.10.). Glitzer für Getränke → Party. Feed-ID von Kev nötig |
+
+## Ausfall-Schutz (seit 23.10.)
+World of Sweets fehlte am 23.10. komplett im Build (Programm laut AWIN aktiv). Seitdem: jeder Feed-Download hat einen zweiten Versuch, und liefert ein Shop unter 80 % vom letzten Lauf, ergänzt `import_feeds.py → auffuellen()` die fehlenden Produkte aus `feed_backup.json.gz` (Release `bilder-cache`, max. 7 Tage alt). Im Cloudflare-Build-Log steht dann „WARNUNG: … aus dem Vorrat ergänzt“.
 
 ## Abgelehnt
 Zotter, italienisch-einkaufen, Mexhaus, Venchi, BOS FOOD, Netto, unverträglich.de (nicht weiter verfolgen). Rest der Runde 2 offen, siehe `BEWERBUNG_RUNDE2.md`.
