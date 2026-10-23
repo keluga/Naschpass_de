@@ -18,9 +18,9 @@ Technik dazu: `website/feeds.json` (welche Shops aktiv sind) und Cloudflare-Vari
 | Haushalt-und-Genuss | 83939 | Awin | 117069 (Dynamic/Live) | ~2.200 | `AWIN_FEED_URL` | Zusage 15.10. Nur Food (Manner, Ölz, Meinl), Herkunft Österreich per `land` in feeds.json. Feed 98990 ist eine alte Kopie (Juli), weglassen |
 | myfruits | 103075 | kein Feed | – | – | – | Zusage 15.10. myfruits.de leitet am 15.10. auf Google um (Shop offline?) → noch nichts eingebaut, später erneut prüfen |
 | Asiafoodland | 15939 | kein Feed | – | 12 per Hand | `products.json` | Zusage 14.10. Claude hat Mochi, Koikeya-Chips, Ramune, Buldak-Chips u. a. ausgewählt (Deeplinks `cread.php?awinmid=15939&awinaffid=3111189&ued=…`). Bild-Server asiafoodland.de (ShaNoo GmbH) in `partner_shops`, Fotos nur nach Einwilligung |
-| Der Feinschmecker Shop | 42164 | ? | **fehlt** | ~6.500 | – | Zusage (AWIN-Liste 23.10.). Bücher ausfiltern. Feed-ID von Kev nötig |
-| decocino | 74168 | ? | **fehlt** | ~1.000 | – | Zusage (AWIN-Liste 23.10.). Backdeko → Weihnachten/Backen. Feed-ID von Kev nötig |
-| glytter | 77590 | ? | **fehlt** | ~50 | – | Zusage (AWIN-Liste 23.10.). Glitzer für Getränke → Party. Feed-ID von Kev nötig |
+| Der Feinschmecker Shop | 42164 | Awin | 82129 | ~330 | `AWIN_FEED_URL` | Zusage 23.10. Nur Schokolade, Pralinen, Gebäck, Honig, Aufstriche (kein Wein, keine Bücher) |
+| decocino | 74168 | **Google** | F102 | ~80 | `AWIN_FEED_URL_3` ⏳ | Zusage 23.10. Nur essbare Deko (Streusel, Oblaten, Zuckerschrift). Kev muss den Link noch in Cloudflare anlegen |
+| glytter | 77590 | Awin | 92280 | ~30 | `AWIN_FEED_URL` | Zusage 23.10. Nur Glitzerpulver (kein Barzubehör) |
 
 ## Ausfall-Schutz (seit 23.10.)
 World of Sweets fehlte am 23.10. komplett im Build (Programm laut AWIN aktiv). Seitdem: jeder Feed-Download hat einen zweiten Versuch, und liefert ein Shop unter 80 % vom letzten Lauf, ergänzt `import_feeds.py → auffuellen()` die fehlenden Produkte aus `feed_backup.json.gz` (Release `bilder-cache`, max. 7 Tage alt). Im Cloudflare-Build-Log steht dann „WARNUNG: … aus dem Vorrat ergänzt“.
@@ -33,7 +33,7 @@ Siehe `WEBSITE_VISION.md`, Abschnitt 6.
 
 ## Ablauf bei einer neuen Zusage
 1. Kev schreibt Claude: „Zusage XY“.
-2. Claude schaut in `datafeeds.csv` (Feed-Übersicht) bzw. fragt nach Feed-ID + Format.
+2. Claude schaut in die Feed-Liste (AWIN → Create-a-Feed → „feedList“-Download, Kev schickt die CSV) bzw. fragt nach Feed-ID + Format.
    - **Format „Awin“:** Claude trägt `fid` in `website/feeds.json` ein (`active: true`). **Kein neuer Link nötig** – der vorhandene `AWIN_FEED_URL` dient nur als Vorlage (Schlüssel + Format).
    - **Format „Google“:** Kev baut in AWIN einen eigenen Link nur für diesen Shop und legt ihn in Cloudflare als nächste Variable `AWIN_FEED_URL_3`, `_4` … an (Encrypt).
    - **Kein Feed:** Kev schickt 3–5 Produktseiten, Claude trägt sie per Hand ein.
