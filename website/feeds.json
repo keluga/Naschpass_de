@@ -157,6 +157,38 @@
       "shop": "Asiafoodland",
       "active": false,
       "_hinweis": "kein Feed, Produkte per Hand in products.json"
+    },
+    {
+      "id": 42164,
+      "shop": "Der Feinschmecker Shop",
+      "active": true,
+      "fid": "82129",
+      "include": "Süßigkeiten & Schokolade|Backwaren|Dips & Brotaufstriche",
+      "include_name": "schoko|praline|trüffel|nougat|marzipan|karamell|keks|cantucci|amaretti|makrone|lebkuchen|stollen|panettone|torrone|honig|konfitüre|naschbox|süße",
+      "exclude_name": "zigarre|tabak|pastete|leber|taralli|grissini|brot\\b"
+    },
+    {
+      "id": 77590,
+      "shop": "glytter",
+      "active": true,
+      "fid": "92280",
+      "themen": [
+        "getraenke"
+      ],
+      "exclude_name": "untersetzer|glas\\b|gläser|becher|strohhalm|halm|shaker|löffel|sieb|zange|set aus edelstahl|edelstahl|ausgießer|ausgiesser"
+    },
+    {
+      "id": 74168,
+      "shop": "decocino",
+      "active": true,
+      "fid": "F102",
+      "themen": [
+        "weihnachten"
+      ],
+      "include": "(?!)",
+      "include_name": "streusel|streudekor|zuckerperl|zuckerdeko|sprinkles|konfetti|schoko|kuvert|drops|marzipan|zuckerschrift|oblate|lolli|candy|marshmallow|diamonds|perlen|herzen|sterne",
+      "_hinweis": "Google-Format: braucht eigenen Link AWIN_FEED_URL_3 in Cloudflare",
+      "exclude_name": "fontäne|kerze|förmchen|farbpaste|farbpulver|dekorierpulver|lebensmittelfarbe|gutschein|ausstech|form\\b|spritz|tülle|pinsel|stift"
     }
   ]
 }
