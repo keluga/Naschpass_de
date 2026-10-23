@@ -3996,6 +3996,45 @@
   },
   "Carlsberg": {
    "alkohol": true
+  },
+  "Milka": {
+   "welt": "deutschland"
+  },
+  "Halloren": {
+   "welt": "deutschland"
+  },
+  "Küfa": {
+   "welt": "deutschland"
+  },
+  "Vivil": {
+   "welt": "deutschland"
+  },
+  "Peters": {
+   "welt": "deutschland"
+  },
+  "Crunchips": {
+   "welt": "deutschland"
+  },
+  "Odenwälder Marzipan": {
+   "welt": "deutschland"
+  },
+  "Durstlöscher": {
+   "welt": "deutschland"
+  },
+  "Carstens": {
+   "welt": "deutschland"
+  },
+  "Landgarten": {
+   "welt": "oesterreich"
+  },
+  "Kims": {
+   "welt": "skandinavien"
+  },
+  "liebeskummerpillen": {
+   "welt": "deutschland"
+  },
+  "Günthart": {
+   "welt": "deutschland"
   }
  }
 }

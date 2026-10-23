@@ -165,52 +165,90 @@ def name_ok(name):
     return not (HART.search(name) or (WEICH.search(name) and not NASCH.search(name)))
 
 
+_VORRAT = {}
+
+
+def vorrat_produkte():
+    """Feed-Vorrat vom letzten guten Lauf (einmal laden). None = nicht erreichbar."""
+    if "p" not in _VORRAT:
+        try:
+            req = urllib.request.Request(BACKUP_URL, headers={"User-Agent": "naschpass-build"})
+            with urllib.request.urlopen(req, timeout=120) as r:
+                raw = r.read()
+            if raw[:2] == b"\x1f\x8b":
+                raw = gzip.decompress(raw)
+            _VORRAT["p"] = json.loads(raw.decode("utf-8")).get("products", [])
+        except Exception as ex:
+            log(f"Feed-Vorrat nicht geladen ({type(ex).__name__})")
+            _VORRAT["p"] = None
+    return _VORRAT["p"]
+
+
+BASIS = "2026-10-01"  # alles, was vor Einführung der Neu-Erkennung schon da war
+
+
+def seit_merken(result):
+    """'seit' = Tag, an dem ein Produkt zum ersten Mal in unseren Feeds auftauchte (für „Neu im Sortiment“).
+    Ohne Vorrat wird nichts gesetzt: lieber kein „Neu“ als alles „Neu“."""
+    alt = vorrat_produkte()
+    if not alt:
+        return
+    heute = datetime.now(timezone.utc).date().isoformat()
+    bek = {}
+    for p in alt:
+        s = p.get("seit") or BASIS
+        for k in (p.get("url"), "n:" + norm(p.get("name", ""))):
+            if k and (k not in bek or s < bek[k]):
+                bek[k] = s
+    neu = 0
+    for p in result:
+        s = bek.get(p.get("url")) or bek.get("n:" + norm(p.get("name", "")))
+        if not s:
+            s, neu = heute, neu + 1
+        p["seit"] = s
+    log(f"Neu-Erkennung: {neu} Produkte zum ersten Mal gesehen")
+
+
+ROWS_SHOP = {}  # Rohzeilen je Shop im Feed (0 = Feed ausgefallen)
+IMG_WEG = set()  # URLs, die alle Filter bestanden, aber wegen fehlendem Bild rausflogen
+
+
 def auffuellen(result, adv):
-    """Fällt ein Shop-Feed aus oder liefert deutlich weniger als beim letzten Lauf (AWIN-Abbruch, Bilder-Zeitbudget),
-    kommen seine fehlenden Produkte aus dem Vorrat vom letzten guten Lauf (GitHub-Release, von bilder-vorrat.yml).
-    Nur mit vorhandenem Bild, höchstens BACKUP_TAGE alt. So verschwindet kein Shop mehr über Nacht."""
-    try:
-        req = urllib.request.Request(BACKUP_URL, headers={"User-Agent": "naschpass-build"})
-        with urllib.request.urlopen(req, timeout=120) as r:
-            raw = r.read()
-        if raw[:2] == b"\x1f\x8b":
-            raw = gzip.decompress(raw)
-        alt = json.loads(raw.decode("utf-8")).get("products", [])
-    except Exception as ex:
-        log(f"Feed-Vorrat nicht geladen ({type(ex).__name__}), kein Auffüllen")
+    """Ergänzt aus dem Vorrat vom letzten guten Lauf (GitHub-Release, von bilder-vorrat.yml), aber nur, was
+    unverschuldet fehlt: alle Produkte eines Shops, dessen Feed ausgefallen ist (0 Zeilen), und Produkte, die nur
+    wegen eines nicht geholten Bilds rausflogen. Aussortiertes (Filter, Sperrliste, ausverkauft) bleibt draußen.
+    Nur mit vorhandenem Bild, höchstens BACKUP_TAGE alt."""
+    alt = vorrat_produkte()
+    if not alt:
+        log("Kein Feed-Vorrat, kein Auffüllen")
         return result
     heute = datetime.now(timezone.utc).date()
-    jetzt, vorher = {}, {}
-    for p in result:
-        jetzt[p.get("shop")] = jetzt.get(p.get("shop"), 0) + 1
-    for p in alt:
-        vorher[p.get("shop")] = vorher.get(p.get("shop"), 0) + 1
-    shops = {a.get("shop") for a in adv.values()}
     have = {p.get("url") for p in result} | {norm(p.get("name", "")) for p in result}
+    exc = {a.get("shop"): (re.compile(a["exclude_name"], re.I) if a.get("exclude_name") else None) for a in adv.values()}
+    ausfall = {sh for sh in exc if not ROWS_SHOP.get(sh)}
     dazu = {}
-    for shop, n_alt in vorher.items():
-        n = jetzt.get(shop, 0)
-        if shop not in shops or n_alt < 30 or n >= 0.8 * n_alt:
+    for p in alt:
+        shop, url = p.get("shop"), p.get("url")
+        if shop not in exc or url in have or norm(p.get("name", "")) in have:
             continue
-        for p in alt:
-            if p.get("shop") != shop or p.get("url") in have or norm(p.get("name", "")) in have:
+        if shop not in ausfall and url not in IMG_WEG:
+            continue
+        seit = p.get("vorrat_seit") or heute.isoformat()
+        try:
+            if (heute - datetime.fromisoformat(seit).date()).days > BACKUP_TAGE:
                 continue
-            seit = p.get("vorrat_seit") or heute.isoformat()
-            try:
-                if (heute - datetime.fromisoformat(seit).date()).days > BACKUP_TAGE:
-                    continue
-            except ValueError:
-                continue
-            img = str(p.get("image", ""))
-            if not (img.startswith("/i/") and (IMG_DIR / img[3:]).exists()) or not name_ok(p.get("name", "")):
-                continue
-            p["vorrat_seit"] = seit
-            result.append(p)
-            have.update({p.get("url"), norm(p.get("name", ""))})
-            dazu[shop] = dazu.get(shop, 0) + 1
-        log(f"WARNUNG: {shop} lieferte {n} statt {n_alt} Produkte, {dazu.get(shop, 0)} aus dem Vorrat ergänzt")
+        except ValueError:
+            continue
+        img, name = str(p.get("image", "")), p.get("name", "")
+        if not (img.startswith("/i/") and (IMG_DIR / img[3:]).exists()) or not name_ok(name) or (exc[shop] and exc[shop].search(name)):
+            continue
+        p["vorrat_seit"] = seit
+        result.append(p)
+        have.update({url, norm(name)})
+        dazu[shop] = dazu.get(shop, 0) + 1
+    for shop, n in sorted(dazu.items()):
+        log(f"WARNUNG: {shop}: {n} Produkte aus dem Vorrat ergänzt ({'Feed ausgefallen' if shop in ausfall else 'Bilder nicht geholt'})")
     return result
-
 
 IMG_FAIL = []  # nur Vorschau: warum ein Bild fehlte (landet in static/_dump/img_fail.json)
 
@@ -325,6 +363,7 @@ def fetch_images(prods):
         r = res2.get(id(p))
         if r and not r[0]:
             stats["weg"] += 1
+            IMG_WEG.add(p.get("url"))
             if DUMP and len(IMG_FAIL) < 1000:
                 IMG_FAIL.append([p.get("shop", ""), p.get("name", "")[:60], mimg, r[1]])
             continue
@@ -615,6 +654,8 @@ def main():
                     stats["zeilen"] += 1
                     mid = col(row, "merchant_id")
                     a = adv.get(mid)
+                    if a:
+                        ROWS_SHOP[a.get("shop")] = ROWS_SHOP.get(a.get("shop"), 0) + 1
                     if not a:
                         stats["inaktiv"] += 1
                         continue
@@ -701,6 +742,7 @@ def main():
 
     if IMG_LOCAL and result:
         result = fetch_images(result)
+    seit_merken(result)
     if IMG_LOCAL:
         result = auffuellen(result, adv)
     if DUMP and DUMP_ROWS:
