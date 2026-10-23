@@ -299,6 +299,7 @@ DULL = re.compile(r"(sparpaket|sparset|vorteilspack|großpackung|\b\d{2,3}\s*x\s
                   r"portionsstick|nachfüll|refill|ersatz|zubehör|kapsel|pads\b|zuckerfrei|stevia)", re.I)
 
 
+REWE_BRANDS = set()
 ART_ORDER = ["schokolade", "gummi", "chips", "getraenke", "pralinen", "bonbons", "kekse", "snacks", "boxen", "eis", "feinkost", "tee"]
 
 
@@ -321,6 +322,11 @@ def order_products():
             s -= 1
         if p.get("post"):
             s += 3
+        # Entdecken = was man nicht in jedem Supermarkt findet
+        if p.get("shop") == "REWE" or p.get("markt"):
+            s -= 5
+        elif (p.get("brand") or "").lower() in REWE_BRANDS:  # Marke steht auch im Supermarkt-Regal (Twix, Milka …)
+            s -= 4
         a = art(p)
         if a in ("tee", "feinkost"):
             s -= 3
@@ -329,6 +335,8 @@ def order_products():
         elif a == "sonst":  # keine Art erkannt -> vermutlich kein klassisches Naschzeug
             s -= 3
         return s
+    global REWE_BRANDS
+    REWE_BRANDS = {(p.get("brand") or "").lower() for p in products if p.get("shop") == "REWE" and p.get("brand")}
     in_seas = {id(x) for c in season for x in cat_items(c)}
     sc, ar = {}, {}
     for p in products:
@@ -394,6 +402,46 @@ def size_label(sz):
     return f"{x:g} Stück"
 
 
+_MULTI = re.compile(r"(\d+)\s*x\s*(\d+(?:[.,]\d+)?)\s*(kg|gramm|gr|g|ml|liter|l)(?![a-z])")
+_ONE = re.compile(r"(\d+(?:[.,]\d+)?)\s*(kg|gramm|gr|g|ml|liter|l)(?![a-z])")
+
+
+def menge(p):
+    """Füllmenge in g oder ml aus dem Namen ("6x1,25l" = 7500 ml). None, wenn unklar (mehrere Angaben)."""
+    n = translit(p.get("name", "").lower())
+    m = _MULTI.search(n)
+    if m:
+        k, x, u = int(m.group(1)), float(m.group(2).replace(",", ".")), m.group(3)
+    else:
+        found = _ONE.findall(n)
+        if len({(a, b) for a, b in found}) != 1:
+            return None
+        k, (x, u) = 1, (float(found[0][0].replace(",", ".")), found[0][1])
+    f = {"kg": 1000, "liter": 1000, "l": 1000}.get(u, 1)
+    unit = "ml" if u in ("ml", "l", "liter") else "g"
+    total = k * x * f
+    return (total, unit) if 5 <= total <= 20000 else None
+
+
+def grundpreis(p):
+    """Preis je kg bzw. Liter (wie im Supermarkt-Regal). (Wert, Text) oder (None, "")."""
+    mg = menge(p)
+    if not (p.get("price") and mg):
+        return None, ""
+    v = p["price"] / mg[0] * 1000
+    return v, f"{euro(v)}/{'kg' if mg[1] == 'g' else 'l'}"
+
+
+NEU_TAGE = 14
+
+
+def ist_neu(p):
+    try:
+        return (TODAY - _dt.date.fromisoformat(p.get("seit", ""))).days <= NEU_TAGE
+    except ValueError:
+        return False
+
+
 def merge_offers():
     """Doppelte Karten vermeiden: gleiche Sorte (gleiche Wörter im Namen) bei mehreren Shops oder in mehreren Größen
     wird zu EINER Karte. Vorn steht das Angebot mit den meisten Punkten (bei Gleichstand das günstigste),
@@ -417,11 +465,24 @@ def merge_offers():
         cand = list(uniq.values())
         if len(cand) < 2:
             continue
-        head = max(cand, key=lambda p: (p.get("score", 0), -p["price"]))
+        # Vorn steht das günstigste Angebot (Kern von Naschpass: sparen). Gleiche Größe -> Preis,
+        # verschiedene Größen -> Preis je kg/l, wenn alle eine Menge haben, sonst Preis.
+        gp = {id(p): grundpreis(p)[0] for p in cand}
+        vgl = (lambda p: gp[id(p)]) if all(gp.values()) else (lambda p: p["price"])
+        head = min(cand, key=lambda p: (vgl(p), -p.get("score", 0)))
         others = sorted((p for p in cand if p is not head), key=lambda p: ((p["_sz"] or ((0, ""),))[0][0], p["price"]))
         same = all(p["_sz"] == head["_sz"] for p in others)
         head["offers"] = [{"s": p.get("shop", ""), "p": p["price"], "u": p["url"], "g": "" if same else size_label(p["_sz"])} for p in others]
         head["offers_same"] = same
+        head["n_shops"] = len({p.get("shop") for p in cand})
+        if same:
+            head["spar"] = round(max(p["price"] for p in cand) - head["price"], 2)
+            head["best"] = head["price"] < min(p["price"] for p in others) - 0.005  # nur echt billiger, kein Gleichstand
+        if any(p.get("shop") == "REWE" for p in cand):
+            head["markt"] = 1  # gibt's auch im Supermarkt -> beim Entdecken weiter hinten
+        seits = [p["seit"] for p in cand if p.get("seit")]
+        if seits:
+            head["seit"] = min(seits)  # war es schon bei einem Shop, ist es nicht neu
         head["score"] = max(p.get("score", 0) for p in cand) + 1
         if head.get("imgkb") and any((p.get("imgkb") or 0) > head["imgkb"] for p in others):
             better = max(others, key=lambda p: p.get("imgkb") or 0)
@@ -893,6 +954,15 @@ font-size:26px;line-height:1;cursor:pointer;box-shadow:0 4px 14px rgba(43,35,80,
 .v-list .fav{top:auto;bottom:8px;right:8px;width:30px;height:30px;font-size:16px}
 .prod .reg{font-size:11.5px;color:var(--mut);line-height:1.3}
 .prod .pr{font-weight:800;font-size:15px;color:var(--fg)}
+.prod .pr .gp{font-weight:600;font-size:11.5px;color:var(--mut)}
+.prod .pr .best,.prod .pr .nb{display:block;width:max-content;max-width:100%;margin-top:3px;font-size:11px;font-weight:800;border-radius:999px;padding:2px 8px;background:#DDF5E8;color:#1D6B45}
+.prod .pr .nb{background:#FFE3EC;color:#B3245A}
+.tueren{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0 4px;max-width:520px}
+.tuer{display:flex;flex-direction:column;gap:3px;background:#fff;border-radius:18px;padding:14px;text-decoration:none;color:var(--fg);box-shadow:var(--sh);border:2px solid transparent}
+.tuer:hover{border-color:var(--vio2)}.tuer .ic{font-size:26px;line-height:1}.tuer b{font-size:16.5px;font-weight:800}.tuer small{font-size:12.5px;color:var(--mut);line-height:1.3}
+.sortbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:4px 0 10px}.sortbar span{font-size:13px;font-weight:700;color:var(--mut)}
+.sortbar button{border:2px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font:700 13px Inter,sans-serif;color:var(--fg);cursor:pointer}
+.sortbar button[aria-pressed=true]{background:var(--fg);color:#fff;border-color:var(--fg)}
 .prod{display:flex;flex-direction:column;background:#fff;border-radius:18px;overflow:hidden;text-decoration:none;color:var(--fg);box-shadow:var(--sh)}
 .prod .pi{position:relative;background:var(--bg2);aspect-ratio:1;display:grid;place-items:center;padding:12px}
 .prod .pi img{max-height:100%;object-fit:contain}
@@ -1133,6 +1203,16 @@ def fav_data(p):
     return html.escape(json.dumps(d, ensure_ascii=False), quote=True)
 
 
+def price_extra(p):
+    gp = grundpreis(p)[1]
+    out = f' <small class="gp">({gp})</small>' if gp else ""
+    if p.get("best"):
+        out += f'<b class="best">Günstigster von {p["n_shops"]} Shops</b>'
+    if ist_neu(p):
+        out += '<b class="nb">Neu</b>'
+    return out
+
+
 def prod_card(p):
     cid = p.get("category", "")
     cname = cat_by_id.get(cid, {}).get("name", "")
@@ -1144,7 +1224,7 @@ def prod_card(p):
             f'<div class="pi">{pic}' + (f'<span class="pc"><i></i>{e(cname)}</span>' if cname else "") + '</div>'
             f'<div class="pb"><h3>{e(p["name"])}</h3>'
             + (f'<p class="note">{e(p["note"])}</p>' if p.get("note") else "")
-            + (f'<span class="pr">{euro(p["price"])}</span>' if p.get("price") else "")
+            + (f'<span class="pr">{euro(p["price"])}{price_extra(p)}</span>' if p.get("price") else "")
             + (f'<span class="shop">bei {e(shop)}</span>' if shop else "")
             + (f'<span class="reg">{e(reg)}</span>' if reg else "")
             + f'<div class="cta"><span><em class="l">{btn}</em><em class="s">Zum Shop*</em></span></div></div></a>'
@@ -1295,7 +1375,7 @@ var fl=document.getElementById('flt');
   var fav=esc2(JSON.stringify({u:i.url,n:i.title,s:sh,i:i.img||'',v:i.v||'',p:i.pr||''}));
   return '<div class="pcw'+(i.o?' has-o':'')+'"><a class="prod" href="'+esc2(i.url)+'" rel="sponsored noopener" target="_blank"><div class="pi">'
    +(im?'<img src="'+esc2(im)+'" alt="'+esc2(i.title)+'" loading="lazy">':'<span class="svgw">'+(i.svg||'')+'</span>')+'</div><div class="pb"><h3>'+esc2(i.title)+'</h3>'
-   +(i.pr?'<span class="pr">'+esc2(i.pr)+'</span>':'')+(sh?'<span class="shop">bei '+esc2(sh)+'</span>':'')+(i.reg?'<span class="reg">'+esc2(i.reg)+'</span>':'')
+   +(i.pr?'<span class="pr">'+esc2(i.pr)+(i.gp?' <small class="gp">('+esc2(i.gp)+')</small>':'')+(i.bn?'<b class="best">Günstigster von '+i.bn+' Shops</b>':'')+(i.sd?'<b class="nb">Neu</b>':'')+'</span>':'')+(sh?'<span class="shop">bei '+esc2(sh)+'</span>':'')+(i.reg?'<span class="reg">'+esc2(i.reg)+'</span>':'')
    +'<div class="cta"><span><em class="l">'+(sh?'Bei '+esc2(sh)+' ansehen*':'Zum Shop*')+'</em><em class="s">Zum Shop*</em></span></div></div></a>'
    +'<button class="fav" type="button" aria-pressed="false" aria-label="Merken" data-fav="'+fav+'">♡</button>'
    +(i.o?'<p class="offers">'+(i.os?'Auch bei':'Weitere Größen &amp; Shops')+': '+i.o.map(function(o){return '<a href="'+esc2(o[2])+'" rel="sponsored noopener" target="_blank">'+esc2(o[0])+' '+esc2(o[1])+'*</a>'}).join(' · ')+'<small>Preise laut Shop, ggf. zzgl. Versand</small></p>':'')+'</div>'}
@@ -1308,11 +1388,18 @@ var fl=document.getElementById('flt');
    if(cd){go();return}
    fetch('/search.json').then(function(r){return r.json()}).then(function(j){var have={};cg.querySelectorAll('a.prod').forEach(function(a){have[a.getAttribute('href')]=1});
     cd=j.items.filter(function(i){return i.type==='product'&&(' '+(i.th||'')+' ').indexOf(' '+cid+' ')>=0&&!have[i.url]});go()})})}
-if(fl){var grid=document.getElementById(fl.dataset.grid),PAGE=24,shown=48,sel={},data=null,loading=false;
+if(fl){var grid=document.getElementById(fl.dataset.grid),PAGE=24,shown=48,sel={},data=null,loading=false,sortBy='';
  var cnt=document.getElementById('fcount'),rst=document.getElementById('freset'),more=document.getElementById('fmore'),emp=document.getElementById('fempty');
  var total=+grid.dataset.total||grid.children.length;
  fl.querySelectorAll('[data-g]').forEach(function(b){sel[b.dataset.g]=[]});
  var u=new URLSearchParams(location.search);Object.keys(sel).forEach(function(k){var v=u.get(k);if(v)sel[k]=v.split(',')});
+ sortBy=['preis','sparen','neu'].indexOf(u.get('sort'))>=0?u.get('sort'):'';
+ var sb=document.getElementById('fsort');
+ function sortHits(h){if(!sortBy)return h;var k=function(d){var i=d.i;
+   return sortBy==='preis'?(i.pv||1e9):sortBy==='sparen'?-(i.sp||0):(i.sd?-Date.parse(i.sd):1e15)};
+  return h.map(function(d,j){return [k(d),j,d]}).sort(function(a,b){return a[0]-b[0]||a[1]-b[1]}).map(function(x){return x[2]}).filter(function(d){
+   return sortBy==='sparen'?d.i.sp>0:sortBy==='neu'?!!d.i.sd:true})}
+ if(sb)sb.addEventListener('click',function(ev){var b=ev.target.closest('[data-sort]');if(!b)return;sortBy=b.dataset.sort;shown=48;apply()});
  function any(){return Object.keys(sel).some(function(k){return sel[k].length})}
  function okD(d){return Object.keys(sel).every(function(k){if(!sel[k].length)return true;var h=' '+(d[k]||'')+' ';
   return sel[k].some(function(v){return h.indexOf(' '+v+' ')>=0})})}
@@ -1321,12 +1408,14 @@ if(fl){var grid=document.getElementById(fl.dataset.grid),PAGE=24,shown=48,sel={}
    var o={i:i};(i.f||'').split(' ').forEach(function(x){var kv=x.split(':');if(kv[1])o[kv[0]]=(o[kv[0]]?o[kv[0]]+' ':'')+kv[1]});o.t=(i.th||'');return o});cb()})}
  var TK=null;try{TK=JSON.parse(fl.dataset.tk||'null')}catch(e){}
  function apply(){
-  if(!data&&(any()||shown>48)){cnt.textContent='Lädt …';load(apply);return}
+  if(!data&&(any()||shown>48||sortBy)){cnt.textContent='Lädt …';load(apply);return}
+  if(sb)sb.querySelectorAll('[data-sort]').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.sort===sortBy)});
   var n;
   if(data){var hits=data.filter(okD);n=hits.length;
    if(sel.t&&sel.t.length&&TK){var rx=[];sel.t.forEach(function(t){(TK[t]||[]).forEach(function(w){rx.push(w)})});
     if(rx.length){var sc=function(d){var h=(d.i.title||'').toLowerCase(),k=0;rx.forEach(function(w){if(h.indexOf(w)>=0)k++});return k};
-     hits=hits.map(function(d,j){return [sc(d),j,d]}).sort(function(a,b){return b[0]-a[0]||a[1]-b[1]}).map(function(x){return x[2]})}}grid.innerHTML=hits.slice(0,shown).map(function(d){return card(d.i)}).join('');
+     hits=hits.map(function(d,j){return [sc(d),j,d]}).sort(function(a,b){return b[0]-a[0]||a[1]-b[1]}).map(function(x){return x[2]})}}
+   hits=sortHits(hits);n=hits.length;grid.innerHTML=hits.slice(0,shown).map(function(d){return card(d.i)}).join('');
    if(window.npFavSync)window.npFavSync(grid)}
   else{n=total}
   fl.querySelectorAll('[data-g]').forEach(function(b){b.setAttribute('aria-pressed',sel[b.dataset.g].indexOf(b.dataset.v)>=0)});
@@ -1335,7 +1424,7 @@ if(fl){var grid=document.getElementById(fl.dataset.grid),PAGE=24,shown=48,sel={}
   document.getElementById('factive').innerHTML=act.join('');
   cnt.textContent=n+' Treffer';more.hidden=n<=shown;more.textContent='Mehr zeigen ('+(n-shown)+')';emp.hidden=n>0;
   rst.hidden=!any();
-  var q=Object.keys(sel).filter(function(k){return sel[k].length}).map(function(k){return k+'='+sel[k].join(',')}).join('&');
+  var q=Object.keys(sel).filter(function(k){return sel[k].length}).map(function(k){return k+'='+sel[k].join(',')}).concat(sortBy?['sort='+sortBy]:[]).join('&');
   history.replaceState(null,'',location.pathname+(q?'?'+q:'')+location.hash)}
  function closeAll(x){fl.querySelectorAll('.dd.open').forEach(function(d){if(d!==x){d.classList.remove('open');d.querySelector('.ddb').setAttribute('aria-expanded','false')}})}
  fl.querySelectorAll('.ddb').forEach(function(t){t.addEventListener('click',function(){var d=t.parentNode,o=!d.classList.contains('open');
@@ -2131,7 +2220,10 @@ def search_index(live):
                       "alt": translit(p["name"]), "tags": " ".join([cname, cid] + p.get("tags", [])),
                       "text": p.get("note", ""),
                       "f": " ".join(f"{g}:{i}" for g, v in facets(p).items() for i in sorted(v)),
-                      "th": " ".join(themes_of(p)), "pr": euro(p.get("price")), "v": p.get("vid", ""), **({"o": [[o["s"] + (" " + o["g"] if o.get("g") else ""), euro(o["p"]), o["u"]] for o in p["offers"][:6]], "os": 1 if p.get("offers_same") else 0} if p.get("offers") else {}), **({"reg": REGION_NOTE[p.get("shop")]} if p.get("shop") in REGION_NOTE else {})})
+                      "th": " ".join(themes_of(p)), "pr": euro(p.get("price")), "v": p.get("vid", ""),
+                      "pv": p.get("price") or 0, "gp": grundpreis(p)[1], "sp": p.get("spar") or 0,
+                      "bn": p.get("n_shops", 0) if p.get("best") else 0,
+                      "sd": p.get("seit", "") if ist_neu(p) else "", **({"o": [[o["s"] + (" " + o["g"] if o.get("g") else ""), euro(o["p"]), o["u"]] for o in p["offers"][:6]], "os": 1 if p.get("offers_same") else 0} if p.get("offers") else {}), **({"reg": REGION_NOTE[p.get("shop")]} if p.get("shop") in REGION_NOTE else {})})
     for c in cats:
         items.append({"type": "cat", "title": c["name"], "url": f"/kategorie/{c['id']}/", "svg": sticker(c["id"], 52),
                       "sub": c["teaser"], "alt": translit(c["name"]), "tags": c["id"].replace("-", " "), "text": c["teaser"]})
@@ -2372,7 +2464,14 @@ def build():
         f'<button class="chip" type="button" data-g="t" data-v="{c["id"]}" data-n="{e(c["name"])}" aria-pressed="false">{e(c["name"])}</button>'
         for c in cats if not _n(c)) + '</div></div>')
     tk = json.dumps({c["id"]: [k.lower() for k in c.get("top", []) + c.get("keywords", [])[:8]] for c in tcats}, ensure_ascii=False)
-    shop_all = (f'<div class="filters" id="flt" data-grid="g-all" data-tk="{e(tk)}"><div class="fbtns">{fgroups}</div><div class="active" id="factive"></div></div>'
+    n_neu = sum(1 for p in products if ist_neu(p))
+    n_spar = sum(1 for p in products if p.get("spar"))
+    sortbar = ('<div class="sortbar" id="fsort" role="group" aria-label="Sortieren"><span>Sortieren:</span>'
+               '<button type="button" data-sort="" aria-pressed="true">Entdecken</button>'
+               '<button type="button" data-sort="preis" aria-pressed="false">Günstigste zuerst</button>'
+               + (f'<button type="button" data-sort="sparen" aria-pressed="false">Größte Ersparnis</button>' if n_spar else '')
+               + (f'<button type="button" data-sort="neu" aria-pressed="false">Neu</button>' if n_neu >= 8 else '') + '</div>')
+    shop_all = (f'<div class="filters" id="flt" data-grid="g-all" data-tk="{e(tk)}"><div class="fbtns">{fgroups}</div><div class="active" id="factive"></div></div>{sortbar}'
                 f'<div class="fbar"><b id="fcount" aria-live="polite"></b><button class="linkbtn" type="button" id="freset" hidden>Filter zurücksetzen</button>'
                 f'<span style="margin-left:auto">{view_toggle("g-all", ["big", "small", "list"], "small")}</span></div>'
                 f'<div class="grid prods v-small" id="g-all" data-total="{len(products)}">{"".join(fill_slots([prod_card(p) for p in products[:SHOP_STATIC]], 8 if len(products) < 8 else 0))}</div>'
@@ -2412,6 +2511,24 @@ def build():
         return f'<div class="morebar">{btn}{link}</div>' if (btn or link) else ""
 
     new_prods = products[:LIMIT]
+    # Spar-Ecke: gleiches Produkt, gleiche Größe, bei einem Shop deutlich günstiger
+    spar, marken = [], set()  # Naschzeug, je Marke nur eins (sonst 5x Red Bull)
+    for p in sorted((p for p in products if (p.get("spar") or 0) >= 0.3), key=lambda p: -p["spar"]):
+        b = (p.get("brand") or p["name"].split()[0]).lower()
+        if b in marken or "getraenke" in facets(p).get("art", set()):
+            continue
+        marken.add(b)
+        spar.append(p)
+        if len(spar) == 8:
+            break
+    spar_html = (f'<section id="sparen"><div class="head"><h2>Gleiche Packung, anderer Preis</h2>'
+                 f'<a class="more" href="/shop/?sort=sparen#alle">Alle Preisvergleiche</a></div>'
+                 f'<p class="sub" style="margin:-4px 0 12px">Wir vergleichen die Preise der Shops täglich. Hier ist der Unterschied gerade am größten, vorn steht immer der günstigste.</p>'
+                 f'{clip_grid([prod_card(p) for p in spar], "g-spar", "prods", show=8)}<p class="wl">{WL}</p></section>') if len(spar) >= 4 else ""
+    neu = sorted((p for p in products if ist_neu(p)), key=lambda p: p.get("seit", ""), reverse=True)
+    neu_html = (f'<section id="neuheiten"><div class="head"><h2>Neu im Sortiment</h2>'
+                f'<a class="more" href="/shop/?sort=neu#alle">Alle {len(neu)} Neuheiten</a></div>'
+                f'{clip_grid([prod_card(p) for p in neu[:8]], "g-neu", "prods", show=8)}<p class="wl">{WL}</p></section>') if len(neu) >= 8 else ""
     home_prods = (f'<section id="neu"><div class="head"><h2>Zum Entdecken</h2>{view_toggle("g-new", ["big", "small", "list"], "small")}</div>'
                   f'{clip_grid(fill_slots([prod_card(p) for p in new_prods], 4), "g-new", "prods", show=LIMIT)}<p class="wl">{WL}</p>'
                   f'<div class="morebar"><a class="btn dark" href="/shop/">Alle {len(products)} im Shop</a></div></section>'
@@ -2492,10 +2609,16 @@ def build():
         f'<section id="posts"><div class="head"><h2>Aus unseren Posts</h2>{view_toggle("g-home-posts", ["big", "small"], "small")}</div>'
         f'{clip_grid([post_card(p) for p in home_posts], "g-home-posts", "posts")}'
         f'{more_bar("g-home-posts", len(home_posts), len(live), "/posts/", f"Alle {len(live)} Posts")}</section>')
-    how = ('<ul class="how">'
+    n_shops = len({p.get("shop") for p in products if p.get("shop")})
+    n_laender = len({x for p in products for x in facets(p).get("land", set())} - {"deutschland", "europa"})
+    doors = ('<div class="tueren">'
+             f'<a class="tuer" href="/shop/#alle"><span class="ic" aria-hidden="true">🧭</span><b>Neues entdecken</b>'
+             f'<small>Exoten &amp; Kultsnacks aus {n_laender} Ländern</small></a>'
+             f'<a class="tuer" href="/shop/?sort=preis#alle"><span class="ic" aria-hidden="true">💸</span><b>Günstig finden</b>'
+             f'<small>Preise aus {n_shops} Shops im Vergleich</small></a></div>') if products else ""
+    how = (doors + '<ul class="how">'
            '<li><a href="/posts/"><span aria-hidden="true">📲</span>Fakten-Posts mit Quellen</a></li>'
            '<li><a href="/shop/"><span aria-hidden="true">🗺️</span>Nach Land & Thema</a></li>'
-           '<li><a href="/shop/#alle"><span aria-hidden="true">🛒</span>Direkt zum Shop</a></li>'
            + ('<li><a href="/kategorie/halloween/" class="advpill hw" data-season><span aria-hidden="true">🎃</span><em>Halloween</em></a></li></ul>'
               if TODAY.month in (9, 10) else
               '<li><a href="/advent/" class="advpill" data-season><span aria-hidden="true">🎄</span><em>Adventskalender</em></a></li></ul>'))
@@ -2512,7 +2635,7 @@ def build():
             f'<p class="lead" style="max-width:36ch">{e(site["intro"])}</p>{how}'
             f'<button class="fake" type="button" data-open-search>{ICON_SEARCH}<span>Snacks, Länder, Marken suchen …</span></button>{browse_html}</div>'
             f'<div class="hr">{minis_html}</div></section>'
-            f'{season_html}{advent_teaser}{home_prods}{explore_html()}{spin_html(live)}{map_html()}{pass_html()}{band_html}{posts_html}{about_box}{jump}')
+            f'{season_html}{advent_teaser}{home_prods}{neu_html}{spar_html}{explore_html()}{spin_html(live)}{map_html()}{pass_html()}{band_html}{posts_html}{about_box}{jump}')
     write("index.html", page("Naschpass – Süßigkeiten aus aller Welt entdecken & kaufen", home, script=SPIN_JS + SHARE_JS + PASS_SHARE_JS))
 
     # --- Über Naschpass / Für Partner (ehrlich: neuer Kanal, keine Reichweitenzahlen)
