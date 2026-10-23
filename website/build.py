@@ -32,6 +32,25 @@ if _ff.exists() and not os.environ.get("PRODUCTS_FILE"):
     _have = {re.sub(r"[^a-z0-9]+", " ", p.get("name", "").lower()).strip() for p in products}
     products = products + [p for p in json.loads(_ff.read_text(encoding="utf-8")).get("products", [])
                            if re.sub(r"[^a-z0-9]+", " ", p.get("name", "").lower()).strip() not in _have]
+_MENGE = re.compile(r"^\s*\d+(?:[.,]\d+)?\s*(g|kg|ml|l|liter|stück|stk\.?|st\.?|er)\b", re.I)
+
+
+def kurzname(n):
+    """Shops hängen Werbetext an ("… 158g - Stapelchips - Krosse Konsistenz - …"). Auf Karten zählt nur der Kern.
+    Bleibt dran: eine reine Mengenangabe ("… Aprikose - 750 ml" -> "… Aprikose, 750 ml")."""
+    n = re.sub(r"(?<=\w{3})\. (?=[A-ZÄÖÜ])", " - ", n, count=1) if len(n) > 45 else n  # "… 90g. Weiße Schokolade …"
+    teile = [t.strip() for t in n.split(" - ")]
+    kurz = teile[0]
+    if len(teile) > 1 and _MENGE.match(teile[1]) and not re.search(r"\d\s*(g|kg|ml|l)\b", kurz, re.I):
+        kurz += ", " + teile[1]
+    if len(kurz) > 70:
+        kurz = kurz[:70].rsplit(" ", 1)[0] + " …"
+    return kurz if len(kurz) >= 6 else n[:70]
+
+
+for _p in products:
+    if " - " in _p.get("name", "") or len(_p.get("name", "")) > 45:
+        _p["full_name"], _p["name"] = _p["name"], kurzname(_p["name"])
 if DEMO and not os.environ.get("PRODUCTS_FILE"):  # Vorschau: echte Produkte zuerst, dann Beispiele
     products = json.loads((HERE / "products.json").read_text(encoding="utf-8"))["products"] + products
 
@@ -927,13 +946,13 @@ font-size:26px;line-height:1;cursor:pointer;box-shadow:0 4px 14px rgba(43,35,80,
 
 /* Produktkarten */
 .grid{display:grid;gap:12px}
-.prods.v-small{grid-template-columns:repeat(2,1fr)}
+.prods.v-small{grid-template-columns:repeat(2,minmax(0,1fr))}
 .prods.v-big{grid-template-columns:1fr}
 .prods.v-list{grid-template-columns:1fr;gap:10px}
-@media(min-width:620px){.prods.v-big{grid-template-columns:repeat(2,1fr)}.prods.v-small{grid-template-columns:repeat(3,1fr)}.prods.v-list{grid-template-columns:repeat(2,1fr)}}
-@media(min-width:960px){.prods.v-big{grid-template-columns:repeat(3,1fr)}.prods.v-small{grid-template-columns:repeat(4,1fr)}}
+@media(min-width:620px){.prods.v-big{grid-template-columns:repeat(2,minmax(0,1fr))}.prods.v-small{grid-template-columns:repeat(3,minmax(0,1fr))}.prods.v-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(min-width:960px){.prods.v-big{grid-template-columns:repeat(3,minmax(0,1fr))}.prods.v-small{grid-template-columns:repeat(4,minmax(0,1fr))}}
 .favlink{white-space:nowrap;color:#E8457A!important}.mrow2 .btn{background:var(--vio);color:#fff;border-radius:12px;text-decoration:none;font-weight:800}
-.pcw{position:relative;display:flex}.pcw.has-o{flex-direction:column}.offers{margin:-10px 0 0;padding:16px 12px 8px;background:#FFF6D6;border-radius:0 0 18px 18px;font-size:12.5px;line-height:1.45;font-weight:600}.offers a{color:var(--fg);white-space:nowrap}.offers small{display:block;font-weight:400;color:var(--mut);font-size:11px}.pcw .pi,.pcw h3{cursor:zoom-in}
+.pcw{position:relative;display:flex}.pcw.has-o{flex-direction:column}.offers{margin:-10px 0 0;padding:16px 12px 8px;background:#FFF6D6;border-radius:0 0 18px 18px;font-size:12.5px;line-height:1.45;font-weight:600}.offers a{color:var(--fg)}.offers small{display:block;font-weight:400;color:var(--mut);font-size:11px}.pcw .pi,.pcw h3{cursor:zoom-in}
 .qv{border:0;border-radius:22px 22px 0 0;padding:0;width:100%;max-width:640px;max-height:88vh;margin:auto auto 0;background:var(--bg);color:var(--fg)}
 @media(min-width:700px){.qv{border-radius:22px;margin:auto}}
 .qv::backdrop{background:rgba(43,35,80,.5)}
@@ -957,6 +976,8 @@ font-size:26px;line-height:1;cursor:pointer;box-shadow:0 4px 14px rgba(43,35,80,
 .prod .pr .gp{font-weight:600;font-size:11.5px;color:var(--mut)}
 .prod .pr .best,.prod .pr .nb{display:block;width:max-content;max-width:100%;margin-top:3px;font-size:11px;font-weight:800;border-radius:999px;padding:2px 8px;background:#DDF5E8;color:#1D6B45}
 .prod .pr .nb{background:#FFE3EC;color:#B3245A}
+.mlist{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}.mlist a{background:#fff;border-radius:999px;padding:7px 13px;text-decoration:none;color:var(--fg);font-weight:700;font-size:14px;box-shadow:var(--sh)}
+.mlist a small{color:var(--mut);font-weight:600}.aznav{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}.aznav a{font-weight:800;color:var(--vio);text-decoration:none;padding:2px 6px}
 .tueren{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0 4px;max-width:520px}
 .tuer{display:flex;flex-direction:column;gap:3px;background:#fff;border-radius:18px;padding:14px;text-decoration:none;color:var(--fg);box-shadow:var(--sh);border:2px solid transparent}
 .tuer:hover{border-color:var(--vio2)}.tuer .ic{font-size:26px;line-height:1}.tuer b{font-size:16.5px;font-weight:800}.tuer small{font-size:12.5px;color:var(--mut);line-height:1.3}
@@ -969,7 +990,7 @@ font-size:26px;line-height:1;cursor:pointer;box-shadow:0 4px 14px rgba(43,35,80,
 .prod .pi .stk{width:44%;height:auto;opacity:.9}
 .prod .pc{position:absolute;left:8px;top:8px;background:#fff;border-radius:999px;font-size:11.5px;font-weight:800;padding:3px 8px 3px 6px;display:flex;align-items:center;gap:5px}
 .prod .pc i{width:8px;height:8px;border-radius:50%;background:var(--c)}
-.prod .pb{padding:11px 12px 12px;display:flex;flex-direction:column;gap:3px;flex:1}
+.prod .pb{padding:11px 12px 12px;min-width:0;overflow-wrap:anywhere;hyphens:auto;display:flex;flex-direction:column;gap:3px;flex:1}
 .prod .note{font-size:13.5px;color:var(--mut);margin:0;line-height:1.4}
 .prod .shop{font-size:12.5px;color:var(--mut);font-weight:600}
 .prod .cta{margin-top:auto;padding-top:9px}
@@ -1002,10 +1023,10 @@ padding:8px 8px 8px 14px;box-shadow:0 10px 30px rgba(43,35,80,.3);font-size:13px
 [hidden]{display:none!important}
 
 /* Post-Karten */
-.posts.v-small{grid-template-columns:repeat(2,1fr)}
+.posts.v-small{grid-template-columns:repeat(2,minmax(0,1fr))}
 .posts.v-big{grid-template-columns:1fr}
-@media(min-width:620px){.posts.v-small{grid-template-columns:repeat(3,1fr)}.posts.v-big{grid-template-columns:repeat(2,1fr)}}
-@media(min-width:960px){.posts.v-small{grid-template-columns:repeat(4,1fr)}.posts.v-big{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:620px){.posts.v-small{grid-template-columns:repeat(3,minmax(0,1fr))}.posts.v-big{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(min-width:960px){.posts.v-small{grid-template-columns:repeat(4,minmax(0,1fr))}.posts.v-big{grid-template-columns:repeat(3,minmax(0,1fr))}}
 .post{display:block;text-decoration:none;color:var(--fg)}
 .post .cover{position:relative;border-radius:16px;overflow:hidden;background:var(--fg);aspect-ratio:4/5;box-shadow:var(--sh)}
 .post .cover img{width:100%;height:100%;object-fit:cover;transition:transform .25s}
@@ -1174,7 +1195,7 @@ def page(title, body, desc=None, path="/", og_img=None, script="", stamp="", ld=
 {body}
 {follow_box()}
 </main>
-<footer><div class="wrap"><a href="/advent/">Adventskalender</a><a href="/geschenk/">Geschenk-Finder</a><a href="/quiz/">Snack-Typ-Quiz</a><a href="/ueber/">Über Naschpass</a><a href="/ueber/#partner">Für Partner</a><a href="/impressum/">Impressum</a><a href="/datenschutz/">Datenschutz</a>
+<footer><div class="wrap"><a href="/advent/">Adventskalender</a><a href="/geschenk/">Geschenk-Finder</a><a href="/quiz/">Snack-Typ-Quiz</a><a href="/marken/">Marken A–Z</a><a href="/adventskalender-vergleich/">Adventskalender-Vergleich</a><a href="/geschenke-unter-20-euro/">Geschenke nach Budget</a><a href="/ueber/">Über Naschpass</a><a href="/ueber/#partner">Für Partner</a><a href="/impressum/">Impressum</a><a href="/datenschutz/">Datenschutz</a>
 <button class="linkbtn" type="button" data-imgpref hidden>Foto-Einstellung</button>
 <span>Keine Cookies, kein Tracking.</span></div></footer>
 <div class="imgbar" id="imgbar" role="region" aria-label="Produktfotos" hidden><p>Shop-Fotos laden? Der Shop sieht dann deine IP-Adresse. <a href="/datenschutz/#fotos">Mehr</a></p>
@@ -2217,13 +2238,16 @@ def search_index(live):
                       "img": ii[1] if ii and ii[0] == "own" else "", "ext": ii[1] if ii and ii[0] == "ext" else "",
                       "svg": "" if ii and ii[0] == "own" else sticker(cid, 52),
                       "sub": " · ".join(x for x in (p.get("shop", ""), cname) if x),
-                      "alt": translit(p["name"]), "tags": " ".join([cname, cid] + p.get("tags", [])),
+                      "alt": translit(p.get("full_name") or p["name"]), "tags": " ".join([cname, cid] + p.get("tags", [])),
                       "text": p.get("note", ""),
                       "f": " ".join(f"{g}:{i}" for g, v in facets(p).items() for i in sorted(v)),
                       "th": " ".join(themes_of(p)), "pr": euro(p.get("price")), "v": p.get("vid", ""),
                       "pv": p.get("price") or 0, "gp": grundpreis(p)[1], "sp": p.get("spar") or 0,
                       "bn": p.get("n_shops", 0) if p.get("best") else 0,
                       "sd": p.get("seit", "") if ist_neu(p) else "", **({"o": [[o["s"] + (" " + o["g"] if o.get("g") else ""), euro(o["p"]), o["u"]] for o in p["offers"][:6]], "os": 1 if p.get("offers_same") else 0} if p.get("offers") else {}), **({"reg": REGION_NOTE[p.get("shop")]} if p.get("shop") in REGION_NOTE else {})})
+    for sl, (name, ps) in MARKEN.items():
+        items.append({"type": "cat", "title": name, "url": f"/marke/{sl}/", "svg": sticker("snacks", 52),
+                      "sub": f"Marke · {len(ps)} Sorten", "alt": translit(name.lower()), "tags": "marke", "text": ""})
     for c in cats:
         items.append({"type": "cat", "title": c["name"], "url": f"/kategorie/{c['id']}/", "svg": sticker(c["id"], 52),
                       "sub": c["teaser"], "alt": translit(c["name"]), "tags": c["id"].replace("-", " "), "text": c["teaser"]})
@@ -2309,6 +2333,125 @@ def write_llms(live, urls):
     write("llms.txt", "\n".join(lines))
 
 
+LAND_NAME = {o["id"]: o["name"] for g in FILTER if g["id"] == "land" for o in g["options"]}
+MARKE_MIN = 6
+_NICHT_MARKE = re.compile(r"gmbh|\.com|\.de\b|^bio primo$|world of sweets|^cool$", re.I)
+
+
+def slug(x):
+    x = translit(x.lower()).replace("&", " und ")
+    return re.sub(r"[^a-z0-9]+", "-", x).strip("-")
+
+
+def marken():
+    """Marke -> Produkte. Gleiche Marke in anderer Schreibweise zählt zusammen, angezeigt wird die häufigste."""
+    shops = {(p.get("shop") or "").lower() for p in products}
+    by = {}
+    for p in products:
+        b = (p.get("brand") or "").strip()
+        if not b or b.lower() in shops or _NICHT_MARKE.search(b):
+            continue
+        by.setdefault(slug(b), []).append(p)
+    out = {}
+    for sl, ps in by.items():
+        if len(ps) < MARKE_MIN or not sl:
+            continue
+        namen = {}
+        for p in ps:
+            namen[p["brand"]] = namen.get(p["brand"], 0) + 1
+        out[sl] = (max(namen, key=namen.get), ps)
+    return out
+
+
+def marke_land(ps):
+    z = {}
+    for p in ps:
+        for l in facets(p).get("land", set()) - {"europa"}:
+            z[l] = z.get(l, 0) + 1
+    return LAND_NAME.get(max(z, key=z.get)) if z else ""
+
+
+MARKEN = {}
+
+
+def write_marken():
+    MARKEN.update(marken())
+    for sl, (name, ps) in MARKEN.items():
+        shops = sorted({p.get("shop") for p in ps if p.get("shop")})
+        preise = [p["price"] for p in ps if p.get("price")]
+        vergl = [p for p in ps if p.get("best")]
+        land = marke_land(ps)
+        satz = (f"{len(ps)} Sorten von {name}" + (f" aus {len(shops)} Shops" if len(shops) > 1 else f" bei {shops[0]}" if shops else "")
+                + (f", ab {euro(min(preise))}" if preise else "") + "."
+                + (f" Herkunft: {land}." if land and land != "Deutschland" else "")
+                + (f" Bei {len(vergl)} Sorten haben wir die Preise mehrerer Shops verglichen, vorn steht jeweils der günstigste." if vergl else ""))
+        billig = sorted(ps, key=lambda p: p.get("price") or 999)[:4]
+        shown = ps[:96]
+        body = (f'<a class="back" href="/marken/">← Alle Marken</a>'
+                f'<section style="padding-top:14px"><h1 style="margin:0 0 6px">{e(name)} kaufen</h1><p class="lead">{e(satz)}</p>'
+                + (f'<h2 style="margin-top:18px">Preisvergleich</h2>{prod_grid(vergl[:8], "g-mv")}' if len(vergl) >= 2 else "")
+                + f'<h2 style="margin-top:18px">Alle Sorten</h2>{prod_grid(shown, "g-m")}'
+                + (f'<p class="sub">{len(ps) - len(shown)} weitere Sorten findest du über die Suche.</p>' if len(ps) > len(shown) else "")
+                + '</section>')
+        ld = [{"@type": "ItemList", "name": f"{name} Sorten", "numberOfItems": len(ps),
+               "itemListElement": [{"@type": "ListItem", "position": i + 1, "name": x["name"]} for i, x in enumerate(ps[:20])]},
+              {"@type": "BreadcrumbList", "itemListElement": [
+                  {"@type": "ListItem", "position": 1, "name": "Marken", "item": f"{BASE}/marken/"},
+                  {"@type": "ListItem", "position": 2, "name": name, "item": f"{BASE}/marke/{sl}/"}]}]
+        write(f"marke/{sl}/index.html", page(
+            f"{name} kaufen: {len(ps)} Sorten" + (" im Preisvergleich" if len(shops) > 1 else "") + " | Naschpass",
+            body, satz, f"/marke/{sl}/", ld=ld))
+    # Übersicht A–Z
+    groups = {}
+    for sl, (name, ps) in sorted(MARKEN.items(), key=lambda x: translit(x[1][0].lower())):
+        k = translit(name[0].upper()) if name[0].isalpha() else "#"
+        groups.setdefault(k, []).append(f'<a href="/marke/{sl}/">{e(name)} <small>{len(ps)}</small></a>')
+    az = "".join(f'<h2 id="m-{k}">{k}</h2><div class="mlist">{"".join(v)}</div>' for k, v in groups.items())
+    nav = "".join(f'<a href="#m-{k}">{k}</a>' for k in groups)
+    write("marken/index.html", page(
+        "Süßigkeiten-Marken von A bis Z – Naschpass",
+        f'<section class="hero" style="padding-bottom:0"><h1>Marken <span class="acc">A–Z</span></h1>'
+        f'<p class="sub">{len(MARKEN)} Marken mit Preisvergleich aus {len({p.get("shop") for p in products})} Shops. Wähl deine Lieblingsmarke und sieh alle Sorten auf einen Blick.</p>'
+        f'<nav class="aznav">{nav}</nav></section><section>{az}</section>',
+        f"{len(MARKEN)} Süßigkeiten- und Snack-Marken von A bis Z: alle Sorten, Preise und Shops auf einen Blick.", "/marken/"))
+
+
+def write_landings():
+    """Seiten für Suchen, die vor Weihnachten richtig groß werden. Nur echte Daten, Preise mit Datum."""
+    adv = sorted((p for p in products if "adventskalender" in themes_of(p) and p.get("price")), key=lambda p: p["price"])
+    if len(adv) >= 12:
+        pmin, pmax = adv[0]["price"], adv[-1]["price"]
+        txt = (f"{len(adv)} Adventskalender mit Süßigkeiten aus {len({p.get('shop') for p in adv})} Shops, sortiert nach Preis: "
+               f"von {euro(pmin)} bis {euro(pmax)}. Preise vom {TODAY.strftime('%d.%m.%Y')}, maßgeblich ist der Shop.")
+        stufen = [(10, "Bis 10 €"), (20, "10 bis 20 €"), (40, "20 bis 40 €"), (10 ** 6, "Über 40 €")]
+        body, lo = "", 0
+        for hi, lab in stufen:
+            part = [p for p in adv if lo < p["price"] <= hi] if lo else [p for p in adv if p["price"] <= hi]
+            lo = hi
+            if part:
+                body += f'<h2 style="margin-top:20px">{lab} <small style="font:600 15px Inter,sans-serif;color:var(--mut)">({len(part)})</small></h2>{prod_grid(part, "g-a" + str(hi))}'
+        write("adventskalender-vergleich/index.html", page(
+            f"Adventskalender-Vergleich {TODAY.year}: {len(adv)} Süßigkeiten-Kalender nach Preis | Naschpass",
+            f'<a class="back" href="/kategorie/adventskalender/">← Themenwelt Adventskalender</a>'
+            f'<section style="padding-top:14px"><h1 style="margin:0 0 6px">Adventskalender-Vergleich {TODAY.year}</h1><p class="lead">{e(txt)}</p>{body}</section>',
+            txt, "/adventskalender-vergleich/"))
+    gesch = [p for p in products if p.get("price") and ({"boxen", "mitbringsel", "weihnachten"} & set(themes_of(p)))]
+    if len(gesch) >= 12:
+        body = ""
+        for hi, lab, gid in [(10, "Unter 10 €", "g-g10"), (20, "10 bis 20 €", "g-g20"), (35, "20 bis 35 €", "g-g35")]:
+            lo = {10: 0, 20: 10, 35: 20}[hi]
+            part = [p for p in gesch if lo < p["price"] <= hi][:24]
+            if part:
+                body += f'<h2 style="margin-top:20px">{lab}</h2>{prod_grid(part, gid)}'
+        write("geschenke-unter-20-euro/index.html", page(
+            "Süßigkeiten-Geschenke unter 10 und 20 Euro | Naschpass",
+            f'<section style="padding-top:14px"><h1 style="margin:0 0 6px">Süße Geschenke nach Budget</h1>'
+            f'<p class="lead">Boxen, Mitbringsel und Weihnachtliches aus unseren Partner-Shops, nach Preis gruppiert. Für Wichteln, Adventskalender-Füllung oder einfach als Danke.</p>'
+            f'<p><a class="btn dark" href="/geschenk/">🎁 Lieber persönlich? Geschenk-Finder in 3 Fragen</a></p>{body}</section>',
+            "Süßigkeiten-Geschenke unter 10 €, unter 20 € und bis 35 €: Boxen, Mitbringsel und Weihnachtliches aus mehreren Shops.", "/geschenke-unter-20-euro/"))
+
+
+
 def build():
     if DIST.exists():
         shutil.rmtree(DIST)
@@ -2318,6 +2461,7 @@ def build():
     live = [p for p in posts if (ROOT / "fertige_posts" / post_folder(p)).exists()]
     merge_offers()
     order_products()
+    MARKEN.update(marken())
     _CAT_CACHE.clear()  # Themenwelten in der neuen Reihenfolge
 
     # --- Kategorie-Seiten
@@ -2339,6 +2483,16 @@ def build():
                     if rel else "")
         others = "".join(f'<a class="sc" href="/kategorie/{o["id"]}/">{sticker(o["id"], 34)}{e(o["name"])}</a>'
                          for o in cats if o["id"] != c["id"])
+        mz = {}
+        for x in items:
+            sl = slug(x.get("brand") or "")
+            if sl in MARKEN:
+                mz[sl] = mz.get(sl, 0) + 1
+        top_m = sorted(mz, key=lambda k: -mz[k])[:14]
+        if len(top_m) >= 4:
+            rel_html = (f'<section><h2>Beliebte Marken: {e(c["name"])}</h2><div class="mlist">'
+                        + "".join(f'<a href="/marke/{k}/">{e(MARKEN[k][0])} <small>{mz[k]}</small></a>' for k in top_m)
+                        + '<a href="/marken/">Alle Marken →</a></div></section>') + rel_html
         cdesc = (f"{len(items)} Sorten {c['name']}: " if len(items) > 1 else "") + (c.get("text") or c["teaser"])
         cld = [{"@type": "ItemList", "name": c["name"], "numberOfItems": len(items),
                 "itemListElement": [{"@type": "ListItem", "position": i + 1, "name": x["name"]} for i, x in enumerate(items[:20])]}] if items else []
@@ -2353,6 +2507,11 @@ def build():
                '<p style="margin-top:12px"><a class="btn dark" href="/geschenk/">🎁 Geschenk-Finder: passende Süßigkeiten in 3 Fragen</a></p></section>'
                if c["id"] in ("weihnachten", "boxen") else ""),
             cdesc, f"/kategorie/{c['id']}/", stamp=c["id"], ld=cld))
+
+    # --- Markenseiten (für Google: "Pocky kaufen", "Pringles günstig") + Marken A–Z
+    write_marken()
+    # --- Weihnachts-Landingpages
+    write_landings()
 
     # --- Post-Seiten
     for k, p in enumerate(live):
@@ -2481,7 +2640,7 @@ def build():
     write("shop/index.html", page(
         "Shop: Süßigkeiten aus aller Welt kaufen – Naschpass",
         f'<section class="hero" style="padding-bottom:0">{SPRINKLES}<h1>Shop</h1>'
-        f'<p class="sub">Such dir aus, worauf du Lust hast: nach Herkunft, Geschmack und Art, frei kombinierbar.</p>'
+        f'<p class="sub">Such dir aus, worauf du Lust hast: nach Herkunft, Geschmack und Art, frei kombinierbar. Oder direkt nach <a href="/marken/">Marke von A–Z</a>.</p>'
         f'<button class="fake" type="button" data-open-search>{ICON_SEARCH}<span>Snacks, Länder, Marken suchen …</span></button></section>'
         f'<nav class="themes" aria-label="Themenwelten"><h2>Themenwelten</h2><div class="trow">{theme_row}</div></nav>'
         f'<section id="alle" style="padding-top:18px">{shop_all}</section>',
@@ -2512,12 +2671,12 @@ def build():
 
     new_prods = products[:LIMIT]
     # Spar-Ecke: gleiches Produkt, gleiche Größe, bei einem Shop deutlich günstiger
-    spar, marken = [], set()  # Naschzeug, je Marke nur eins (sonst 5x Red Bull)
+    spar, spar_marken = [], set()  # Naschzeug, je Marke nur eins (sonst 5x Red Bull)
     for p in sorted((p for p in products if (p.get("spar") or 0) >= 0.3), key=lambda p: -p["spar"]):
         b = (p.get("brand") or p["name"].split()[0]).lower()
-        if b in marken or "getraenke" in facets(p).get("art", set()):
+        if b in spar_marken or "getraenke" in facets(p).get("art", set()):
             continue
-        marken.add(b)
+        spar_marken.add(b)
         spar.append(p)
         if len(spar) == 8:
             break
@@ -2668,9 +2827,12 @@ Vollständige Angaben im <a href="/impressum/">Impressum</a>.</p></section>"""
 
     si = search_index(live)
     for it in si["items"]:  # leere Felder und doppelte Schreibweisen weglassen (Datei bleibt kleiner)
-        if it.get("alt") == it.get("title", "").lower():
-            it.pop("alt")
-        for k in [k for k, v in it.items() if v in ("", None)]:
+        alt = it.get("alt", "")
+        if alt == it.get("title", "").lower() or alt == translit(it.get("title", "").lower()):
+            it.pop("alt", None)
+        elif alt:
+            it["alt"] = alt[:110]  # voller Shop-Name nur zum Finden, der Anfang reicht
+        for k in [k for k, v in it.items() if v in ("", None, " ") or (k in ("pv", "sp", "bn", "os") and not v)]:
             it.pop(k)
     write("search.json", json.dumps(si, ensure_ascii=False, separators=(",", ":")))
     # Für den nächtlichen Verfügbarkeits-Check (GitHub-Action): Werbelink + direkte Shop-Adresse
