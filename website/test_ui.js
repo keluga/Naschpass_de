@@ -3,7 +3,7 @@
 // Braucht Playwright (npm i playwright) und Chromium.
 const { chromium } = require('playwright');
 const BASE = process.argv[2] || 'http://localhost:8799';
-const PAGES = ['/', '/shop/', '/kategorie/schokolade/', '/kategorie/halloween/', '/p/01/', '/merkliste/', '/geschenk/', '/quiz/', '/advent/', '/posts/', '/ueber/'];
+const PAGES = ['/', '/shop/', '/kategorie/schokolade/', '/kategorie/halloween/', '/p/01/', '/merkliste/', '/geschenk/', '/quiz/', '/advent/', '/posts/', '/ueber/', '/marken/', '/adventskalender-vergleich/', '/geschenke-unter-20-euro/'];
 const EXE = process.env.CHROME || '/opt/pw-browsers/chromium_headless_shell-1194/chrome-linux/headless_shell';
 const ID = /awinaffid=3111189|[?&]a=3111189/;
 
@@ -23,6 +23,12 @@ const ID = /awinaffid=3111189|[?&]a=3111189/;
       // 1) Seite wackelt nicht seitlich
       const over = await p.evaluate(() => document.scrollingElement.scrollWidth - innerWidth);
       if (over > 2) fails.push(`${dev} ${path}: Seite ${over}px zu breit (wackelt seitlich)`);
+      // 1b) Raster-Karten passen in die Breite (Body schneidet ab, deshalb sieht 1) das nicht)
+      const cut = await p.evaluate(() => [...document.querySelectorAll('.grid > *')].filter(e => {
+        if (!e.offsetParent || e.closest('.hsw,.trow,.mrow,.reel')) return false;
+        const g = e.parentElement.getBoundingClientRect(); return e.getBoundingClientRect().right > Math.min(g.right, innerWidth) + 2;
+      }).length);
+      if (cut) fails.push(`${dev} ${path}: ${cut} Karten ragen rechts aus dem Raster (abgeschnitten)`);
       // 2) Jede Wisch-Reihe, die mehr Inhalt hat, lässt sich weiterbewegen
       const naked = await p.evaluate(() => [...document.querySelectorAll('body *')].filter(e => {
         const cs = getComputedStyle(e); if (cs.overflowX !== 'auto' && cs.overflowX !== 'scroll') return false;
