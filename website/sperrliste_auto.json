@@ -1,10 +1,4 @@
 {
  "_info": "Automatisch (tools/check_links.py). Nicht von Hand bearbeiten, dafür gibt es sperrliste.json.",
- "eintraege": {
-  "https://www.awin1.com/pclick.php?p=43997469803&a=3111189&m=112586": {
-   "shop": "World of Sweets",
-   "seit": "2026-10-23",
-   "shop_url": "https://www.worldofsweets.de/Jimmy-s-Popcorn-Sweet-Chili-BBQ-with-Tabasco-90g.316483.html"
-  }
- }
+ "eintraege": {}
 }
