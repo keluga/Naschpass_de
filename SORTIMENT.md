@@ -1,18 +1,18 @@
-# Sortiment – Stand 2026-10-25
+# Sortiment – Stand 2026-10-26
 
 Automatisch aus `/sortiment.json` (nächtliche Action, `tools/sortiment_md.py`). Volle Tabellen: `/pruefen/sortiment/` auf der Seite.
 
-**12134 Produkte** · ohne Herkunft 1960 · ohne Art 1273 · Preisvergleich-Karten 935 (1312 Doppel-Karten zusammengefasst) · übrige Sorten bei mehreren Shops 268
+**12086 Produkte** · ohne Herkunft 1948 · ohne Art 1264 · Preisvergleich-Karten 930 (1303 Doppel-Karten zusammengefasst) · übrige Sorten bei mehreren Shops 266
 
 ## Je Shop
 | Shop | Produkte | ohne Herkunft | ohne Art | ohne Preis | Bild schwach | Preis median |
 | --- | --- | --- | --- | --- | --- | --- |
-| World of Sweets | 7160 | 1474 | 1002 | 0 | 13 | 3.49 € |
+| World of Sweets | 7119 | 1464 | 994 | 0 | 13 | 3.49 € |
 | REWE | 1784 | 157 | 47 | 0 | 0 | 2.89 € |
 | Piccantino | 1376 | 36 | 12 | 0 | 41 | 4.39 € |
 | GOURVITA | 629 | 11 | 21 | 1 | 7 | 3.99 € |
 | Haushalt-und-Genuss | 482 | 0 | 28 | 0 | 0 | 3.99 € |
-| Der Feinschmecker Shop | 328 | 202 | 87 | 0 | 0 | 11.97 € |
+| Der Feinschmecker Shop | 321 | 200 | 86 | 0 | 0 | 11.95 € |
 | Burghardt Delicious | 148 | 49 | 0 | 3 | 1 | 13.95 € |
 | decocino | 93 | 4 | 55 | 0 | 0 | 3.09 € |
 | SugarGang | 61 | 6 | 0 | 0 | 0 | 4.99 € |
@@ -24,36 +24,36 @@ Automatisch aus `/sortiment.json` (nächtliche Action, `tools/sortiment_md.py`).
 ## Herkunft
 | Herkunft | Produkte |
 | --- | --- |
-| deutschland | 5608 |
+| deutschland | 5587 |
 | oesterreich | 949 |
-| usa | 757 |
-| italien | 677 |
+| usa | 750 |
+| italien | 675 |
 | schweiz | 520 |
-| skandinavien | 456 |
+| skandinavien | 454 |
 | uk | 279 |
 | benelux | 272 |
-| asien | 215 |
-| frankreich | 158 |
+| asien | 214 |
+| frankreich | 156 |
 | spanien | 127 |
 | orient | 78 |
-| mexiko | 68 |
+| mexiko | 67 |
 | europa | 7 |
 | osteuropa | 3 |
 
 ## Art
 | Art | Produkte |
 | --- | --- |
-| schokolade | 3593 |
-| kekse | 1491 |
-| getraenke | 1347 |
-| bonbons | 1173 |
-| snacks | 815 |
-| feinkost | 786 |
-| gummi | 691 |
+| schokolade | 3581 |
+| kekse | 1486 |
+| getraenke | 1345 |
+| bonbons | 1166 |
+| snacks | 812 |
+| feinkost | 784 |
+| gummi | 686 |
 | chips | 629 |
 | eis | 127 |
-| boxen | 122 |
-| pralinen | 61 |
+| boxen | 120 |
+| pralinen | 60 |
 | tee | 26 |
 
 ## Themenwelten
@@ -61,25 +61,25 @@ Automatisch aus `/sortiment.json` (nächtliche Action, `tools/sortiment_md.py`).
 | --- | --- | --- |
 | Halloween | 107 | aktiv |
 | Adventskalender | 199 | aktiv |
-| Weihnachten & Geschenke | 966 |  |
-| Schokolade & Pralinen | 3509 |  |
-| Japan & Asien | 215 |  |
-| USA | 757 |  |
-| Italien | 677 |  |
+| Weihnachten & Geschenke | 962 |  |
+| Schokolade & Pralinen | 3497 |  |
+| Japan & Asien | 214 |  |
+| USA | 750 |  |
+| Italien | 675 |  |
 | Schweiz | 520 |  |
-| Mexiko | 68 |  |
-| Skandinavien | 456 |  |
+| Mexiko | 67 |  |
+| Skandinavien | 454 |  |
 | Anders in der EU | 0 |  |
-| Sauer & scharf | 795 |  |
-| Getränke | 1071 |  |
-| Nuss- & Fruchtsnacks | 453 |  |
-| Boxen & Geschenke | 502 |  |
+| Sauer & scharf | 791 |  |
+| Getränke | 1069 |  |
+| Nuss- & Fruchtsnacks | 452 |  |
+| Boxen & Geschenke | 499 |  |
 | Supermarkt-Klassiker | 1784 |  |
-| Filmabend | 1536 |  |
-| Party & Teilen | 919 |  |
-| Mitbringsel & Danke | 867 |  |
-| Geburtstag | 479 |  |
-| Für Naschkatzen | 1040 |  |
+| Filmabend | 1529 |  |
+| Party & Teilen | 915 |  |
+| Mitbringsel & Danke | 863 |  |
+| Geburtstag | 473 |  |
+| Für Naschkatzen | 1031 |  |
 
 ## Lücken
 Häufigste Marken ohne Herkunft (Kandidaten für `brands.json`):
@@ -87,9 +87,9 @@ Häufigste Marken ohne Herkunft (Kandidaten für `brands.json`):
 | Marke | Produkte |
 | --- | --- |
 | (ohne Marke) | 291 |
-| World of Sweets | 38 |
+| World of Sweets | 37 |
 | Cool | 36 |
-| Yummi Yummi | 29 |
+| Yummi Yummi | 28 |
 | Maxi Nutrition | 28 |
 | Becky's | 26 |
 | Mellow Mellow | 23 |
@@ -97,9 +97,9 @@ Häufigste Marken ohne Herkunft (Kandidaten für `brands.json`):
 | AHEAD | 17 |
 | Barkleys | 17 |
 | Power System | 15 |
-| Suntjens | 14 |
 | Argenta | 14 |
 | Bites we Love | 13 |
+| Suntjens | 13 |
 | Edel | 13 |
 | Taste of Nature | 13 |
 | Nestlé | 12 |
@@ -126,11 +126,11 @@ Häufigste Namen ohne Art (Kandidaten für Stichwörter in `site.json → filter
 | bears overnight oats | 8 |
 | emil reimann stollenkonfekt | 7 |
 | lakrids by bülow | 6 |
-| niederegger marzipan torte | 5 |
 | niederegger männersache marzipan | 5 |
 | haribo lakritz schnecken | 5 |
 | kölln hafer müsli | 5 |
 | rewe beste wahl | 4 |
+| niederegger marzipan torte | 4 |
 | holland foodz zuckerstangen | 4 |
 | wicklein meistersinger feine | 4 |
 | wicklein mini elisen | 4 |
@@ -138,9 +138,9 @@ Häufigste Namen ohne Art (Kandidaten für Stichwörter in `site.json → filter
 | bunter mix happy | 4 |
 | saurer mix happy | 4 |
 | veggie mix happy | 4 |
-| wicklein meistersinger tassenwichtel | 4 |
 | de bron zoute | 4 |
 | world of sweets | 4 |
+| vitalis knusper müsli | 4 |
 
 ## Dubletten (gleiche Sorte, mehrere Shops)
 | Sorte | Shops | Preis |

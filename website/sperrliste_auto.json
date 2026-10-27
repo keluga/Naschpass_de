@@ -1,15 +1,4 @@
 {
  "_info": "Automatisch (tools/check_links.py). Nicht von Hand bearbeiten, dafür gibt es sperrliste.json.",
- "eintraege": {
-  "https://www.awin1.com/pclick.php?p=46253712054&a=3111189&m=112586": {
-   "shop": "World of Sweets",
-   "seit": "2026-10-26",
-   "shop_url": "https://www.worldofsweets.de/World-of-Sweets-Ostalgie-Box.320702.html"
-  },
-  "https://www.awin1.com/pclick.php?p=41889810889&a=3111189&m=112586": {
-   "shop": "World of Sweets",
-   "seit": "2026-10-26",
-   "shop_url": "https://www.worldofsweets.de/Halls-Extra-Strong-zuckerfrei-65g.315851.html"
-  }
- }
+ "eintraege": {}
 }
