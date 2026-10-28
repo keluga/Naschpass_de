@@ -1,4 +1,20 @@
 {
  "_info": "Automatisch (tools/check_links.py). Nicht von Hand bearbeiten, dafür gibt es sperrliste.json.",
- "eintraege": {}
+ "eintraege": {
+  "https://www.awin1.com/pclick.php?p=31575945377&a=3111189&m=14403": {
+   "shop": "GOURVITA",
+   "seit": "2026-10-28",
+   "shop_url": "https://www.gourvita.com/sabita-pappadum-chips-original-60g.html"
+  },
+  "https://www.awin1.com/pclick.php?p=44533111974&a=3111189&m=115505": {
+   "shop": "Burghardt Delicious",
+   "seit": "2026-10-28",
+   "shop_url": "https://shop.burghardt-delicious.com/products/luddite-burghardt-knirsch-best-red-blend-jahrgang-2017-2018?variant=56346090275151&om=105&utm_source=awin&utm_medium=feeds&utm_campaign=awin_feed"
+  },
+  "https://www.awin1.com/pclick.php?p=41889812720&a=3111189&m=112586": {
+   "shop": "World of Sweets",
+   "seit": "2026-10-28",
+   "shop_url": "https://www.worldofsweets.de/Milka-Joghurt-100g.305117.html"
+  }
+ }
 }
