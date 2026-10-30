@@ -46,8 +46,13 @@ ANLASS = {
     "adventskalender": ("Adventskalender aus aller Welt", "ADVENTSKALENDER", "24 Türchen, aber mal anders", "Adventskalender Süßigkeiten, Adventskalender für Erwachsene"),
     "halloween": ("Halloween-Süßigkeiten", "HALLOWEEN", "Süßes für die Gruselparty", "Halloween Süßigkeiten, Halloween Party Snacks"),
     "geburtstag": ("Süße Geburtstagsideen", "GEBURTSTAG?", "Süße Ideen zum Verschenken", "Geburtstagsgeschenk Süßigkeiten, Naschbox"),
+    "weihnachten": ("Süße Weihnachtsgeschenke", "WEIHNACHTEN", "Süße Geschenkideen aus aller Welt", "Weihnachtsgeschenk Süßigkeiten, Wichtelgeschenk, Nikolaus, Geschenkideen"),
 }
 SPAR_BOARD = "Snacks günstiger finden – Preisvergleich"
+QUIZ_NAME = {"schokolade": re.compile(r"schoko|chocolate|choco|kitkat|reese|hershey|m&m", re.I),
+             "gummi": re.compile(r"gummi|gummy|sour|jelly|fruchtgummi|candy|warheads|nerds", re.I),
+             "chips": re.compile(r"chips|crisps|takis|cheetos|doritos|pringles|tortilla", re.I),
+             "getraenke": re.compile(r"cola|soda|ramune|limo|drink|pepper|fanta|sprite|tea|tee", re.I)}
 # Suchbegriffe vorn im Titel (so suchen Leute auf Pinterest) und 5–8 Hashtags je Pin
 SEO_TITEL = {"japan": "Japanische Süßigkeiten", "usa": "Amerikanische Süßigkeiten", "mexiko": "Mexikanische Süßigkeiten",
              "skandinavien": "Skandinavische Süßigkeiten & Lakritz", "italien": "Italienische Süßigkeiten", "schweiz": "Schweizer Schokolade & Süßes",
@@ -67,6 +72,9 @@ TAGS = {
     "adventskalender": "#adventskalender #adventskalenderideen #weihnachten #advent #süßigkeiten",
     "halloween": "#halloween #halloweenparty #halloweensüßigkeiten #süßesodersaures #gruselparty",
     "geburtstag": "#geburtstag #geburtstagsgeschenk #geschenkidee #naschbox",
+    "weihnachten": "#weihnachtsgeschenk #wichtelgeschenk #geschenkidee #weihnachten #süßigkeiten",
+    "boxen": "#snackbox #süßigkeitenbox #geschenkbox #geschenkidee #naschen",
+    "guenstig-seite": "#sparen #günstignaschen #sparfuchs #süßigkeiten #spartipps",
     "quiz": "#quiz #snacks #süßigkeiten #naschen",
 }
 try:
@@ -363,10 +371,27 @@ def make(dist, products, cats, cat_items, facets, euro, today, top_brands, log=p
                               link=f"/kategorie/{cid}/",
                               title=f"{board}: {len(items)} Ideen – Süßigkeiten aus aller Welt",
                               desc=f"{sub}: {len(items)} Ideen aus aller Welt an einem Ort, mit Preisvergleich zwischen den Shops. {kw}. Anzeige: Links zu Partner-Shops."))
+    # 4b) Günstig naschen -> /guenstig/ (Preis-Radar), keine Preise auf dem Bild
+    gut = [p for p in products if p.get("gut") and usable(p)]
+    seen, sel = set(), []
+    for p in gut:
+        b = (p.get("brand") or p["name"].split()[0]).lower()
+        if b not in seen:
+            seen.add(b)
+            sel.append(want(p))
+        if len(sel) == 5:
+            break
+    if len(sel) >= 4:
+        plans.append(dict(kind="anlass", slug="anlass-guenstig", board="Günstig naschen – Spartipps", items=sel, head="GÜNSTIG NASCHEN",
+                          sub="Gute Preise je kg aus vielen Shops", n=len(gut), link="/guenstig/", cid="guenstig-seite",
+                          title=f"Süßigkeiten günstig kaufen: {len(gut)} Sorten mit gutem Preis je kg",
+                          desc=f"Schokolade, Fruchtgummi, Chips und mehr mit gutem Preis je kg, aus mehreren Online-Shops verglichen. "
+                               "Süßigkeiten günstig kaufen, sparen beim Naschen, Großpackungen. Anzeige: Links zu Partner-Shops."))
     # 5) Quiz
     quiz_items = []
     for art in ("schokolade", "gummi", "chips", "getraenke"):
         p = next((x for x in products if usable(x) and x not in quiz_items and art in facets(x).get("art", set())
+                  and QUIZ_NAME[art].search(x["name"])  # Bild muss zum Etikett passen (keine Skittles unter „Schoko“)
                   and x.get("land") in ("japan", "usa", "korea", "asien", "mexiko")), None)
         if p:
             quiz_items.append(want(p))
@@ -477,7 +502,7 @@ def make(dist, products, cats, cat_items, facets, euro, today, top_brands, log=p
         img.convert("RGB").save(out / f"{pl['slug']}.jpg", "JPEG", quality=88, optimize=True)
         names = ", ".join(clean_name(p["name"], 40) for p in pl["items"])
         manifest.append({"slug": pl["slug"], "kind": k, "board": pl["board"], "image": f"/pins/{pl['slug']}.jpg",
-                         "link": f"https://{DOMAIN}{pl['link']}", "title": pl["title"][:100],
+                         "link": f"https://{DOMAIN}{pl['link']}{'&' if '?' in pl['link'] else '?'}k=pin", "title": pl["title"][:100],
                          "description": (pl["desc"][:430].rstrip() + " " + (TAGS.get(pl.get("cid") or pl["slug"].split("-", 1)[-1]) or TAGS.get(k, "")) + " #naschpass").strip()[:500],
                          "alt": f"Naschpass-Pin: {pl['title']}. Zu sehen: {names}."[:500], "stand": today.isoformat()})
     (out / "pins.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=1), encoding="utf-8")
