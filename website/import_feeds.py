@@ -611,7 +611,7 @@ ART_KERN = re.compile(r"schoko|choco|praline|trüffel|fruchtgummi|gummi|bonbon|l
 _BRAND_RX = re.compile(r"(?<![\w])(" + "|".join(re.escape(k) for k in sorted(BRANDS, key=len, reverse=True) if len(k) >= 3) + r")(?![\w])", re.I) if BRANDS else None
 _BRAND_LC = {k.lower(): k for k in BRANDS}
 _STRONG = re.compile(r"\b(japan|japanisch\w*|korea|koreanisch\w*|usa|amerikanisch\w*|mexikanisch\w*|italienisch\w*|thailändisch\w*|chinesisch\w*|"
-                     r"türkisch\w*|griechisch\w*|arabisch\w*|indisch\w*|französisch\w*|spanisch\w*|englisch\w*|britisch\w*|schwedisch\w*|matcha|sakura|yuzu|"
+                     r"türkisch\w*|griechisch\w*|arabisch\w*|indisch\w*|französisch\w*|spanisch\w*|englisch\w*|britisch\w*|schwedisch\w*|"
                      r"finnisch\w*|norwegisch\w*|dänisch\w*|österreichisch\w*|schweizer|belgisch\w*|holländisch\w*|asiatisch\w*)\b", re.I)
 
 

@@ -273,6 +273,8 @@ def in_cat(p, c):
         nk = _CAT_KW.setdefault("!" + c["id"], [_kw_re(k) for k in c["not_keywords"]])
         if any(r.search(translit(p.get("name", ""))) for r in nk):
             return False
+    if c.get("nur_arten") and not (facets(p).get("art", set()) & set(c["nur_arten"])):
+        return False  # Länderwelten: nur Naschzeug (keine Masala-Paste oder Kokosmilch bei „Japan & Asien“)
     if c.get("facets"):
         f = facets(p)
         if any(x.split(":")[1] in f.get(x.split(":")[0], set()) for x in c["facets"]):
@@ -1053,6 +1055,8 @@ font-size:26px;line-height:1;cursor:pointer;box-shadow:0 4px 14px rgba(43,35,80,
 .tueren{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0 4px;max-width:520px}
 .tuer{display:flex;flex-direction:column;gap:3px;background:#fff;border-radius:18px;padding:14px;text-decoration:none;color:var(--fg);box-shadow:var(--sh);border:2px solid transparent}
 .tuer:hover{border-color:var(--vio2)}
+.wissen details{background:#fff;border-radius:14px;padding:10px 14px;margin:8px 0;box-shadow:var(--sh)}
+.wissen summary{font-weight:800;cursor:pointer}.wissen details p{margin:8px 0 2px}
 .fakten{margin:8px 0 12px;font-size:13px;font-weight:700;color:var(--mut)}.tuer .ic{font-size:26px;line-height:1}.tuer b{font-size:16.5px;font-weight:800}.tuer small{font-size:12.5px;color:var(--mut);line-height:1.3}
 .sortbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:4px 0 10px}.sortbar span{font-size:13px;font-weight:700;color:var(--mut)}
 .sortbar button{border:2px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font:700 13px Inter,sans-serif;color:var(--fg);cursor:pointer}
@@ -2669,13 +2673,32 @@ def build():
                         + "".join(f'<a href="/marke/{k}/">{e(MARKEN[k][0])} <small>{mz[k]}</small></a>' for k in top_m)
                         + '<a href="/marken/">Alle Marken →</a></div></section>') + rel_html
         cdesc = (f"{len(items)} Sorten {c['name']}: " if len(items) > 1 else "") + (c.get("text") or c["teaser"])
+        wissen = ""
+        if items and (c.get("more") or c.get("faq")):  # Für Google: echter Text + Fragen, Zahlen aus den eigenen Daten
+            shops = sorted({x.get("shop") for x in items if x.get("shop")})
+            n_gut = sum(1 for x in items if x.get("gut"))
+            vorn = []  # Marken in Entdecken-Reihenfolge (typische zuerst), nicht nach Menge (sonst Bio-Matcha-Marken bei Japan)
+            for x in items:
+                sl = slug(x.get("brand") or "")
+                if sl in MARKEN and MARKEN[sl][0] not in vorn:
+                    vorn.append(MARKEN[sl][0])
+                if len(vorn) == 5:
+                    break
+            daten = (f"Aktuell {len(items)} Sorten von {len(shops)} Partner-Shop{'s' if len(shops) != 1 else ''} ({', '.join(shops)})"
+                     + (f", darunter Marken wie {', '.join(vorn)}" if len(vorn) >= 3 else "")
+                     + (f". {n_gut} davon mit gutem Preis je kg." if n_gut else ".") + f" Stand {TODAY.strftime('%d.%m.%Y')}.")
+            wissen = ('<section class="prose wissen"><h2>Gut zu wissen</h2>' + "".join(f"<p>{e(t)}</p>" for t in c.get("more", []))
+                      + f'<p class="sub">{e(daten)}</p>'
+                      + "".join(f'<details><summary>{e(q)}</summary><p>{e(a)}</p></details>' for q, a in c.get("faq", []))
+                      + '</section>')
         cld = [{"@type": "ItemList", "name": c["name"], "numberOfItems": len(items),
                 "itemListElement": [{"@type": "ListItem", "position": i + 1, "name": x["name"]} for i, x in enumerate(items[:20])]}] if items else []
         write(f"kategorie/{c['id']}/index.html", page(
-            f"{c['name']} online kaufen – Süßigkeiten aus aller Welt | Naschpass" if items else f"{c['name']} – Naschpass",
+            (c["seo_title"].replace("{year}", str(TODAY.year)) if c.get("seo_title") else f"{c['name']} online kaufen – Süßigkeiten aus aller Welt | Naschpass")
+            if items else f"{c['name']} – Naschpass",
             f'<a class="back" href="/shop/">← Zum Shop</a>'
             f'<section style="padding-top:14px"><div style="display:flex;align-items:center;gap:14px;margin-bottom:6px">{sticker(c["id"], 64)}'
-            f'<h1 style="margin:0">{e(c["name"])}</h1></div><p class="lead">{e(c.get("text") or c["teaser"])}</p>{inner}</section>{rel_html}'
+            f'<h1 style="margin:0">{e(c.get("h1") or c["name"])}</h1></div><p class="lead">{e(c.get("text") or c["teaser"])}</p>{inner}</section>{wissen}{rel_html}'
             f'<section><h2>Mehr entdecken</h2><div class="stickers">{others}</div></section>'
             + ('<section><a class="advteaser" href="/advent/">' + sticker("weihnachten", 56) + '<div><h2>Adventskalender</h2>'
                '<p>Vom 1. bis 24. Dezember jeden Tag ein Türchen.</p></div></a>'
