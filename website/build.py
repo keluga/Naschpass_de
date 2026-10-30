@@ -342,6 +342,11 @@ def order_products():
             s -= 1
         if p.get("post"):
             s += 3
+        if p.get("gut"):  # Preis-Radar: nicht nur teure Mini-Packungen oben
+            s += 4
+        elif p.get("_gv") and haupt_art(p) in MITTE:  # je kg deutlich teurer als üblich für diese Art: nach hinten
+            r = p["_gv"] / MITTE[haupt_art(p)]
+            s -= 5 if r > 2 else 2 if r > 1.5 else 0
         # Entdecken = was man nicht in jedem Supermarkt findet
         if p.get("shop") == "REWE" or p.get("markt"):
             s -= 5
@@ -523,6 +528,62 @@ def merge_offers():
     MERGED["weg"] = len(drop)
     products[:] = [p for p in products if id(p) not in drop]
     print(f"[Preisvergleich] {MERGED['gruppen']} Sorten zusammengefasst, {MERGED['weg']} doppelte Karten weniger")
+
+
+GUT, MITTE = {}, {}  # Art -> Grenze günstigstes Viertel / Median (€/kg bzw. €/l), täglich aus den echten Daten
+
+
+# Art für den Preisvergleich je kg: aus dem NAMEN (die Filter-Arten sind absichtlich weit, „Schoko-Pudding“ ist dort Schokolade).
+# Reihenfolge zählt: Schoko-Eis ist Eis, Schoko-Kekse sind Kekse. Ohne klaren Treffer kein „Guter Preis“.
+RADAR = [("eis", r"\beis\b|eiscreme|ice cream|sorbet|\beis-|-eis\b"),
+         ("getraenke", r"limo|soda|cola|sirup|syrup|saft|eistee|\bdrink|energy|tonic|ginger ale|\bwasser\b|schorle|mate\b"),
+         ("kekse", r"keks|cookie|cooky|geb(ä|ae)ck|waffel|biscuit|biskuit|cracker|zwieback|spekulatius|lebkuchen|printen|muffin|brownie|"
+                   r"cantucci|prinzen rolle|pfeffern(ü|ue)sse|makronen"),
+         ("pralinen", r"praline|pralinés?\b|tr(ü|ue)ffel|konfekt"),
+         ("gummi", r"gummi|fruchtgummi|weingummi|haribo|trolli|lakritz|lakritze|marshmallow|schaumzucker|jelly"),
+         ("chips", r"chips|crisps|flips|tortilla|nachos|popcorn|salzstangen|brezel|pretzel"),
+         ("bonbons", r"bonbon|lolli|lutscher|drops|traubenzucker|kaugummi|pastille|zuckerl|brause|toffee|karamell"),
+         ("snacks", r"n(ü|ue)sse|\bnuss\b|mandeln|cashew|erdn(ü|ue)ss|pistazien|studentenfutter|trockenfr(ü|ue)cht|datteln"),
+         ("schokolade", r"schokolade|chocolate|\bschoko\b|tafel|lindor|riegel|\bbar\b|kugeln|schokolinsen|n(ä|ae)pschen|napolitain")]
+RADAR = [(a, re.compile(rx, re.I)) for a, rx in RADAR]
+KEIN_RADAR = re.compile(r"pudding|dessert|joghurt|mousse|kuchen|torte|backmischung|milchreis|grie(ß|ss)brei|quark|sahne|aufstrich|"
+                        r"nutella|nougatcreme|creme\b|crème\b|m(ü|ue)sli|cerealien|flakes|porridge|backzutat|kuvert(ü|ue)re|streusel|"
+                        r"raspel|glasur|kakaopulver|trinkschokolade|adventskalender|box\b|mix\b|sortiment|geschenk|crunchy|fleks|\bmac\b|"
+                        r"monte|doppeldecker|drink|mais\b|popcornmais|popcorn-mais|vitalis", re.I)
+DESSERT = KEIN_RADAR
+
+
+def haupt_art(p):
+    n = p.get("name", "")
+    if KEIN_RADAR.search(n):
+        return None
+    art = next((a for a, rx in RADAR if rx.search(n)), None)
+    mg = menge(p)
+    if art and mg and (mg[1] == "ml") != (art in ("getraenke", "eis")):  # nie Liter mit Kilo mischen
+        return None
+    return art
+
+
+def preis_radar():
+    """„Guter Preis“: Grundpreis im günstigsten Viertel seiner Art (nur Arten mit mind. 40 Produkten mit Grundpreis).
+    Vergleich nur innerhalb der Partner-Shops, erklärt auf /ueber/#vergleich."""
+    werte = {}
+    for p in products:
+        a, gv = haupt_art(p), grundpreis(p)[0]
+        if a and gv and preis_ok(p):
+            p["_gv"] = gv
+            werte.setdefault(a, []).append(gv)
+    for a, v in werte.items():
+        if len(v) >= 40:
+            v.sort()
+            GUT[a], MITTE[a] = v[len(v) // 4], v[len(v) // 2]
+    n = 0
+    for p in products:
+        a = haupt_art(p)
+        if p.get("_gv") and a in GUT and p["_gv"] <= GUT[a]:
+            p["gut"] = True
+            n += 1
+    print(f"[Preis-Radar] {n} Sorten mit gutem Preis; Grenzen: " + ", ".join(f"{a} {euro(g)}" for a, g in sorted(GUT.items())))
 
 
 def offers_html(p):
@@ -986,11 +1047,13 @@ font-size:26px;line-height:1;cursor:pointer;box-shadow:0 4px 14px rgba(43,35,80,
 .prod .pr .gp{font-weight:600;font-size:11.5px;color:var(--mut)}
 .prod .pr .best,.prod .pr .nb{display:block;width:max-content;max-width:100%;margin-top:3px;font-size:11px;font-weight:800;border-radius:999px;padding:2px 8px;background:#DDF5E8;color:#1D6B45}
 .prod .pr .nb{background:#FFE3EC;color:#B3245A}
+.prod .pr .gut{display:block;width:max-content;max-width:100%;margin-top:3px;font-size:11px;font-weight:800;border-radius:999px;padding:2px 8px;background:#FFF1C9;color:#7A4B00}
 .mlist{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}.mlist a{background:#fff;border-radius:999px;padding:7px 13px;text-decoration:none;color:var(--fg);font-weight:700;font-size:14px;box-shadow:var(--sh)}
 .mlist a small{color:var(--mut);font-weight:600}.aznav{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}.aznav a{font-weight:800;color:var(--vio);text-decoration:none;padding:2px 6px}
 .tueren{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0 4px;max-width:520px}
 .tuer{display:flex;flex-direction:column;gap:3px;background:#fff;border-radius:18px;padding:14px;text-decoration:none;color:var(--fg);box-shadow:var(--sh);border:2px solid transparent}
-.tuer:hover{border-color:var(--vio2)}.tuer .ic{font-size:26px;line-height:1}.tuer b{font-size:16.5px;font-weight:800}.tuer small{font-size:12.5px;color:var(--mut);line-height:1.3}
+.tuer:hover{border-color:var(--vio2)}
+.fakten{margin:8px 0 12px;font-size:13px;font-weight:700;color:var(--mut)}.tuer .ic{font-size:26px;line-height:1}.tuer b{font-size:16.5px;font-weight:800}.tuer small{font-size:12.5px;color:var(--mut);line-height:1.3}
 .sortbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:4px 0 10px}.sortbar span{font-size:13px;font-weight:700;color:var(--mut)}
 .sortbar button{border:2px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font:700 13px Inter,sans-serif;color:var(--fg);cursor:pointer}
 .sortbar button[aria-pressed=true]{background:var(--fg);color:#fff;border-color:var(--fg)}
@@ -1246,6 +1309,8 @@ def price_extra(p):
     out = f' <small class="gp">({gp})</small>' if gp else ""
     if p.get("best"):
         out += f'<b class="best">Günstigster von {p["n_shops"]} Shops</b>'
+    if p.get("gut"):
+        out += '<b class="gut" title="Preis je kg bzw. Liter im günstigsten Viertel dieser Art bei unseren Partner-Shops">Guter Preis</b>'
     if ist_neu(p):
         out += '<b class="nb">Neu</b>'
     return out
@@ -1426,7 +1491,7 @@ var fl=document.getElementById('flt');
   var fav=esc2(JSON.stringify({u:i.url,n:i.title,s:sh,i:i.img||'',v:i.v||'',p:i.pr||''}));
   return '<div class="pcw'+(i.o?' has-o':'')+'"><a class="prod" href="'+esc2(i.url)+'" rel="sponsored noopener" target="_blank"><div class="pi">'
    +(im?'<img src="'+esc2(im)+'" alt="'+esc2(i.title)+'" loading="lazy">':'<span class="svgw">'+(i.svg||'')+'</span>')+'</div><div class="pb"><h3>'+esc2(i.title)+'</h3>'
-   +(i.pr?'<span class="pr">'+esc2(i.pr)+(i.gp?' <small class="gp">('+esc2(i.gp)+')</small>':'')+(i.bn?'<b class="best">Günstigster von '+i.bn+' Shops</b>':'')+(i.sd?'<b class="nb">Neu</b>':'')+'</span>':'')+(sh?'<span class="shop">bei '+esc2(sh)+'</span>':'')+(i.reg?'<span class="reg">'+esc2(i.reg)+'</span>':'')
+   +(i.pr?'<span class="pr">'+esc2(i.pr)+(i.gp?' <small class="gp">('+esc2(i.gp)+')</small>':'')+(i.bn?'<b class="best">Günstigster von '+i.bn+' Shops</b>':'')+(i.gu?'<b class="gut">Guter Preis</b>':'')+(i.sd?'<b class="nb">Neu</b>':'')+'</span>':'')+(sh?'<span class="shop">bei '+esc2(sh)+'</span>':'')+(i.reg?'<span class="reg">'+esc2(i.reg)+'</span>':'')
    +'<div class="cta"><span><em class="l">'+(sh?'Bei '+esc2(sh)+' ansehen*':'Zum Shop*')+'</em><em class="s">Zum Shop*</em></span></div></div></a>'
    +'<button class="fav" type="button" aria-pressed="false" aria-label="Merken" data-fav="'+fav+'">♡</button>'
    +(i.o?'<p class="offers">'+(i.os?'Auch bei':'Weitere Größen &amp; Shops')+': '+i.o.map(function(o){return '<a href="'+esc2(o[2])+'" rel="sponsored noopener" target="_blank">'+esc2(o[0])+' '+esc2(o[1])+'*</a>'}).join(' · ')+'<small>Preise laut Shop, ggf. zzgl. Versand</small></p>':'')+'</div>'}
@@ -1444,12 +1509,12 @@ if(fl){var grid=document.getElementById(fl.dataset.grid),PAGE=24,shown=48,sel={}
  var total=+grid.dataset.total||grid.children.length;
  fl.querySelectorAll('[data-g]').forEach(function(b){sel[b.dataset.g]=[]});
  var u=new URLSearchParams(location.search);Object.keys(sel).forEach(function(k){var v=u.get(k);if(v)sel[k]=v.split(',')});
- sortBy=['preis','sparen','neu'].indexOf(u.get('sort'))>=0?u.get('sort'):'';
+ sortBy=['preis','kg','gut','sparen','neu'].indexOf(u.get('sort'))>=0?u.get('sort'):'';
  var sb=document.getElementById('fsort');
  function sortHits(h){if(!sortBy)return h;var k=function(d){var i=d.i;
-   return sortBy==='preis'?(i.pv||1e9):sortBy==='sparen'?-(i.sp||0):(i.sd?-Date.parse(i.sd):1e15)};
+   return sortBy==='preis'?(i.pv||1e9):(sortBy==='kg'||sortBy==='gut')?(i.gv||1e9):sortBy==='sparen'?-(i.sp||0):(i.sd?-Date.parse(i.sd):1e15)};
   return h.map(function(d,j){return [k(d),j,d]}).sort(function(a,b){return a[0]-b[0]||a[1]-b[1]}).map(function(x){return x[2]}).filter(function(d){
-   return sortBy==='sparen'?d.i.sp>0:sortBy==='neu'?!!d.i.sd:true})}
+   return sortBy==='sparen'?d.i.sp>0:sortBy==='neu'?!!d.i.sd:sortBy==='gut'?!!d.i.gu:sortBy==='kg'?!!d.i.gv:true})}
  if(sb)sb.addEventListener('click',function(ev){var b=ev.target.closest('[data-sort]');if(!b)return;sortBy=b.dataset.sort;shown=48;apply()});
  function any(){return Object.keys(sel).some(function(k){return sel[k].length})}
  function okD(d){return Object.keys(sel).every(function(k){if(!sel[k].length)return true;var h=' '+(d[k]||'')+' ';
@@ -1562,10 +1627,20 @@ function hit(i){
  const im=i.img||(i.ext&&window.npImgOK&&window.npImgOK()?i.ext:'');
  const th=im?`<img src="${esc(im)}" alt="" loading="lazy"${i.type==='product'?' class="ct"':''}>`:(i.svg||'');
  const ext=i.type==='product'?' rel="sponsored noopener" target="_blank"':'';
- return `<a class="hit" href="${esc(i.url)}"${ext}><span class="th">${th}</span><span><b>${esc(i.title)}${i.type==='product'?'*':''}</b><span>${esc(i.sub||'')}</span></span></a>`}
+ return `<a class="hit" href="${esc(i.url)}"${ext}><span class="th">${th}</span><span><b>${esc(i.title)}${i.type==='product'?'*':''}</b><span>${esc(i.sub||'')}${i.pr?' · '+esc(i.pr)+(i.gp?' ('+esc(i.gp)+')':''):''}${i.gu?' · Guter Preis':''}</span></span></a>`}
 function group(t,arr){return arr.length?`<h4>${t}</h4>`+arr.map(hit).join(''):''}
+const CHEAP=/\b(guenstig\w*|billig\w*|preiswert\w*|spar\w*|budget)\b/g;
 function render(){
- const v=q.value.trim();
+ const v0=q.value.trim(),cheap=CHEAP.test(norm(v0));CHEAP.lastIndex=0;
+ const v=cheap?norm(v0).replace(CHEAP,' ').replace(/\s+/g,' ').trim():v0;
+ if(cheap){/* Preis-Radar: Günstigstes je kg zuerst, mit Hinweis */
+  const pr=data.items.filter(i=>i.type==='product'&&i.gv);let base=pr;
+  if(v){const {found}=parse(v);const hits=new Set(fuse.search(v).map(r=>r.item));
+   base=found.length?pr.filter(i=>found.every(x=>(' '+i.f+' ').includes(' '+x.g+':'+x.id+' '))):pr.filter(i=>hits.has(i))}
+  const L=base.slice().sort((a,b)=>(b.gu||0)-(a.gu||0)||a.gv-b.gv);
+  out.innerHTML=`<div class="hint"><b>Günstig je kg${v?' · '+esc(v):''}</b><p style="margin:6px 0 0">Gute Preise zuerst (günstigstes Viertel je kg bei unseren Partner-Shops).</p>`
+   +`<p style="margin:10px 0 0"><a class="btn dark" href="/guenstig/">Alle Preis-Tipps</a></p></div>`
+   +(L.length?group('Süßigkeiten',L.slice(0,12))+'<p class="wl">* Werbelink</p>':`<p class="none">Dazu nichts mit Grundpreis gefunden.</p>`);return}
  if(!v){out.innerHTML='<h4>Vorschläge</h4><div class="sugg">'+data.sugg.map(s=>`<button class="chip" type="button" data-s="${esc(s)}">${esc(s)}</button>`).join('')+'</div>'
   +((data.ex||[]).length?'<h4>So kannst du suchen</h4><div class="exs">'+data.ex.map(x=>`<button class="ex" type="button" data-s="${esc(x.t)}"><span>„${esc(x.t)}“</span><em>${x.n} Treffer</em></button>`).join('')+'</div><p class="tip">Tipp: Kombinier Land, Geschmack und Art einfach in einem Satz. Mit #Nummer springst du direkt zu einem Post.</p>':'');return}
  let res=fuse.search(v).map(r=>r.item);
@@ -2272,7 +2347,8 @@ def search_index(live):
                       "text": p.get("note", ""),
                       "f": " ".join(f"{g}:{i}" for g, v in facets(p).items() for i in sorted(v)),
                       "th": " ".join(themes_of(p)), "pr": euro(p.get("price")) if preis_ok(p) else "", "v": p.get("vid", ""),
-                      "pv": p.get("price") or 0, "gp": grundpreis(p)[1], "sp": p.get("spar") or 0,
+                      "pv": p.get("price") or 0, "gp": grundpreis(p)[1] if preis_ok(p) else "", "gv": round(p["_gv"], 2) if p.get("_gv") else 0,
+                      "gu": 1 if p.get("gut") else 0, "sp": p.get("spar") or 0,
                       "bn": p.get("n_shops", 0) if p.get("best") else 0,
                       "sd": p.get("seit", "") if ist_neu(p) else "", **({"o": [[o["s"] + (" " + o["g"] if o.get("g") else ""), f'{euro(o["p"])} ({o["gp"]})' if o.get("gp") else "", o["u"]] for o in p["offers"][:6]], "os": 1 if p.get("offers_same") else 0} if p.get("offers") else {}), **({"reg": REGION_NOTE[p.get("shop")]} if p.get("shop") in REGION_NOTE else {})})
     for sl, (name, ps) in MARKEN.items():
@@ -2451,6 +2527,53 @@ ADV_KIDS = re.compile(r"paw patrol|peppa|disney|barbie|minions|hello kitty|feuer
                       r"kinder\b|kinderschokolade|f[üu]r kinder|stitch|princess|prinzessin|pj masks|super wings", re.I)
 
 
+ART_NAME = {"schokolade": "Schokolade", "gummi": "Fruchtgummi", "chips": "Chips", "kekse": "Kekse & Gebäck", "bonbons": "Bonbons",
+             "snacks": "Nüsse & Snacks", "pralinen": "Pralinen", "getraenke": "Getränke", "eis": "Eis", "boxen": "Boxen"}
+
+
+def write_guenstig():
+    """/guenstig/: je Art die günstigsten Sorten je kg (Alltagspackungen bis 1 kg, Großpackungen extra).
+    Je Marke nur eine Karte, damit es nicht 8x Lindt wird."""
+    if not GUT:
+        return
+    body, nav, n_ges = "", "", 0
+    for a in [x for x in ART_NAME if x in GUT]:
+        ps = sorted((p for p in products if p.get("gut") and haupt_art(p) == a), key=lambda p: p["_gv"])
+        def pick(items, k=8):
+            out, marken = [], set()
+            for p in items:
+                b = (p.get("brand") or p["name"].split()[0]).lower()
+                if b in marken:
+                    continue
+                marken.add(b)
+                out.append(p)
+                if len(out) == k:
+                    break
+            return out
+        alltag = pick([p for p in ps if (menge(p) or (0,))[0] <= 1000])
+        gross = pick([p for p in ps if (menge(p) or (0,))[0] > 1000], 4)
+        if len(alltag) < 4:
+            continue
+        einheit = "l" if a == "getraenke" else "kg"
+        n_ges += 1
+        nav += f'<a class="chip" style="text-decoration:none" href="#{a}">{ART_NAME[a]}</a>'
+        body += (f'<h2 id="{a}" style="margin-top:22px;scroll-margin-top:80px">{ART_NAME[a]} <small style="font:600 15px Inter,sans-serif;color:var(--mut)">'
+                 f'guter Preis = bis {euro(GUT[a])}/{einheit}</small></h2>{prod_grid(alltag, "g-gu-" + a)}')
+        if gross:
+            body += f'<h3 style="margin:14px 0 6px">Großpackungen {ART_NAME[a]}</h3>{prod_grid(gross, "g-gg-" + a)}'
+    if n_ges < 3:
+        return
+    txt = (f"Die günstigsten Süßigkeiten je kg bei unseren {len({p.get('shop') for p in products})} Partner-Shops: Schokolade, Fruchtgummi, Chips und mehr. "
+           f"„Guter Preis“ heißt: Der Preis je kg bzw. Liter gehört zum günstigsten Viertel seiner Art. Preise vom {TODAY.strftime('%d.%m.%Y')}, "
+           "maßgeblich ist der Shop, Versand und Mindestbestellwert nicht eingerechnet.")
+    write("guenstig/index.html", page(
+        "Süßigkeiten günstig kaufen: die günstigsten je kg im Vergleich | Naschpass",
+        f'<section style="padding-top:14px"><h1 style="margin:0 0 6px">Günstig naschen</h1><p class="lead">{e(txt)}</p>'
+        f'<nav aria-label="Springen zu" style="display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 4px">{nav}</nav>{body}'
+        f'<p style="margin-top:22px"><a class="btn dark" href="/shop/?sort=gut#alle">Alle Sorten mit gutem Preis im Shop</a></p></section>',
+        txt, "/guenstig/"))
+
+
 def write_landings():
     """Seiten für Suchen, die vor Weihnachten richtig groß werden. Nur echte Daten, Preise mit Datum."""
     adv = sorted((p for p in products if "adventskalender" in themes_of(p) and p.get("price")), key=lambda p: p["price"])
@@ -2482,6 +2605,7 @@ def write_landings():
             f'<section style="padding-top:14px"><h1 style="margin:0 0 6px">Adventskalender-Vergleich {TODAY.year}</h1><p class="lead">{e(txt)}</p>'
             f'<nav class="chips" aria-label="Springen zu" style="display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 4px">{nav}</nav>{body}</section>',
             txt, "/adventskalender-vergleich/"))
+    write_guenstig()
     gesch = [p for p in products if p.get("price") and ({"boxen", "mitbringsel", "weihnachten"} & set(themes_of(p)))]
     if len(gesch) >= 12:
         body = ""
@@ -2507,6 +2631,7 @@ def build():
         shutil.copytree(HERE / "demo", DIST / "static" / "demo")
     live = [p for p in posts if (ROOT / "fertige_posts" / post_folder(p)).exists()]
     merge_offers()
+    preis_radar()
     order_products()
     MARKEN.update(marken())
     _CAT_CACHE.clear()  # Themenwelten in der neuen Reihenfolge
@@ -2674,7 +2799,9 @@ def build():
     n_spar = sum(1 for p in products if p.get("spar"))
     sortbar = ('<div class="sortbar" id="fsort" role="group" aria-label="Sortieren"><span>Sortieren:</span>'
                '<button type="button" data-sort="" aria-pressed="true">Entdecken</button>'
-               '<button type="button" data-sort="preis" aria-pressed="false">Günstigste zuerst</button>'
+               '<button type="button" data-sort="gut" aria-pressed="false">Gute Preise</button>'
+               '<button type="button" data-sort="kg" aria-pressed="false">Preis je kg</button>'
+               '<button type="button" data-sort="preis" aria-pressed="false">Günstigste Packung</button>'
                + (f'<button type="button" data-sort="sparen" aria-pressed="false">Größte Ersparnis</button>' if n_spar else '')
                + (f'<button type="button" data-sort="neu" aria-pressed="false">Neu</button>' if n_neu >= 8 else '') + '</div>')
     shop_all = (f'<div class="filters" id="flt" data-grid="g-all" data-tk="{e(tk)}"><div class="fbtns">{fgroups}</div><div class="active" id="factive"></div></div>{sortbar}'
@@ -2820,8 +2947,9 @@ def build():
     doors = ('<div class="tueren">'
              f'<a class="tuer" href="/shop/#alle"><span class="ic" aria-hidden="true">🧭</span><b>Neues entdecken</b>'
              f'<small>Exoten &amp; Kultsnacks aus {n_laender} Ländern</small></a>'
-             f'<a class="tuer" href="/shop/?sort=preis#alle"><span class="ic" aria-hidden="true">💸</span><b>Günstig finden</b>'
-             f'<small>Preise aus {n_shops} Shops im Vergleich</small></a></div>') if products else ""
+             f'<a class="tuer" href="/guenstig/"><span class="ic" aria-hidden="true">💸</span><b>Günstig finden</b>'
+             f'<small>{sum(1 for p in products if p.get("gut")):,} Sorten mit gutem Preis je kg</small></a></div>'.replace(",", ".")
+             + f'<p class="fakten">{len(products):,} Sorten · {n_shops} Partner-Shops · Preise täglich aktuell</p>'.replace(",", ".")) if products else ""
     how = (doors + '<ul class="how">'
            '<li><a href="/posts/"><span aria-hidden="true">📲</span>Fakten-Posts mit Quellen</a></li>'
            '<li><a href="/shop/"><span aria-hidden="true">🗺️</span>Nach Land & Thema</a></li>'
@@ -2862,8 +2990,9 @@ def build():
 <ul><li><b>Nur Partner-Shops:</b> Wir zeigen ausschließlich Produkte von Shops, die über das Netzwerk Awin mit uns zusammenarbeiten und uns eine Provision zahlen, wenn du über unseren Link kaufst. Andere Shops und Supermärkte vergleichen wir nicht, es kann also woanders günstiger sein. Aktuell: {e(", ".join(sorted({p.get("shop", "") for p in products if p.get("shop")})))}.</li>
 <li><b>Preisvergleich:</b> Gibt es dieselbe Sorte bei mehreren Partner-Shops oder in mehreren Größen, fassen wir sie zu einer Karte zusammen. Vorn steht das günstigste Angebot (gleiche Größe: nach Preis, sonst nach Preis je kg bzw. Liter). „Günstigster von N Shops“ steht nur da, wenn es wirklich billiger ist. Versandkosten sind nicht eingerechnet.</li>
 <li><b>Preise:</b> Sie stammen aus den Produktdaten der Shops und werden täglich aktualisiert. Maßgeblich ist der Preis im Shop. Einen Preis zeigen wir nur, wenn wir auch den Grundpreis (je kg bzw. Liter) angeben können.</li>
-<li><b>Reihenfolge „Entdecken“</b> (Startseite, Themenwelten, Shop ohne Sortierung): Ein Punktesystem bringt Ungewöhnliches nach vorn. Plus gibt es für Herkunft außerhalb Deutschlands, klassische Naschsachen (Schokolade, Fruchtgummi, Chips …), Saison-Treffer und Produkte aus unseren Posts. Minus gibt es für Sorten, die es auch im Supermarkt gibt (REWE-Sortiment und dessen Marken), für Tee, Feinkost und Getränke sowie für schlechte Produktbilder. Zwei Shops bekommen einen kleinen Bonus, weil sie besonders viele Exoten führen: SugarGang (stark) und Burghardt Delicious (leicht). Danach mischen wir, damit nicht mehrere Karten vom selben Shop, derselben Art oder Marke hintereinander stehen. Die Höhe der Provision spielt für die Reihenfolge keine Rolle.</li>
-<li><b>Eigene Sortierung:</b> Im Shop kannst du jederzeit nach Preis, größter Ersparnis oder Neuheit sortieren.</li></ul>
+<li><b>Reihenfolge „Entdecken“</b> (Startseite, Themenwelten, Shop ohne Sortierung): Ein Punktesystem bringt Ungewöhnliches nach vorn. Plus gibt es für Herkunft außerhalb Deutschlands, klassische Naschsachen (Schokolade, Fruchtgummi, Chips …), Saison-Treffer, gute Preise je kg und Produkte aus unseren Posts. Minus gibt es für Sorten, die es auch im Supermarkt gibt (REWE-Sortiment und dessen Marken), für Tee, Feinkost und Getränke sowie für schlechte Produktbilder. Zwei Shops bekommen einen kleinen Bonus, weil sie besonders viele Exoten führen: SugarGang (stark) und Burghardt Delicious (leicht). Danach mischen wir, damit nicht mehrere Karten vom selben Shop, derselben Art oder Marke hintereinander stehen. Die Höhe der Provision spielt für die Reihenfolge keine Rolle.</li>
+<li><b>„Guter Preis“:</b> Der Preis je kg bzw. Liter gehört zum günstigsten Viertel seiner Art (z. B. Schokolade, Fruchtgummi, Chips) bei unseren Partner-Shops. Die Grenzen rechnen wir täglich neu aus{(": " + ", ".join(f"{ART_NAME.get(a, a)} bis {euro(g)}" for a, g in sorted(GUT.items()) if a in ART_NAME)) if GUT else ""}. Gute Preise rücken bei „Entdecken“ nach vorn, Sorten mit deutlich höherem Preis je kg als üblich für ihre Art (ab dem 1,5-Fachen des Mittelwerts) nach hinten. Die Art bestimmen wir dafür aus dem Produktnamen; Desserts, Aufstriche, Müsli und gemischte Boxen bekommen kein Preis-Label.</li>
+<li><b>Eigene Sortierung:</b> Im Shop kannst du jederzeit nach guten Preisen, Preis je kg, Packungspreis, größter Ersparnis oder Neuheit sortieren.</li></ul>
 <h2 id="partner">Für Partner</h2>
 <p>Du betreibst einen Shop oder eine Marke mit Süßigkeiten, Snacks oder alkoholfreien Getränken? So arbeiten wir:</p>
 <ul><li>Deine Produkte erscheinen in passenden Themenwelten (zum Beispiel {worlds}) und auf den Seiten der Posts, in denen sie vorkommen.</li>
@@ -2885,7 +3014,7 @@ Vollständige Angaben im <a href="/impressum/">Impressum</a>.</p></section>"""
             it.pop("alt", None)
         elif alt:
             it["alt"] = alt[:110]  # voller Shop-Name nur zum Finden, der Anfang reicht
-        for k in [k for k, v in it.items() if v in ("", None, " ") or (k in ("pv", "sp", "bn", "os") and not v)]:
+        for k in [k for k, v in it.items() if v in ("", None, " ") or (k in ("pv", "sp", "bn", "os", "gv", "gu") and not v)]:
             it.pop(k)
     write("search.json", json.dumps(si, ensure_ascii=False, separators=(",", ":")))
     # Für den nächtlichen Verfügbarkeits-Check (GitHub-Action): Werbelink + direkte Shop-Adresse
