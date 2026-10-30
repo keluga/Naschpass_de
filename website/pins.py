@@ -10,7 +10,8 @@ Formate (jeweils ein klarer Hebel):
   guenstig   geringes Risiko: „Japan-Snacks unter 3 €“ – 6 Sorten
   anlass     konkreter Anlass: Filmabend, Mitbringsel, Adventskalender, Halloween …
   quiz       Selbsttest: „Welcher Snack-Typ bist du?“
-Regeln: „Anzeige“ auf jedem Pin, keine Kaufaufforderung, keine Ansprache von Kindern, Preise nur mit Datum,
+Abgeschaltet (AUS): vergleich, guenstig – Preise auf dem Bild veralten, Pins leben monatelang.
+Regeln: „Anzeige“ auf jedem Pin, keine Kaufaufforderung, keine Ansprache von Kindern, keine Preise auf Pins,
 nur Produkte aus Partner-Feeds (Bilder mit Feed-Erlaubnis), nichts Erfundenes.
 """
 import io
@@ -27,6 +28,7 @@ FONTS = HERE.parent / "generator" / "fonts"
 W, H = 1000, 1500
 BG, FG, VIO, PINK, ORA, MINT, WHITE = "#EAF6F1", "#2B2350", "#6248E8", "#FF8FB1", "#FFB547", "#9EE3C6", "#FFFFFF"
 DOMAIN = "naschpass.oneflowsolution.de"
+AUS = {"vergleich", "guenstig"}  # abgeschaltete Formate (Preise auf dem Bild)
 
 # Themenwelt -> (Board, Überschrift-Wort, Suchbegriffe für Titel/Beschreibung)
 WELTEN = {
@@ -399,6 +401,10 @@ def make(dist, products, cats, cat_items, facets, euro, today, top_brands, log=p
             bg.alpha_composite(im)
             return bg
         return im.convert("RGBA")
+
+    # Pins leben monatelang, Preise veralten in Tagen: keine Formate mit Preisen auf dem Bild (Plan 30.10.2026).
+    # Mini-Ersparnisse (z. B. 0,40 € bei Pringles) frisst außerdem der Versand.
+    plans = [pl for pl in plans if pl["kind"] not in AUS]
 
     manifest = []
     for pl in plans:

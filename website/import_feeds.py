@@ -158,7 +158,7 @@ def name_ok(name):
     low = name.lower()
     if SPERR and any(x in low for x in SPERR):
         return False
-    if ALKOHOL.search(name) or ALK_WORT.search(name) or ALK_EXTRA.search(name) or TIER.search(name) or NONFOOD.search(name):
+    if ALKOHOL.search(name) or ALK_WORT.search(name) or ALK_EXTRA.search(name) or ALK_BIER.search(name) or (ALK_FLASCHE.search(name) and not ALK_FREI.search(name)) or HART.search(name) or TIER.search(name) or NONFOOD.search(name):
         return False
     if KAFFEE_TEE.search(name) and ((KT_HART.search(name) and not KT_SUESS.search(name)) or not KT_RETTEN.search(name)):
         return False
@@ -376,6 +376,21 @@ ALKOHOL = re.compile(
     r"\b(wein|weine|rotwein|weißwein|weisswein|ros[eé]wein|sekt|prosecco|champagner|cava|spirituose\w*|lik[öo]r\w*|likoer\w*|"
     r"liqueur|(?<!root )(?<!ginger )beer|cachaca|cachaça|secco|frizzante|cider|cidre|glühwein|gluehwein|eierlik[öo]r|kräuterlik[öo]r|bier|biere|gin|rum|wodka|vodka|whisk(e)?y|tequila|mezcal|grappa|limoncello|amaro|brandy|cognac|schnaps|aperitif|"
     r"vermouth|wermut|sake|alkohol\w*|vol\.?\s*%|\d+([.,]\d+)?\s*%\s*vol)\b", re.I)
+# Bier, Wein & Spirituosen, die ALKOHOL nicht erwischt (30.10.: „5,0 Original Pils“, Johnnie Walker, Rosé bei REWE).
+# Butterbeer-Bohnen, Probier-Boxen und „feinherb“ (Schokolade!) bleiben.
+ALK_BIER = re.compile(r"\b(pils\w*|pilsner|pilsener|lagerbier|hefeweizen|weizenbier|wei(ß|ss)bier|radler|alsterwasser|k(ö|oe)lsch|altbier|ipa|pale ale|stout|"
+                      r"m(ä|ae)rzen|hard seltzer|shandy|desperados|corona extra|heineken|beck'?s|krombacher|warsteiner|bitburger|veltins|radeberger|"
+                      r"erdinger|paulaner|jever|holsten|oettinger|mixery|somersby|smirnoff|bacardi|jack daniel'?s|captain morgan|j(ä|ae)germeister|"
+                      r"baileys|aperol|campari|passionstar|5,0 original|johnnie walker|ballantine'?s|jim beam|jameson|chivas|glenfiddich|havana club|"
+                      r"malibu|kahl[uú]a|pitu|ramazzotti|averna|asbach|mumm|rotk(ä|ae)ppchen|freixenet|henkell|s(ö|oe)hnlein|kleiner feigling|berentzen|"
+                      r"mateus|halbtrocken|brauhaus|brauerei|kellerbier|primitivo|merlot|grenache|lambrusco|pinot|riesling|chardonnay|sauvignon|"
+                      r"cabernet|tempranillo|cr[eé]mant d|qba|vineyards|rosato|rosado|metaxa|pernod|verpoorten|aquavit|licor 43|\w*brand|"
+                      r"kindersekt)\b|\b(?!ingwer|butter|probier)\w+bier\b", re.I)
+# Getränk in Spirituosen-/Weinflasche (0,7 l / 0,75 l) ohne Hinweis auf alkoholfrei: sicherheitshalber raus
+ALK_FLASCHE = re.compile(r"\b0[,.]75?\s*l\b", re.I)
+ALK_FREI = re.compile(r"sirup|syrup|saft|nektar|limo|eistee|wasser|water|tonic|smoothie|drink|cola|schorle|alkoholfrei|0[,.]0\s*%|\bzero\b|mate|"
+                      r"energy|ginger|soda|kombucha|essig|öl\b|honig|sauce|soße|punsch|rotb(ä|ae)ckchen|rabenhorst|granini|active o2|"
+                      r"brottrunk|pflaumentrunk|\byo\b|mix it", re.I)
 ALK_WORT = re.compile(r"\w*(lik[öo]r|likoer|glühwein|gluehwein|portwein|weinbrand)\b", re.I)  # Wortteile: Kokoslikör, Fruchtglühwein
 NONFOOD = re.compile(
     r"\b(tasse|becher|teller|schale|geschirr|porzellan|st[äa]bchen|messer|gabel|l[öo]ffel|topf|pfanne|buch|kochbuch|t-?shirt|"
@@ -426,6 +441,28 @@ ALIASES = {
 
 def log(msg):
     print(f"[Feed-Import] {msg}", flush=True)
+
+
+# Füllmenge für den Grundpreis (PAngV): steht oft nicht im (gekürzten) Namen, aber im vollen Namen oder in der Beschreibung.
+_INH_KEY = re.compile(r"(?:inhalt|füllmenge|fuellmenge|nettofüllmenge|nettogewicht|netto)\s*[:=]?\s*(?:ca\.?\s*)?"
+                      r"(\d+(?:[.,]\d+)?)\s*(kg|gramm|gr|g|ml|liter|l)(?![a-zäöü])", re.I)
+_INH_MULTI = re.compile(r"\b\d+\s*er\b|\bset\b|\d+\s*x\b|\bstück|\bstk\b", re.I)
+_INH_ONE = re.compile(r"(\d+(?:[.,]\d+)?)\s*(kg|gramm|gr|g|ml|liter|l)(?![a-zäöü])", re.I)
+
+
+def inhalt_of(fullname, desc):
+    """'500 g' o. Ä. oder ''. Reihenfolge: genau eine Mengenangabe im vollen Namen, sonst 'Inhalt: …' in der Beschreibung.
+    Nährwertangaben ('pro 100 g') werden so nicht erwischt."""
+    found = {(a.replace(",", "."), u.lower()) for a, u in _INH_ONE.findall(fullname or "")}
+    if len(found) == 1:
+        a, u = found.pop()
+        return f"{a} {u}"
+    if _INH_MULTI.search(fullname or ""):  # Set/Multipack: Menge in der Beschreibung gilt oft nur für ein Teil -> lieber keine
+        return ""
+    m = _INH_KEY.search(desc or "")
+    if m:
+        return f"{m.group(1).replace(',', '.')} {m.group(2).lower()}"
+    return ""
 
 
 def col(row, key):
@@ -550,7 +587,8 @@ WELT_HINTS = [
 WELT_HINTS = [(re.compile(r, re.I), w) for r, w in WELT_HINTS]
 # Passt nicht zum Naschen, auch wenn die Shop-Kategorie es reinlässt (geprüft an 6.200 echten Produkten)
 # HART: immer raus. WEICH: raus, wenn im Namen nichts nach Naschen klingt (NASCH rettet z. B. "Karamell-Salz-Mandeln").
-HART = re.compile(r"(wurst|würst|salami|schinken|speck\b|fleisch|geschnetzelt|leber|pastete|terrine|rillette|schmalz|verhackert|grammel|"
+HART = re.compile(r"(senf-?sauce|senf sauce|dressing|eiersalat|ei-bacon|putenbrust|ziegenfrischk(ä|ae)se|schwarzwurzel|honigtomate|zarte filets|cappelletti|"
+                  r"geschenktasche|tragetasche|beutel jute|tasche weihnachten|wurst|würst|salami|schinken|speck\b|fleisch|geschnetzelt|leber|pastete|terrine|rillette|schmalz|verhackert|grammel|"
                   r"fisch|lachs|hering|thunfisch|sardine|sardelle|anchovi|kaviar|garnele|krabbe|\bhipp\b|babybrei|säugling|basmati|\breis\b|"
                   r"naturreis|langkorn|wildreis|couscous|bulgur|quinoa|polenta|risotto|gnocchi|ravioli|tortellini|maultasche|knödel|windel|"
                   r"teekanne|teefilter|kaffeefilter|filtertüte|flammkuchen|fondant|backmischung|backpulver|\bhefe\b|\bmehl\b|"
@@ -681,7 +719,7 @@ def main():
                     brand = brand_of(name, col(row, "brand"), a.get("shop", ""))
                     binfo = BRANDS.get(brand, {})
                     hay = f"{name} {mcat} {cat}"
-                    if binfo.get("alkohol") or ALKOHOL.search(hay) or ALK_EXTRA.search(name) or ALK_WORT.search(name) or re.search(r"alkoholische getränke|\bwein\b|spirituos|\bbier\b", f"{mcat} {cat}", re.I):
+                    if binfo.get("alkohol") or ALKOHOL.search(hay) or ALK_EXTRA.search(name) or ALK_WORT.search(name) or ALK_BIER.search(name) or (ALK_FLASCHE.search(name) and not ALK_FREI.search(name)) or re.search(r"alkoholische getränke|\bwein\b|spirituos|\bbier\b", f"{mcat} {cat}", re.I):
                         stats["alkohol"] += 1
                         continue
                     if binfo.get("tier") or TIER.search(hay) or re.search(r"tierbedarf|tiernahrung", mcat, re.I):
@@ -724,6 +762,9 @@ def main():
                     pr = parse_price(col(row, "sale")) or parse_price(col(row, "price"))
                     if pr:
                         p["price"] = round(pr, 2)
+                        inh = inhalt_of(name, col(row, "desc"))
+                        if inh:
+                            p["inhalt"] = inh  # für den Grundpreis, falls der gekürzte Name keine Menge mehr hat
                     w = welt_of(name, brand, f"{mcat} {cat}") or a.get("land")  # Shop-Herkunft als Rückfall (feeds.json "land")
                     if w:
                         p["land"] = w
