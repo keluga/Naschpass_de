@@ -1214,7 +1214,7 @@ def clip(t, n=158):
 
 ORG = {"@type": "Organization", "@id": f"{BASE}/#org", "name": "Naschpass", "url": f"{BASE}/",
        "logo": f"{BASE}/static/logo.png", "sameAs": [x["url"] for x in site["socials"]]}
-NOINDEX_PATHS = ("/merkliste/", "/pruefen/", "/pruefen/sortiment/", "/pruefen/pins/", "/404")
+NOINDEX_PATHS = ["/merkliste/", "/pruefen/", "/pruefen/sortiment/", "/pruefen/pins/", "/404"]  # Markenseiten ohne Mehrwert kommen dazu
 
 
 def ld_json(path, title, extra):
@@ -2484,8 +2484,11 @@ def write_marken():
     MARKEN.update(marken())
     for sl, (name, ps) in MARKEN.items():
         shops = sorted({p.get("shop") for p in ps if p.get("shop")})
-        preise = [p["price"] for p in ps if p.get("price")]
+        preise = [p["price"] for p in ps if preis_ok(p)]
         vergl = [p for p in ps if p.get("best")]
+        if len(vergl) < 3 and len(shops) < 3:
+            # Thin affiliation vermeiden: nur Markenseiten mit echtem Vergleich bei Google, der Rest bleibt für Besucher da
+            NOINDEX_PATHS.append(f"/marke/{sl}/")
         land = marke_land(ps)
         satz = (f"{len(ps)} Sorten von {name}" + (f" aus {len(shops)} Shops" if len(shops) > 1 else f" bei {shops[0]}" if shops else "")
                 + (f", ab {euro(min(preise))}" if preise else "") + "."
