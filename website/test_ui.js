@@ -3,7 +3,7 @@
 // Braucht Playwright (npm i playwright) und Chromium.
 const { chromium } = require('playwright');
 const BASE = process.argv[2] || 'http://localhost:8799';
-const PAGES = ['/', '/shop/', '/kategorie/schokolade/', '/kategorie/halloween/', '/p/01/', '/merkliste/', '/geschenk/', '/quiz/', '/advent/', '/posts/', '/ueber/', '/marken/', '/adventskalender-vergleich/', '/geschenke-unter-20-euro/'];
+const PAGES = ['/', '/shop/', '/kategorie/schokolade/', '/kategorie/halloween/', '/p/01/', '/merkliste/', '/geschenk/', '/quiz/', '/advent/', '/posts/', '/ueber/', '/marken/', '/adventskalender-vergleich/', '/geschenke-unter-20-euro/', '/guenstig/'];
 const EXE = process.env.CHROME || '/opt/pw-browsers/chromium_headless_shell-1194/chrome-linux/headless_shell';
 const ID = /awinaffid=3111189|[?&]a=3111189/;
 
