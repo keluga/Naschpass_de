@@ -49,6 +49,12 @@ ANLASS = {
     "weihnachten": ("Süße Weihnachtsgeschenke", "WEIHNACHTEN", "Süße Geschenkideen aus aller Welt", "Weihnachtsgeschenk Süßigkeiten, Wichtelgeschenk, Nikolaus, Geschenkideen"),
 }
 SPAR_BOARD = "Snacks günstiger finden – Preisvergleich"
+ANLASS_TITEL = {"adventskalender": "Adventskalender mit Süßigkeiten aus aller Welt – Ideen für Erwachsene & Familie",
+                "weihnachten": "Süße Weihnachtsgeschenke aus aller Welt – Ideen zum Wichteln & Verschenken",
+                "filmabend": "Snacks für den Filmabend: Chips, Popcorn & Süßes aus aller Welt",
+                "mitbringsel": "Süße Mitbringsel & kleine Danke-Geschenke",
+                "geburtstag": "Süße Geburtstagsideen: Naschgeschenke aus aller Welt",
+                "halloween": "Halloween-Süßigkeiten für die Gruselparty"}
 QUIZ_NAME = {"schokolade": re.compile(r"schoko|chocolate|choco|kitkat|reese|hershey|m&m", re.I),
              "gummi": re.compile(r"gummi|gummy|sour|jelly|fruchtgummi|candy|warheads|nerds", re.I),
              "chips": re.compile(r"chips|crisps|takis|cheetos|doritos|pringles|tortilla", re.I),
@@ -84,7 +90,7 @@ except Exception:
 # Welche Herkunft eine Entdecken-Welt wirklich zeigen soll (sonst landen z. B. Nacho-Chips aus Österreich bei „Mexiko“)
 # Typische Marken/Sorten je Welt: Entdecken-Pins sollen „Was ist DAS?“ auslösen, nicht „Kenn ich vom Supermarkt“
 TYPISCH = {
-    "japan": r"pocky|pepero|hi-?chew|ramune|mochi|koikeya|karamucho|calbee|meiji|glico|buldak|samyang|yan ?yan|kinoko|matcha|tao kae noi|choco ?pie",
+    "japan": r"pocky|pepero|hi-?chew|ramune|mochi|koikeya|karamucho|calbee|meiji|glico|buldak|samyang|yan ?yan|kinoko|tao kae noi|choco ?pie",
     "usa": r"reese|hershey|twinkie|jolly rancher|warheads|airheads|nerds|takis|cheetos|lucky charms|pop-?tarts|sour patch|swedish fish|jelly belly|root beer|dr\.? ?pepper|mountain dew|fluff|goldfish|cheez-?it|trolli crawlers|kool-?aid",
     "mexiko": r"takis|pulparindo|lucas|vero|de la rosa|mazap[aá]n|pel[oó]n|duvalin|rockaleta|taj[ií]n|valentina|barcel|tamarind|chamoy|jarritos",
     "skandinavien": r"lakrids|salmiak|fazer|malaco|cloetta|ahlgren|djungelvr|l[äa]kerol|toms|nordthy|marabou|kanelbull|turkisk|pantteri|haribo salt",
@@ -233,6 +239,18 @@ def clean_name(n, maxlen=34):
     return n if len(n) <= maxlen else n[:maxlen - 1].rsplit(" ", 1)[0] + "…"
 
 
+def marken3(sel):
+    """Bis zu 3 Markennamen für Pin-Titel (statt abgeschnittener Produktnamen mit „…“)."""
+    out = []
+    for p in sel:
+        b = (p.get("brand") or p["name"].split()[0]).strip()
+        if len(b) < 3:  # „Q“ (Q Mochi) -> „Q Mochi“
+            b = " ".join(p["name"].split()[:2])
+        if b and b.lower() not in {x.lower() for x in out}:
+            out.append(b)
+    return out[:3]
+
+
 def make(dist, products, cats, cat_items, facets, euro, today, top_brands, log=print):
     out = dist / "pins"
     out.mkdir(parents=True, exist_ok=True)
@@ -277,7 +295,8 @@ def make(dist, products, cats, cat_items, facets, euro, today, top_brands, log=p
                 return False
             return not (b in top_brands and cid not in ("japan",))
         rx = re.compile(TYPISCH.get(cid, r"$^"), re.I)
-        pool = [p for p in items if rx.search(p["name"] + " " + (p.get("brand") or ""))]
+        marke_ok = lambda p: not echt or BRANDS.get((p.get("brand") or "").lower()) in (None, *echt)  # kein schottischer Matcha auf dem Japan-Pin
+        pool = [p for p in items if rx.search(p["name"] + " " + (p.get("brand") or "")) and marke_ok(p)]
         if len(pool) < 4:
             pool = [p for p in items if neu(p)]
         if len(pool) < 4:
@@ -295,8 +314,8 @@ def make(dist, products, cats, cat_items, facets, euro, today, top_brands, log=p
             n = len(items)
             plans.append(dict(kind="entdecken", slug=f"entdecken-{cid}", board=board, items=sel, cid=cid, wo=wo, n=n,
                               link=f"/kategorie/{cid}/",
-                              title=f"{SEO_TITEL.get(cid, 'Süßigkeiten ' + wo)} – {', '.join(clean_name(p['name'], 18) for p in sel[:2])} & mehr",
-                              desc=f"Hast du die schon probiert? {n} Sorten {wo} an einem Ort entdecken – mit Preisvergleich zwischen den Shops. {kw}. Anzeige: Links zu Partner-Shops."))
+                              title=f"{SEO_TITEL.get(cid, 'Süßigkeiten ' + wo)} online kaufen: {', '.join(marken3(sel))} & mehr",
+                              desc=f"Hast du die schon probiert? {n} Sorten {wo} an einem Ort entdecken, mit Preisen und Links zu den Shops. {kw}. Anzeige: Links zu Partner-Shops."))
     # 2) Preisvergleich: bekannte Marken, gleiche Packung, deutlicher Unterschied
     cands = []
     for p in products:
@@ -358,6 +377,8 @@ def make(dist, products, cats, cat_items, facets, euro, today, top_brands, log=p
             if not (se[0] <= md <= se[1]):
                 continue
         items = [p for p in cat_items(c) if usable(p)]
+        if cid in ("adventskalender", "weihnachten"):  # Naschpass-Kern zuerst: Herkunft außerhalb DE/AT
+            items.sort(key=lambda p: p.get("land") in (None, "deutschland", "oesterreich"))
         seen, sel = set(), []
         for p in items:
             b = (p.get("brand") or p["name"].split()[0]).lower()
@@ -369,8 +390,8 @@ def make(dist, products, cats, cat_items, facets, euro, today, top_brands, log=p
         if len(sel) >= 4:
             plans.append(dict(kind="anlass", slug=f"anlass-{cid}", board=board, items=sel, head=head, sub=sub, n=len(items),
                               link=f"/kategorie/{cid}/",
-                              title=f"{board}: {len(items)} Ideen – Süßigkeiten aus aller Welt",
-                              desc=f"{sub}: {len(items)} Ideen aus aller Welt an einem Ort, mit Preisvergleich zwischen den Shops. {kw}. Anzeige: Links zu Partner-Shops."))
+                              title=ANLASS_TITEL.get(cid, f"{board}: {len(items)} Ideen aus aller Welt"),
+                              desc=f"{sub}: {len(items)} Ideen aus aller Welt an einem Ort, mit Preisen und Links zu den Shops. {kw}. Anzeige: Links zu Partner-Shops."))
     # 4b) Günstig naschen -> /guenstig/ (Preis-Radar), keine Preise auf dem Bild
     gut = [p for p in products if p.get("gut") and usable(p)]
     seen, sel = set(), []

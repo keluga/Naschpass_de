@@ -395,7 +395,8 @@ ALK_WORT = re.compile(r"\w*(lik[öo]r|likoer|glühwein|gluehwein|portwein|weinbr
 NONFOOD = re.compile(
     r"\b(tasse|becher|teller|schale|geschirr|porzellan|st[äa]bchen|messer|gabel|l[öo]ffel|topf|pfanne|buch|kochbuch|t-?shirt|"
     r"shirt|hoodie|socken|kerze|deko|dekoration|vase|gutschein|geschenkgutschein|spielzeug|pl[üu]sch|kosmetik|seife|duft|"
-    r"backform|ausstecher|dose leer|grill|dirndl|kost[üu]m|dessous|unterw[äa]sche|socke)\b", re.I)
+    r"backform|ausstecher|dose leer|grill|dirndl|kost[üu]m|dessous|unterw[äa]sche|socke|zum (selbst)?bef[üu]llen|selbst ?zu ?bef[üu]llen|"
+    r"selbstbef[üu]ll\w*)\b", re.I)
 # Nachgeschärft 23.10.: rutschten über REWE durch (Ouzo, Disaronno, Wein-Spritz …)
 ALK_EXTRA = re.compile(r"\b(ouzo|raki|rakı|pastis|sambuca|aperitivo|disaronno|spritz)\b|amaretto\b.*\b0[,.]\d+\s*l\b", re.I)
 # Tee, Kaffee, Kapseln: kein Naschzeug (Kevs Entscheidung 23.10.). Eistee, Bubble Tea und Süßes mit Kaffee/Tee-Geschmack bleiben.
