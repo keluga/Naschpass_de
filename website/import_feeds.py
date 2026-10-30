@@ -428,6 +428,28 @@ def log(msg):
     print(f"[Feed-Import] {msg}", flush=True)
 
 
+# Füllmenge für den Grundpreis (PAngV): steht oft nicht im (gekürzten) Namen, aber im vollen Namen oder in der Beschreibung.
+_INH_KEY = re.compile(r"(?:inhalt|füllmenge|fuellmenge|nettofüllmenge|nettogewicht|netto)\s*[:=]?\s*(?:ca\.?\s*)?"
+                      r"(\d+(?:[.,]\d+)?)\s*(kg|gramm|gr|g|ml|liter|l)(?![a-zäöü])", re.I)
+_INH_MULTI = re.compile(r"\b\d+\s*er\b|\bset\b|\d+\s*x\b|\bstück|\bstk\b", re.I)
+_INH_ONE = re.compile(r"(\d+(?:[.,]\d+)?)\s*(kg|gramm|gr|g|ml|liter|l)(?![a-zäöü])", re.I)
+
+
+def inhalt_of(fullname, desc):
+    """'500 g' o. Ä. oder ''. Reihenfolge: genau eine Mengenangabe im vollen Namen, sonst 'Inhalt: …' in der Beschreibung.
+    Nährwertangaben ('pro 100 g') werden so nicht erwischt."""
+    found = {(a.replace(",", "."), u.lower()) for a, u in _INH_ONE.findall(fullname or "")}
+    if len(found) == 1:
+        a, u = found.pop()
+        return f"{a} {u}"
+    if _INH_MULTI.search(fullname or ""):  # Set/Multipack: Menge in der Beschreibung gilt oft nur für ein Teil -> lieber keine
+        return ""
+    m = _INH_KEY.search(desc or "")
+    if m:
+        return f"{m.group(1).replace(',', '.')} {m.group(2).lower()}"
+    return ""
+
+
 def col(row, key):
     for a in ALIASES[key]:
         v = row.get(a)
@@ -724,6 +746,9 @@ def main():
                     pr = parse_price(col(row, "sale")) or parse_price(col(row, "price"))
                     if pr:
                         p["price"] = round(pr, 2)
+                        inh = inhalt_of(name, col(row, "desc"))
+                        if inh:
+                            p["inhalt"] = inh  # für den Grundpreis, falls der gekürzte Name keine Menge mehr hat
                     w = welt_of(name, brand, f"{mcat} {cat}") or a.get("land")  # Shop-Herkunft als Rückfall (feeds.json "land")
                     if w:
                         p["land"] = w

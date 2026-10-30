@@ -15,6 +15,7 @@ import json
 import os
 import re
 import shutil
+import unicodedata
 from pathlib import Path
 from urllib.parse import quote
 
@@ -367,15 +368,18 @@ def order_products():
     queues = list(buckets.values())
     used = {}
     eff = lambda q: sc[id(q[0])] - 1.5 * used.get(id(q), 0)  # jede Wahl aus demselben Topf zählt weniger -> Abwechslung
-    out, last = [], (None, None)
+    out, last = [], (None, None, [])
+    br = lambda p: (p.get("brand") or "").lower() or None
     while queues:
         queues.sort(key=lambda q: -eff(q))
-        pick = (next((q for q in queues if q[0].get("shop") != last[0] and ar[id(q[0])] != last[1]), None)
+        # nie zweimal hintereinander derselbe Shop oder dieselbe Art, keine Marke doppelt in 3 Karten (z. B. zweimal Pepero)
+        pick = (next((q for q in queues if q[0].get("shop") != last[0] and ar[id(q[0])] != last[1] and (br(q[0]) is None or br(q[0]) not in last[2])), None)
+                or next((q for q in queues if q[0].get("shop") != last[0] and ar[id(q[0])] != last[1]), None)
                 or next((q for q in queues if q[0].get("shop") != last[0]), queues[0]))
         p = pick.pop(0)
         used[id(pick)] = used.get(id(pick), 0) + 1
         out.append(p)
-        last = (p.get("shop"), ar[id(p)])
+        last = (p.get("shop"), ar[id(p)], (last[2] or [])[-2:] + [br(p)])  # Marke: die letzten 3 Karten (2 Reihen am Handy)
         if not pick:
             queues.remove(pick)
     products[:] = out
@@ -391,7 +395,7 @@ MERGED = {"gruppen": 0, "weg": 0}
 def offer_key(p):
     """Schlüssel einer Sorte: die Wörter des Namens ohne Packungsgröße und ohne Shop-Zusätze nach ' - '.
     Gibt (Wörter, Größe) zurück; Größe kann None sein."""
-    full = translit(p.get("name", "").lower())
+    full = "".join(c for c in unicodedata.normalize("NFKD", translit(p.get("name", "").lower())) if not unicodedata.combining(c))
     n = full.split(" - ")[0]  # Zusätze der Shops ("- Stapelchips - Knabberspaß") weglassen
     sizes = []
     for a, u in (_SIZE.findall(n) or _SIZE.findall(full)):
@@ -426,8 +430,13 @@ _ONE = re.compile(r"(\d+(?:[.,]\d+)?)\s*(kg|gramm|gr|g|ml|liter|l)(?![a-z])")
 
 
 def menge(p):
-    """Füllmenge in g oder ml aus dem Namen ("6x1,25l" = 7500 ml). None, wenn unklar (mehrere Angaben)."""
-    n = translit(p.get("name", "").lower())
+    """Füllmenge in g oder ml aus dem Namen ("6x1,25l" = 7500 ml), sonst aus "inhalt" (Feed: voller Name/Beschreibung).
+    None, wenn unklar (mehrere Angaben)."""
+    return _menge(p.get("name", "")) or (_menge(p["inhalt"]) if p.get("inhalt") else None)
+
+
+def _menge(name):
+    n = translit(name.lower())
     m = _MULTI.search(n)
     if m:
         k, x, u = int(m.group(1)), float(m.group(2).replace(",", ".")), m.group(3)
@@ -491,7 +500,8 @@ def merge_offers():
         head = min(cand, key=lambda p: (vgl(p), -p.get("score", 0)))
         others = sorted((p for p in cand if p is not head), key=lambda p: ((p["_sz"] or ((0, ""),))[0][0], p["price"]))
         same = all(p["_sz"] == head["_sz"] for p in others)
-        head["offers"] = [{"s": p.get("shop", ""), "p": p["price"], "u": p["url"], "g": "" if same else size_label(p["_sz"])} for p in others]
+        head["offers"] = [{"s": p.get("shop", ""), "p": p["price"], "u": p["url"], "g": "" if same else size_label(p["_sz"]),
+                           "gp": grundpreis(p)[1]} for p in others]
         head["offers_same"] = same
         head["n_shops"] = len({p.get("shop") for p in cand})
         if same:
@@ -520,8 +530,8 @@ def offers_html(p):
         return ""
     head = "Auch bei" if p.get("offers_same") else "Weitere Größen &amp; Shops"
     shown = p["offers"][:6]
-    links = " · ".join(f'<a href="{e(o["u"])}" rel="sponsored noopener" target="_blank">{e(o["s"])}{" " + e(o["g"]) if o.get("g") else ""} {euro(o["p"])}*</a>'
-                       for o in shown)
+    links = " · ".join(f'<a href="{e(o["u"])}" rel="sponsored noopener" target="_blank">{e(o["s"])}{" " + e(o["g"]) if o.get("g") else ""}'
+                       + (f' {euro(o["p"])} ({o["gp"]})' if o.get("gp") else "") + '*</a>' for o in shown)
     rest = f" · +{len(p['offers']) - 6} weitere" if len(p["offers"]) > 6 else ""
     return f'<p class="offers">{head}: {links}{rest}<small>Preise laut Shop am {TODAY.strftime("%d.%m.")}, ggf. zzgl. Versand</small></p>'
 
@@ -1005,6 +1015,7 @@ font-size:26px;line-height:1;cursor:pointer;box-shadow:0 4px 14px rgba(43,35,80,
 .v-list .prod .cta span{display:inline-block;padding:7px 12px;font-size:13.5px}
 .wl{font-size:13px;color:var(--mut);margin:10px 0 0}
 .xi{display:contents}.xi.ok .stk{display:none}
+.xi:not(.ok)::after{content:"Foto laden";position:absolute;bottom:8px;left:50%;transform:translateX(-50%);font:700 11px Inter,sans-serif;background:rgba(43,35,80,.78);color:#fff;border-radius:99px;padding:2px 9px;white-space:nowrap}
 .imgbar{position:fixed;left:10px;right:10px;bottom:10px;z-index:40;max-width:560px;margin:0 auto;background:var(--fg);color:#fff;border-radius:14px;
 padding:8px 8px 8px 14px;box-shadow:0 10px 30px rgba(43,35,80,.3);font-size:13px;line-height:1.35;display:flex;align-items:center;gap:10px}
 .imgbar[hidden]{display:none}
@@ -1207,7 +1218,8 @@ def page(title, body, desc=None, path="/", og_img=None, script="", stamp="", ld=
 
 REGION_NOTE = {"REWE": "Lieferung je nach Wohnort, sonst Abholung im Markt"}
 CART_SHOPS = {"SugarGang": {"base": "https://sugargang.com/cart/", "mid": "127807"}}  # Shopify: /cart/<variante>:<menge>,...
-WL = f"* Werbelink · Preise vom {TODAY.strftime('%d.%m.')}, maßgeblich ist der Shop"
+WL = (f"* Werbelink · Nur Partner-Shops, die uns Provision zahlen · Preise vom {TODAY.strftime('%d.%m.')}, maßgeblich ist der Shop · "
+      '<a href="/ueber/#vergleich">So vergleichen &amp; sortieren wir</a>')
 
 
 def euro(x):
@@ -1219,9 +1231,14 @@ def fav_data(p):
     d = {"u": p["url"], "n": p["name"], "s": p.get("shop", ""), "i": i[1] if i and i[0] == "own" else ""}
     if p.get("vid"):
         d["v"] = p["vid"]
-    if p.get("price"):
-        d["p"] = euro(p["price"])
+    if preis_ok(p):
+        d["p"] = f"{euro(p['price'])} ({grundpreis(p)[1]})"
     return html.escape(json.dumps(d, ensure_ascii=False), quote=True)
+
+
+def preis_ok(p):
+    """Preis nur zeigen, wenn wir auch den Grundpreis (€/kg bzw. €/l) kennen. Pflicht nach § 4 PAngV, auch für Affiliates."""
+    return bool(p.get("price") and grundpreis(p)[1])
 
 
 def price_extra(p):
@@ -1245,7 +1262,7 @@ def prod_card(p):
             f'<div class="pi">{pic}' + (f'<span class="pc"><i></i>{e(cname)}</span>' if cname else "") + '</div>'
             f'<div class="pb"><h3>{e(p["name"])}</h3>'
             + (f'<p class="note">{e(p["note"])}</p>' if p.get("note") else "")
-            + (f'<span class="pr">{euro(p["price"])}{price_extra(p)}</span>' if p.get("price") else "")
+            + (f'<span class="pr">{euro(p["price"])}{price_extra(p)}</span>' if preis_ok(p) else "")
             + (f'<span class="shop">bei {e(shop)}</span>' if shop else "")
             + (f'<span class="reg">{e(reg)}</span>' if reg else "")
             + f'<div class="cta"><span><em class="l">{btn}</em><em class="s">Zum Shop*</em></span></div></div></a>'
@@ -1306,6 +1323,16 @@ if(pb){var slots=pb.querySelectorAll('[data-s]'),cnt=pb.querySelector('.pcount')
  rs.addEventListener('click',function(){pset(null);draw()});draw()}
 })();
 (function(){
+/* Messen ohne Cookies: Werbelinks bekommen beim Klick die Seite (clickref) und den Kanal aus ?k=pin|tt|ig (clickref2).
+   Awin zeigt das im Bericht „Click References“. Es wird nichts gespeichert, gilt nur für diesen Seitenaufruf. */
+var sl=(location.pathname.replace(/^\/|\/$/g,'').replace(/[^a-z0-9]+/gi,'-').toLowerCase()||'home').slice(0,50);
+var kq=((location.search.match(/[?&]k=([a-z0-9]{1,20})/i)||[])[1]||'').toLowerCase();
+function tag(ev){var a=ev.target.closest&&ev.target.closest('a[href*="awin1.com/"]');if(!a||/[?&]clickref=/.test(a.href))return;
+ var add='clickref='+sl+(kq?'&clickref2='+kq:''),h=a.href,i=h.indexOf('&ued=');
+ a.href=i>0?h.slice(0,i)+'&'+add+h.slice(i):h+(h.indexOf('?')<0?'?':'&')+add}
+['click','auxclick','contextmenu'].forEach(function(t){document.addEventListener(t,tag,true)});
+})();
+(function(){
 /* Produktfotos von Shop-Servern: erst nach Einwilligung laden. Die Wahl liegt nur im Browser (localStorage). */
 var K='np_fotos',bar=document.getElementById('imgbar'),pref=document.querySelector('[data-imgpref]');
 function get(){try{return localStorage.getItem(K)}catch(e){return null}}
@@ -1315,7 +1342,10 @@ var ext=document.querySelectorAll('img[data-ext]');
 function show(){ext.forEach(function(i){if(i.src)return;i.onload=function(){i.hidden=false;i.parentNode.classList.add('ok')};
  i.onerror=function(){i.remove()};i.src=i.dataset.ext})}
 if(ext.length){if(pref)pref.hidden=false;
- if(get()==='1')show();else if(get()!=='0')bar.hidden=false}
+ if(get()==='1')show();
+ /* Leiste nicht mehr von selbst über die Produkte legen: erst, wenn jemand auf ein Platzhalterbild tippt */
+ document.querySelectorAll('.xi').forEach(function(x){x.addEventListener('click',function(ev){
+  if(get()==='1'||x.classList.contains('ok'))return;ev.preventDefault();bar.hidden=false;bar.querySelector('.yes').focus()})})}
 document.querySelectorAll('[data-img]').forEach(function(b){b.addEventListener('click',function(){
  var was=[].some.call(ext,function(i){return i.src});set(b.dataset.img);bar.hidden=true;
  if(b.dataset.img==='1')show();else if(was)location.reload()})});
@@ -2241,10 +2271,10 @@ def search_index(live):
                       "alt": translit(p.get("full_name") or p["name"]), "tags": " ".join([cname, cid] + p.get("tags", [])),
                       "text": p.get("note", ""),
                       "f": " ".join(f"{g}:{i}" for g, v in facets(p).items() for i in sorted(v)),
-                      "th": " ".join(themes_of(p)), "pr": euro(p.get("price")), "v": p.get("vid", ""),
+                      "th": " ".join(themes_of(p)), "pr": euro(p.get("price")) if preis_ok(p) else "", "v": p.get("vid", ""),
                       "pv": p.get("price") or 0, "gp": grundpreis(p)[1], "sp": p.get("spar") or 0,
                       "bn": p.get("n_shops", 0) if p.get("best") else 0,
-                      "sd": p.get("seit", "") if ist_neu(p) else "", **({"o": [[o["s"] + (" " + o["g"] if o.get("g") else ""), euro(o["p"]), o["u"]] for o in p["offers"][:6]], "os": 1 if p.get("offers_same") else 0} if p.get("offers") else {}), **({"reg": REGION_NOTE[p.get("shop")]} if p.get("shop") in REGION_NOTE else {})})
+                      "sd": p.get("seit", "") if ist_neu(p) else "", **({"o": [[o["s"] + (" " + o["g"] if o.get("g") else ""), f'{euro(o["p"])} ({o["gp"]})' if o.get("gp") else "", o["u"]] for o in p["offers"][:6]], "os": 1 if p.get("offers_same") else 0} if p.get("offers") else {}), **({"reg": REGION_NOTE[p.get("shop")]} if p.get("shop") in REGION_NOTE else {})})
     for sl, (name, ps) in MARKEN.items():
         items.append({"type": "cat", "title": name, "url": f"/marke/{sl}/", "svg": sticker("snacks", 52),
                       "sub": f"Marke · {len(ps)} Sorten", "alt": translit(name.lower()), "tags": "marke", "text": ""})
@@ -2416,24 +2446,41 @@ def write_marken():
         f"{len(MARKEN)} Süßigkeiten- und Snack-Marken von A bis Z: alle Sorten, Preise und Shops auf einen Blick.", "/marken/"))
 
 
+ADV_KIDS = re.compile(r"paw patrol|peppa|disney|barbie|minions|hello kitty|feuerwehrmann|super mario|pok[eé]mon|frozen|spider-?man|"
+                      r"marvel|lego|bluey|sesamstra|benjamin bl|bibi|ninjago|sonic|my little pony|gabby|toy story|cars\b|"
+                      r"kinder\b|kinderschokolade|f[üu]r kinder|stitch|princess|prinzessin|pj masks|super wings", re.I)
+
+
 def write_landings():
     """Seiten für Suchen, die vor Weihnachten richtig groß werden. Nur echte Daten, Preise mit Datum."""
     adv = sorted((p for p in products if "adventskalender" in themes_of(p) and p.get("price")), key=lambda p: p["price"])
     if len(adv) >= 12:
-        pmin, pmax = adv[0]["price"], adv[-1]["price"]
-        txt = (f"{len(adv)} Adventskalender mit Süßigkeiten aus {len({p.get('shop') for p in adv})} Shops, sortiert nach Preis: "
-               f"von {euro(pmin)} bis {euro(pmax)}. Preise vom {TODAY.strftime('%d.%m.%Y')}, maßgeblich ist der Shop.")
-        stufen = [(10, "Bis 10 €"), (20, "10 bis 20 €"), (40, "20 bis 40 €"), (10 ** 6, "Über 40 €")]
-        body, lo = "", 0
-        for hi, lab in stufen:
-            part = [p for p in adv if lo < p["price"] <= hi] if lo else [p for p in adv if p["price"] <= hi]
-            lo = hi
-            if part:
-                body += f'<h2 style="margin-top:20px">{lab} <small style="font:600 15px Inter,sans-serif;color:var(--mut)">({len(part)})</small></h2>{prod_grid(part, "g-a" + str(hi))}'
+        # Nach Art statt nur nach Preis: Wer „aus aller Welt“ sucht, soll nicht erst 60 Kinder-Kalender für 1,99 € sehen.
+        def gruppe(p):
+            if ADV_KIDS.search(p.get("name", "")):
+                return "kinder"
+            land = facets(p).get("land", set()) - {"europa"}  # "europa" ist nur die Obergruppe, kein eigenes Herkunftsland
+            if land and not land <= {"deutschland", "oesterreich"}:
+                return "welt"
+            if p["price"] >= 25 or "pralinen" in facets(p).get("art", set()):
+                return "premium"
+            return "klassiker"
+        stufen = [("welt", "Aus aller Welt", "aus-aller-welt"), ("premium", "Premium &amp; Pralinen", "premium"),
+                  ("klassiker", "Klassiker", "klassiker"), ("kinder", "Für Kinder &amp; Fans", "kinder")]
+        teile = {k: [p for p in adv if gruppe(p) == k] for k, _, _ in stufen}
+        txt = (f"{len(adv)} Adventskalender mit Süßigkeiten aus {len({p.get('shop') for p in adv})} Partner-Shops, sortiert nach Art "
+               f"und darin nach Preis. Preise vom {TODAY.strftime('%d.%m.%Y')}, maßgeblich ist der Shop.")
+        nav = "".join(f'<a class="chip" style="text-decoration:none" href="#{a}">{lab} ({len(teile[k])})</a>' for k, lab, a in stufen if teile[k])
+        body = ""
+        for k, lab, a in stufen:
+            if teile[k]:
+                body += (f'<h2 id="{a}" style="margin-top:20px;scroll-margin-top:80px">{lab} <small style="font:600 15px Inter,sans-serif;color:var(--mut)">({len(teile[k])})</small></h2>'
+                         f'{prod_grid(teile[k], "g-a-" + a)}')
         write("adventskalender-vergleich/index.html", page(
-            f"Adventskalender-Vergleich {TODAY.year}: {len(adv)} Süßigkeiten-Kalender nach Preis | Naschpass",
+            f"Adventskalender-Vergleich {TODAY.year}: {len(adv)} Süßigkeiten-Kalender | Naschpass",
             f'<a class="back" href="/kategorie/adventskalender/">← Themenwelt Adventskalender</a>'
-            f'<section style="padding-top:14px"><h1 style="margin:0 0 6px">Adventskalender-Vergleich {TODAY.year}</h1><p class="lead">{e(txt)}</p>{body}</section>',
+            f'<section style="padding-top:14px"><h1 style="margin:0 0 6px">Adventskalender-Vergleich {TODAY.year}</h1><p class="lead">{e(txt)}</p>'
+            f'<nav class="chips" aria-label="Springen zu" style="display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 4px">{nav}</nav>{body}</section>',
             txt, "/adventskalender-vergleich/"))
     gesch = [p for p in products if p.get("price") and ({"boxen", "mitbringsel", "weihnachten"} & set(themes_of(p)))]
     if len(gesch) >= 12:
@@ -2811,6 +2858,12 @@ def build():
 <h2>Kanäle</h2>
 <ul>{chans}<li><a href="/">naschpass.oneflowsolution.de</a> (diese Website)</li></ul>
 <p>Ehrlich gesagt: Naschpass ist neu und die Kanäle sind im Aufbau. Bisher gibt es {len(live)} Posts, alle findest du unter <a href="/posts/">Posts</a>.</p>
+<h2 id="vergleich">So vergleichen und sortieren wir</h2>
+<ul><li><b>Nur Partner-Shops:</b> Wir zeigen ausschließlich Produkte von Shops, die über das Netzwerk Awin mit uns zusammenarbeiten und uns eine Provision zahlen, wenn du über unseren Link kaufst. Andere Shops und Supermärkte vergleichen wir nicht, es kann also woanders günstiger sein. Aktuell: {e(", ".join(sorted({p.get("shop", "") for p in products if p.get("shop")})))}.</li>
+<li><b>Preisvergleich:</b> Gibt es dieselbe Sorte bei mehreren Partner-Shops oder in mehreren Größen, fassen wir sie zu einer Karte zusammen. Vorn steht das günstigste Angebot (gleiche Größe: nach Preis, sonst nach Preis je kg bzw. Liter). „Günstigster von N Shops“ steht nur da, wenn es wirklich billiger ist. Versandkosten sind nicht eingerechnet.</li>
+<li><b>Preise:</b> Sie stammen aus den Produktdaten der Shops und werden täglich aktualisiert. Maßgeblich ist der Preis im Shop. Einen Preis zeigen wir nur, wenn wir auch den Grundpreis (je kg bzw. Liter) angeben können.</li>
+<li><b>Reihenfolge „Entdecken“</b> (Startseite, Themenwelten, Shop ohne Sortierung): Ein Punktesystem bringt Ungewöhnliches nach vorn. Plus gibt es für Herkunft außerhalb Deutschlands, klassische Naschsachen (Schokolade, Fruchtgummi, Chips …), Saison-Treffer und Produkte aus unseren Posts. Minus gibt es für Sorten, die es auch im Supermarkt gibt (REWE-Sortiment und dessen Marken), für Tee, Feinkost und Getränke sowie für schlechte Produktbilder. Zwei Shops bekommen einen kleinen Bonus, weil sie besonders viele Exoten führen: SugarGang (stark) und Burghardt Delicious (leicht). Danach mischen wir, damit nicht mehrere Karten vom selben Shop, derselben Art oder Marke hintereinander stehen. Die Höhe der Provision spielt für die Reihenfolge keine Rolle.</li>
+<li><b>Eigene Sortierung:</b> Im Shop kannst du jederzeit nach Preis, größter Ersparnis oder Neuheit sortieren.</li></ul>
 <h2 id="partner">Für Partner</h2>
 <p>Du betreibst einen Shop oder eine Marke mit Süßigkeiten, Snacks oder alkoholfreien Getränken? So arbeiten wir:</p>
 <ul><li>Deine Produkte erscheinen in passenden Themenwelten (zum Beispiel {worlds}) und auf den Seiten der Posts, in denen sie vorkommen.</li>
@@ -2927,7 +2980,7 @@ Vollständige Angaben im <a href="/impressum/">Impressum</a>.</p></section>"""
 <h2>2. Kurz gesagt</h2><p>Diese Website setzt keine Cookies, nutzt keine Analyse- oder Tracking-Tools und lädt Inhalte von Drittanbietern nur, wenn du es ausdrücklich erlaubst (Produktfotos, siehe Abschnitt 4b). Schriften und unsere eigenen Bilder liegen auf unserem eigenen Server.</p>
 <h2>3. Hosting</h2><p>{HOST_TEXT}</p>
 
-<h2>4. Werbelinks (Affiliate)</h2><p>Einige Links führen zu Online-Shops und sind mit einer Partnerkennung versehen (z. B. über das Netzwerk Awin). Erst wenn du einen solchen Link anklickst, verlässt du diese Website; der Shop bzw. das Partnernetzwerk kann dann auf seiner eigenen Seite Cookies setzen, um den Kauf zuzuordnen. Dafür ist der jeweilige Anbieter verantwortlich. Auf dieser Website selbst wird dabei nichts gespeichert. Produktbilder aus den Datenfeeds der Partner-Shops werden über unseren Hoster {HOST_NAME} ausgeliefert; dein Browser baut dabei keine Verbindung zu den Shops auf. Ausnahme: Abschnitt 4b.</p>
+<h2>4. Werbelinks (Affiliate)</h2><p>Einige Links führen zu Online-Shops und sind mit einer Partnerkennung versehen (z. B. über das Netzwerk Awin). Erst wenn du einen solchen Link anklickst, verlässt du diese Website; der Shop bzw. das Partnernetzwerk kann dann auf seiner eigenen Seite Cookies setzen, um den Kauf zuzuordnen. Dafür ist der jeweilige Anbieter verantwortlich. Auf dieser Website selbst wird dabei nichts gespeichert. Damit wir sehen, welche Seiten hilfreich sind, enthält der Link beim Klick den Namen der Unterseite, auf der du geklickt hast (z. B. „kategorie-japan“), und ggf. den Kanal, über den du gekommen bist (z. B. „pin“ für Pinterest). Daraus lässt sich nicht ablesen, wer du bist. Produktbilder aus den Datenfeeds der Partner-Shops werden über unseren Hoster {HOST_NAME} ausgeliefert; dein Browser baut dabei keine Verbindung zu den Shops auf. Ausnahme: Abschnitt 4b.</p>
 {fotos_html()}
 <h2>4c. Dein Naschpass (Stempel)</h2><p>Wenn du auf der Startseite „Pass starten“ drückst, speichern wir im lokalen Speicher deines Browsers, welche Länder-Themenwelten du besucht hast. Das passiert nur auf deinen Wunsch (§ 25 Abs. 2 Nr. 2 TDDDG), wird nie an uns übertragen und lässt sich mit „Pass zurücksetzen“ jederzeit löschen.</p>
 <h2>4d. Merkliste</h2><p>Tippst du bei einem Produkt auf ♡, speichern wir Name, Shop und Link im lokalen Speicher deines Browsers, damit du deine Auswahl später wiederfindest. Das passiert nur auf deinen Wunsch (§ 25 Abs. 2 Nr. 2 TDDDG), wird nie an uns übertragen und lässt sich auf der Seite „Merkliste“ jederzeit löschen.</p>
