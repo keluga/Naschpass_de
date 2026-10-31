@@ -3,7 +3,7 @@
 name: Verfügbarkeit prüfen
 on:
   schedule:
-    - cron: "41 1 * * *"   # 01:41 UTC, vor dem täglichen Neubau
+    - cron: "41 1 */2 * *"   # jede 2. Nacht 01:41 UTC (spart Action-Minuten; jedes Produkt alle ~14 Tage, der Feed filtert Ausverkauftes ohnehin täglich)
   workflow_dispatch:
     inputs:
       alle:
