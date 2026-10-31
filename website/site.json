@@ -85,6 +85,22 @@
       "top": [
         "adventskalender",
         "24 türchen"
+      ],
+      "seo_title": "Adventskalender mit Süßigkeiten aus aller Welt {year} | Naschpass",
+      "h1": "Adventskalender aus aller Welt",
+      "more": [
+        "Ein Adventskalender muss nicht immer Vollmilch-Schokolade aus dem Supermarkt sein. Hier findest du Kalender mit Lakritz aus Skandinavien, Süßigkeiten aus den USA und Asien, Pralinen und Klassiker, alles von Shops, die nach Deutschland liefern.",
+        "Tipp: Die beliebtesten Kalender sind oft früh ausverkauft. Wer einen bestimmten möchte, bestellt am besten bis Mitte November, damit er pünktlich zum 1. Dezember da ist. Eine Übersicht nach Art und Preis gibt es im Adventskalender-Vergleich."
+      ],
+      "faq": [
+        [
+          "Gibt es Adventskalender für Erwachsene?",
+          "Ja. Unter „Aus aller Welt“ und „Premium & Pralinen“ im Adventskalender-Vergleich findest du Kalender mit Lakritz, Pralinen oder Süßigkeiten aus anderen Ländern, die sich eher an Erwachsene richten."
+        ],
+        [
+          "Liefern die Shops nach Deutschland?",
+          "Ja, wir verlinken nur Partner-Shops, die nach Deutschland liefern. Versandkosten und Lieferzeit stehen im jeweiligen Shop."
+        ]
       ]
     },
     {
@@ -127,6 +143,22 @@
         "lebkuchen",
         "christmas",
         "santa"
+      ],
+      "seo_title": "Süßigkeiten als Weihnachtsgeschenk: Ideen aus aller Welt | Naschpass",
+      "h1": "Süße Weihnachtsgeschenke",
+      "more": [
+        "Lebkuchen, Stollen, Panettone, Pralinen oder etwas Ausgefallenes aus einem anderen Land: Süßigkeiten sind ein Geschenk, das fast immer passt, ob zum Wichteln, zu Nikolaus oder unter den Baum.",
+        "Wer ein festes Budget hat, findet Ideen unter 10 und unter 20 Euro auf der Seite „Geschenke nach Budget“. Wer unsicher ist, was passt, probiert den Geschenk-Finder mit drei kurzen Fragen."
+      ],
+      "faq": [
+        [
+          "Was ist ein gutes Wichtelgeschenk mit Süßigkeiten?",
+          "Etwas, das man nicht selbst im Supermarkt kauft: Süßigkeiten aus einem anderen Land, eine Probierbox oder eine kleine Pralinenschachtel. Ideen nach Preis findest du unter „Geschenke nach Budget“."
+        ],
+        [
+          "Bis wann sollte ich bestellen?",
+          "Das hängt vom Shop ab. Die Lieferzeit steht beim jeweiligen Shop, vor Weihnachten lohnt es sich, früh zu bestellen."
+        ]
       ]
     },
     {
@@ -159,6 +191,34 @@
       "posts": [
         "02",
         "03"
+      ],
+      "seo_title": "Japanische & asiatische Süßigkeiten kaufen: Pocky, Mochi & mehr | Naschpass",
+      "h1": "Japanische & asiatische Süßigkeiten",
+      "more": [
+        "Pocky und Pepero, Mochi, Hi-Chew, Matcha-Süßes oder scharfe Ramen-Snacks: Viele asiatische Süßigkeiten findet man im deutschen Supermarkt nicht. Hier sind sie an einem Ort, mit Links zu Shops, die nach Deutschland liefern.",
+        "Viele asiatische Sorten gibt es nur in kleinen Packungen. Der Preis je kg wirkt deshalb oft hoch. Zum Probieren reichen kleine Packungen, wer sparen will, schaut nach dem Label „Guter Preis“."
+      ],
+      "faq": [
+        [
+          "Wo kann ich japanische Süßigkeiten in Deutschland kaufen?",
+          "Online bei Shops, die Süßigkeiten aus aller Welt führen. Auf dieser Seite siehst du die Sorten unserer Partner-Shops mit Preis und Link."
+        ],
+        [
+          "Was ist der Unterschied zwischen Pocky und Pepero?",
+          "Beides sind dünne Kekssticks mit Überzug. Pocky kommt aus Japan, Pepero aus Südkorea."
+        ]
+      ],
+      "nur_arten": [
+        "schokolade",
+        "pralinen",
+        "gummi",
+        "bonbons",
+        "chips",
+        "snacks",
+        "kekse",
+        "getraenke",
+        "eis",
+        "boxen"
       ]
     },
     {
@@ -172,6 +232,34 @@
       "posts": [
         "01",
         "04"
+      ],
+      "seo_title": "Amerikanische Süßigkeiten kaufen & bestellen | Naschpass",
+      "h1": "Amerikanische Süßigkeiten",
+      "more": [
+        "Reese's, Hershey's, Sour Patch Kids, Warheads oder Lucky Charms: Viele amerikanische Süßigkeiten gibt es hier gar nicht oder nur selten. Hier findest du sie gesammelt, mit Links zu Shops, die nach Deutschland liefern.",
+        "Manche US-Sorten gibt es in Europa mit anderer Rezeptur, weil hier andere Regeln für Zutaten wie Farbstoffe gelten. Mehr dazu in unseren Posts unter „Anders in der EU“."
+      ],
+      "faq": [
+        [
+          "Wo bekomme ich amerikanische Süßigkeiten in Deutschland?",
+          "Online bei Import-Shops. Auf dieser Seite siehst du die Sorten unserer Partner-Shops mit Preis und Link zum Shop."
+        ],
+        [
+          "Warum sind amerikanische Süßigkeiten hier teurer?",
+          "Sie werden importiert und oft in kleinen Mengen verkauft. Vergleiche am besten den Preis je kg, er steht bei jeder Sorte mit Preis."
+        ]
+      ],
+      "nur_arten": [
+        "schokolade",
+        "pralinen",
+        "gummi",
+        "bonbons",
+        "chips",
+        "snacks",
+        "kekse",
+        "getraenke",
+        "eis",
+        "boxen"
       ]
     },
     {
@@ -181,7 +269,30 @@
       "facets": [
         "land:italien"
       ],
-      "text": "Italien hat eine eigene Süßwaren-Tradition: Panettone und Pandoro zu Weihnachten, Torrone mit Honig und Mandeln, Cantucci zum Kaffee und Gianduja, die Verbindung aus Schokolade und Haselnuss aus dem Piemont."
+      "text": "Italien hat eine eigene Süßwaren-Tradition: Panettone und Pandoro zu Weihnachten, Torrone mit Honig und Mandeln, Cantucci zum Kaffee und Gianduja, die Verbindung aus Schokolade und Haselnuss aus dem Piemont.",
+      "seo_title": "Italienische Süßigkeiten online kaufen: Cantucci, Panettone & mehr | Naschpass",
+      "h1": "Italienische Süßigkeiten",
+      "more": [
+        "Cantucci zum Kaffee, Panettone und Pandoro zu Weihnachten, Torrone, Amaretti und Gianduja: Italien hat eine eigene, große Süßwaren-Tradition. Hier findest du sie gesammelt, mit Links zu Shops, die nach Deutschland liefern."
+      ],
+      "faq": [
+        [
+          "Was ist der Unterschied zwischen Panettone und Pandoro?",
+          "Panettone ist ein Hefekuchen mit kandierten Früchten und Rosinen, Pandoro ist ohne Früchte und hat die Form eines Sterns."
+        ]
+      ],
+      "nur_arten": [
+        "schokolade",
+        "pralinen",
+        "gummi",
+        "bonbons",
+        "chips",
+        "snacks",
+        "kekse",
+        "getraenke",
+        "eis",
+        "boxen"
+      ]
     },
     {
       "id": "schweiz",
@@ -190,7 +301,30 @@
       "facets": [
         "land:schweiz"
       ],
-      "text": "Die Schweiz und Schokolade gehören zusammen: Milchschokolade wurde dort entwickelt, und das Conchieren, also das lange Rühren für den zarten Schmelz, geht auf Rodolphe Lindt zurück. Hier sammeln wir Tafeln, Pralinen und Klassiker aus den Alpen."
+      "text": "Die Schweiz und Schokolade gehören zusammen: Milchschokolade wurde dort entwickelt, und das Conchieren, also das lange Rühren für den zarten Schmelz, geht auf Rodolphe Lindt zurück. Hier sammeln wir Tafeln, Pralinen und Klassiker aus den Alpen.",
+      "seo_title": "Schweizer Schokolade online kaufen | Naschpass",
+      "h1": "Schweizer Schokolade & Süßes",
+      "more": [
+        "Tafeln, Pralinen, Kugeln und Klassiker aus den Alpen: Hier sammeln wir Schweizer Schokolade und Süßigkeiten, die unsere Partner-Shops führen, mit Preis je kg zum Vergleichen."
+      ],
+      "faq": [
+        [
+          "Ist Schweizer Schokolade hier teurer als in der Schweiz?",
+          "Das hängt von Sorte und Shop ab. Vergleiche am besten den Preis je kg, er steht bei jeder Sorte mit Preis."
+        ]
+      ],
+      "nur_arten": [
+        "schokolade",
+        "pralinen",
+        "gummi",
+        "bonbons",
+        "chips",
+        "snacks",
+        "kekse",
+        "getraenke",
+        "eis",
+        "boxen"
+      ]
     },
     {
       "id": "mexiko",
@@ -199,7 +333,24 @@
       "facets": [
         "land:mexiko"
       ],
-      "text": "In Mexiko treffen Süßigkeiten auf Chili: Fruchtiges wird mit Chilipulver, Limette und Salz kombiniert, dazu kommt Tamarinde. Für viele hier ungewohnt, für Fans genau der Reiz."
+      "text": "In Mexiko treffen Süßigkeiten auf Chili: Fruchtiges wird mit Chilipulver, Limette und Salz kombiniert, dazu kommt Tamarinde. Für viele hier ungewohnt, für Fans genau der Reiz.",
+      "seo_title": "Mexikanische Süßigkeiten kaufen: Chili, Tamarinde & Limette | Naschpass",
+      "h1": "Mexikanische Süßigkeiten",
+      "more": [
+        "In Mexiko werden Süßigkeiten gern mit Chili, Limette und Salz kombiniert, dazu kommt Tamarinde. Für viele hier ungewohnt, für Fans genau der Reiz. Hier findest du mexikanische Sorten, die unsere Partner-Shops führen."
+      ],
+      "nur_arten": [
+        "schokolade",
+        "pralinen",
+        "gummi",
+        "bonbons",
+        "chips",
+        "snacks",
+        "kekse",
+        "getraenke",
+        "eis",
+        "boxen"
+      ]
     },
     {
       "id": "skandinavien",
@@ -208,7 +359,35 @@
       "facets": [
         "land:skandinavien"
       ],
-      "text": "Im Norden ist Lakritz gern salzig, und Süßigkeiten kauft man oft lose aus der Wand, als Pick & Mix. Hier findest du Salmiak, Salzlakritz und schwedische Fruchtgummis."
+      "text": "Im Norden ist Lakritz gern salzig, und Süßigkeiten kauft man oft lose aus der Wand, als Pick & Mix. Hier findest du Salmiak, Salzlakritz und schwedische Fruchtgummis.",
+      "seo_title": "Schwedische Süßigkeiten & Lakritz aus Skandinavien kaufen | Naschpass",
+      "h1": "Lakritz & Süßes aus Skandinavien",
+      "more": [
+        "Salmiak, Salzlakritz, Lakritz mit Schokolade und schwedische Fruchtgummis: Im Norden ist Lakritz gern salzig und kräftig. Hier findest du Sorten aus Dänemark, Schweden, Finnland und Norwegen, soweit unsere Partner-Shops sie führen.",
+        "Salmiak schmeckt für viele beim ersten Mal ungewohnt. Zum Einstieg eignen sich Lakritz mit Schokolade oder süße Lakritze, wer es kräftig mag, greift zu Salmiak."
+      ],
+      "faq": [
+        [
+          "Was ist Salmiak?",
+          "Salmiaklakritz wird mit Salmiaksalz gewürzt und schmeckt dadurch salzig-herb. Im Norden ist das ein Klassiker."
+        ],
+        [
+          "Gibt es schwedisches Pick & Mix online?",
+          "Lose Süßigkeiten zum Selbstmischen gibt es eher im Laden. Online findest du hier schwedische Fruchtgummis und Mixe in Tüten."
+        ]
+      ],
+      "nur_arten": [
+        "schokolade",
+        "pralinen",
+        "gummi",
+        "bonbons",
+        "chips",
+        "snacks",
+        "kekse",
+        "getraenke",
+        "eis",
+        "boxen"
+      ]
     },
     {
       "id": "verboten",
@@ -229,7 +408,12 @@
         "geschmack:sauer",
         "geschmack:scharf"
       ],
-      "text": "Extrem saure Bonbons, Chili-Lollis und scharfe Chips: für alle, die es beim Naschen gern intensiv mögen."
+      "text": "Extrem saure Bonbons, Chili-Lollis und scharfe Chips: für alle, die es beim Naschen gern intensiv mögen.",
+      "seo_title": "Saure & scharfe Süßigkeiten kaufen: Warheads, Sour Patch & Co. | Naschpass",
+      "h1": "Saure & scharfe Süßigkeiten",
+      "more": [
+        "Extrem saure Bonbons, saure Fruchtgummis, Chili-Lollis und scharfe Chips: für alle, die es beim Naschen intensiv mögen. Bei sehr sauren oder sehr scharfen Sorten lohnt ein Blick auf die Hinweise auf der Packung."
+      ]
     },
     {
       "id": "getraenke",
@@ -338,6 +522,17 @@
         "geschenk",
         "probier",
         "präsent"
+      ],
+      "seo_title": "Süßigkeiten-Box aus aller Welt bestellen: Mystery-Boxen & Sets | Naschpass",
+      "h1": "Süßigkeiten-Boxen & Geschenksets",
+      "more": [
+        "Mystery-Boxen, Probiersets und Geschenkboxen mit Süßigkeiten aus aller Welt: praktisch zum Durchprobieren, für einen Filmabend mit Freunden oder als Geschenk, wenn man nicht weiß, was der andere mag."
+      ],
+      "faq": [
+        [
+          "Was ist in einer Mystery-Box?",
+          "Das verrät der Shop vorher nicht genau, meist ist es eine Mischung aus Süßigkeiten, Snacks und Getränken. Die Beschreibung im Shop sagt, wie viele Teile und aus welchen Ländern."
+        ]
       ]
     },
     {
