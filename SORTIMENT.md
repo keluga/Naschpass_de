@@ -1,40 +1,40 @@
-# Sortiment – Stand 2026-11-04
+# Sortiment – Stand 2026-11-06
 
 Automatisch aus `/sortiment.json` (nächtliche Action, `tools/sortiment_md.py`). Volle Tabellen: `/pruefen/sortiment/` auf der Seite.
 
-**11976 Produkte** · ohne Herkunft 1910 · ohne Art 1290 · Preisvergleich-Karten 919 (1292 Doppel-Karten zusammengefasst) · übrige Sorten bei mehreren Shops 275
+**12037 Produkte** · ohne Herkunft 1943 · ohne Art 1295 · Preisvergleich-Karten 927 (1294 Doppel-Karten zusammengefasst) · übrige Sorten bei mehreren Shops 275
 
 ## Je Shop
 | Shop | Produkte | ohne Herkunft | ohne Art | ohne Preis | Bild schwach | Preis median |
 | --- | --- | --- | --- | --- | --- | --- |
-| World of Sweets | 6972 | 1430 | 989 | 0 | 13 | 3.49 € |
-| REWE | 1775 | 121 | 66 | 0 | 0 | 2.89 € |
-| Piccantino | 1364 | 36 | 12 | 0 | 41 | 4.39 € |
-| GOURVITA | 628 | 12 | 25 | 1 | 6 | 3.99 € |
-| Haushalt-und-Genuss | 480 | 0 | 29 | 0 | 0 | 4.09 € |
-| Der Feinschmecker Shop | 342 | 213 | 92 | 0 | 0 | 12.90 € |
+| World of Sweets | 7028 | 1464 | 995 | 0 | 12 | 3.49 € |
+| REWE | 1770 | 120 | 65 | 0 | 0 | 2.89 € |
+| Piccantino | 1365 | 36 | 12 | 0 | 41 | 4.39 € |
+| GOURVITA | 633 | 12 | 26 | 1 | 6 | 3.99 € |
+| Haushalt-und-Genuss | 475 | 0 | 29 | 0 | 0 | 4.09 € |
+| Der Feinschmecker Shop | 358 | 214 | 93 | 0 | 0 | 12.93 € |
 | Burghardt Delicious | 163 | 65 | 0 | 3 | 3 | 14.95 € |
-| SugarGang | 91 | 11 | 2 | 0 | 0 | 4.80 € |
-| decocino | 91 | 4 | 55 | 0 | 0 | 3.09 € |
-| Sodapop | 37 | 0 | 0 | 0 | 0 | 12.00 € |
-| glytter | 19 | 17 | 17 | 0 | 0 | 10.00 € |
+| decocino | 90 | 4 | 54 | 0 | 0 | 3.14 € |
+| SugarGang | 87 | 11 | 2 | 0 | 0 | 4.99 € |
+| Sodapop | 36 | 0 | 0 | 0 | 0 | 8.50 € |
+| glytter | 18 | 16 | 16 | 0 | 0 | 29.98 € |
 | Asiafoodland | 12 | 0 | 3 | 12 | 0 | – |
 | my-choco-world | 2 | 1 | 0 | 2 | 0 | – |
 
 ## Herkunft
 | Herkunft | Produkte |
 | --- | --- |
-| deutschland | 5547 |
-| oesterreich | 938 |
-| usa | 765 |
-| italien | 665 |
-| schweiz | 510 |
-| skandinavien | 452 |
+| deutschland | 5550 |
+| oesterreich | 935 |
+| usa | 754 |
+| italien | 674 |
+| schweiz | 522 |
+| skandinavien | 461 |
 | uk | 291 |
-| benelux | 273 |
-| asien | 199 |
-| frankreich | 155 |
-| spanien | 123 |
+| benelux | 277 |
+| asien | 204 |
+| frankreich | 153 |
+| spanien | 125 |
 | orient | 75 |
 | mexiko | 64 |
 | europa | 6 |
@@ -43,15 +43,15 @@ Automatisch aus `/sortiment.json` (nächtliche Action, `tools/sortiment_md.py`).
 ## Art
 | Art | Produkte |
 | --- | --- |
-| schokolade | 3543 |
-| kekse | 1487 |
-| getraenke | 1297 |
-| bonbons | 1148 |
-| snacks | 801 |
-| feinkost | 780 |
-| gummi | 687 |
-| chips | 621 |
-| boxen | 118 |
+| schokolade | 3575 |
+| kekse | 1499 |
+| getraenke | 1303 |
+| bonbons | 1160 |
+| snacks | 794 |
+| feinkost | 779 |
+| gummi | 689 |
+| chips | 616 |
+| boxen | 123 |
 | eis | 117 |
 | pralinen | 61 |
 | tee | 26 |
@@ -60,63 +60,63 @@ Automatisch aus `/sortiment.json` (nächtliche Action, `tools/sortiment_md.py`).
 | Welt | Produkte | Saison |
 | --- | --- | --- |
 | Halloween | 101 |  |
-| Adventskalender | 184 | aktiv |
-| Weihnachten & Geschenke | 966 | aktiv |
-| Schokolade & Pralinen | 3462 |  |
-| Japan & Asien | 149 |  |
-| USA | 715 |  |
-| Italien | 578 |  |
-| Schweiz | 488 |  |
+| Adventskalender | 183 | aktiv |
+| Weihnachten & Geschenke | 965 | aktiv |
+| Schokolade & Pralinen | 3491 |  |
+| Japan & Asien | 154 |  |
+| USA | 704 |  |
+| Italien | 585 |  |
+| Schweiz | 500 |  |
 | Mexiko | 35 |  |
-| Skandinavien | 321 |  |
+| Skandinavien | 331 |  |
 | Anders in der EU | 0 |  |
-| Sauer & scharf | 795 |  |
-| Getränke | 1019 |  |
-| Nuss- & Fruchtsnacks | 446 |  |
-| Boxen & Geschenke | 491 |  |
-| Supermarkt-Klassiker | 1775 |  |
-| Filmabend | 1514 |  |
-| Party & Teilen | 913 |  |
-| Mitbringsel & Danke | 858 |  |
-| Geburtstag | 475 |  |
-| Für Naschkatzen | 1028 |  |
+| Sauer & scharf | 794 |  |
+| Getränke | 1020 |  |
+| Nuss- & Fruchtsnacks | 439 |  |
+| Boxen & Geschenke | 490 |  |
+| Supermarkt-Klassiker | 1770 |  |
+| Filmabend | 1509 |  |
+| Party & Teilen | 927 |  |
+| Mitbringsel & Danke | 863 |  |
+| Geburtstag | 479 |  |
+| Für Naschkatzen | 1022 |  |
 
 ## Lücken
 Häufigste Marken ohne Herkunft (Kandidaten für `brands.json`):
 
 | Marke | Produkte |
 | --- | --- |
-| (ohne Marke) | 298 |
+| (ohne Marke) | 297 |
 | Cool | 35 |
-| World of Sweets | 33 |
+| World of Sweets | 31 |
 | Yummi Yummi | 30 |
+| AHEAD | 27 |
 | Becky's | 25 |
 | Sweet Flash | 25 |
-| Mellow Mellow | 20 |
-| AHEAD | 19 |
-| Maxi Nutrition | 19 |
+| Mellow Mellow | 23 |
+| Maxi Nutrition | 21 |
 | Barkleys | 17 |
 | Gönrgy | 16 |
+| Edel | 15 |
 | Power System | 15 |
 | Bites we Love | 13 |
 | burghardt-delicious.com | 11 |
 | Suntjens | 11 |
 | Nestlé | 11 |
-| Amore Sweets | 11 |
 | Wick | 11 |
-| Edel | 10 |
 | elephant | 10 |
+| Amore Sweets | 10 |
 | N.A! Nature Addicts | 10 |
 | Argenta | 10 |
 | BIO PRIMO | 9 |
 | Sunshine Delights | 9 |
-| Klett | 9 |
+| PiCK UP! | 9 |
 
 Häufigste Namen ohne Art (Kandidaten für Stichwörter in `site.json → filter`):
 
 | Name | Produkte |
 | --- | --- |
-| glytterpulver | 16 |
+| glytterpulver | 15 |
 | veggie mix beste | 10 |
 | bunter mix beste | 10 |
 | saurer mix beste | 10 |
@@ -130,7 +130,6 @@ Häufigste Namen ohne Art (Kandidaten für Stichwörter in `site.json → filter
 | niederegger männersache marzipan | 5 |
 | niederegger marzipan torte | 5 |
 | kölln hafer müsli | 5 |
-| dr oetker seelenwärmer | 4 |
 | wicklein meistersinger feine | 4 |
 | wicklein mini elisen | 4 |
 | wicklein bio nürnberger | 4 |
@@ -138,9 +137,10 @@ Häufigste Namen ohne Art (Kandidaten für Stichwörter in `site.json → filter
 | bunter mix happy | 4 |
 | saurer mix happy | 4 |
 | veggie mix happy | 4 |
-| schulte dominos mit | 4 |
 | de bron zoute | 4 |
 | vitalis knusper müsli | 4 |
+| henry lambertz lebkuchenkonfekt | 4 |
+| bonne maman petits | 4 |
 
 ## Dubletten (gleiche Sorte, mehrere Shops)
 | Sorte | Shops | Preis |
@@ -157,10 +157,11 @@ Häufigste Namen ohne Art (Kandidaten für Stichwörter in `site.json → filter
 | corny free schoko | GOURVITA, Haushalt-und-Genuss, World of Sweets | 2.39–40.99 € |
 | alnatura bio schoko | Haushalt-und-Genuss, Piccantino, REWE | 1.99–4.69 € |
 | dr oetker original | Haushalt-und-Genuss, Piccantino, REWE | 0.99–1.79 € |
-| pringles sweet paprika | Haushalt-und-Genuss, REWE, World of Sweets | 0.99–3.29 € |
+| pringles sweet paprika | Haushalt-und-Genuss, REWE, World of Sweets | 2.79–3.29 € |
 | pringles sour cream | Piccantino, REWE, World of Sweets | 2.79–3.49 € |
 | corny nussvoll dreierlei | Haushalt-und-Genuss, Piccantino, World of Sweets | 2.39–3.29 € |
 | bahlsen hermann bahlsen | Haushalt-und-Genuss, REWE, World of Sweets | 3.79–60.49 € |
+| lindt excellence orange | Piccantino, REWE, World of Sweets | 2.79–4.99 € |
 | corny nussvoll erdnuss | Haushalt-und-Genuss, Piccantino, World of Sweets | 2.39–3.29 € |
 | lakrids by bülow | Der Feinschmecker Shop, World of Sweets | 8.95–79.00 € |
 | lindt lindor kugeln | Piccantino, World of Sweets | 4.99–139.99 € |
@@ -168,11 +169,10 @@ Häufigste Namen ohne Art (Kandidaten für Stichwörter in `site.json → filter
 | red bull energy | REWE, World of Sweets | 1.49–17.88 € |
 | farmer s snack | REWE, World of Sweets | 0.99–8.99 € |
 | mövenpick gourmet frühstück | GOURVITA, REWE | 3.19–3.69 € |
-| sal de ibiza | Piccantino, World of Sweets | 2.49–59.99 € |
 | monster energy ultra | REWE, World of Sweets | 1.59–5.39 € |
+| sal de ibiza | Piccantino, World of Sweets | 2.49–59.99 € |
 | funny frisch chipsfrisch | REWE, World of Sweets | 1.99–39.99 € |
 | maryland snack nüsse | REWE, World of Sweets | 3.99–6.49 € |
 | red band fruchtgummi | REWE, World of Sweets | 2.79–39.99 € |
 | kelly s chips | Haushalt-und-Genuss, Piccantino | 2.79–8.99 € |
-| hitschies saure drachenzungen | REWE, World of Sweets | 1.39–2.39 € |
 
