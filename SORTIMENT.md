@@ -1,122 +1,122 @@
-# Sortiment – Stand 2026-11-06
+# Sortiment – Stand 2026-11-08
 
 Automatisch aus `/sortiment.json` (nächtliche Action, `tools/sortiment_md.py`). Volle Tabellen: `/pruefen/sortiment/` auf der Seite.
 
-**12037 Produkte** · ohne Herkunft 1943 · ohne Art 1295 · Preisvergleich-Karten 927 (1294 Doppel-Karten zusammengefasst) · übrige Sorten bei mehreren Shops 275
+**12091 Produkte** · ohne Herkunft 1938 · ohne Art 1305 · Preisvergleich-Karten 936 (1307 Doppel-Karten zusammengefasst) · übrige Sorten bei mehreren Shops 278
 
 ## Je Shop
 | Shop | Produkte | ohne Herkunft | ohne Art | ohne Preis | Bild schwach | Preis median |
 | --- | --- | --- | --- | --- | --- | --- |
-| World of Sweets | 7028 | 1464 | 995 | 0 | 12 | 3.49 € |
-| REWE | 1770 | 120 | 65 | 0 | 0 | 2.89 € |
-| Piccantino | 1365 | 36 | 12 | 0 | 41 | 4.39 € |
-| GOURVITA | 633 | 12 | 26 | 1 | 6 | 3.99 € |
-| Haushalt-und-Genuss | 475 | 0 | 29 | 0 | 0 | 4.09 € |
-| Der Feinschmecker Shop | 358 | 214 | 93 | 0 | 0 | 12.93 € |
+| World of Sweets | 7042 | 1462 | 1002 | 0 | 11 | 3.49 € |
+| REWE | 1816 | 123 | 72 | 0 | 0 | 2.89 € |
+| Piccantino | 1363 | 36 | 12 | 0 | 41 | 4.39 € |
+| GOURVITA | 634 | 11 | 26 | 1 | 6 | 3.99 € |
+| Haushalt-und-Genuss | 476 | 0 | 29 | 0 | 0 | 4.09 € |
+| Der Feinschmecker Shop | 357 | 213 | 92 | 0 | 0 | 12.95 € |
 | Burghardt Delicious | 163 | 65 | 0 | 3 | 3 | 14.95 € |
 | decocino | 90 | 4 | 54 | 0 | 0 | 3.14 € |
-| SugarGang | 87 | 11 | 2 | 0 | 0 | 4.99 € |
-| Sodapop | 36 | 0 | 0 | 0 | 0 | 8.50 € |
-| glytter | 18 | 16 | 16 | 0 | 0 | 29.98 € |
+| SugarGang | 84 | 10 | 2 | 0 | 0 | 4.89 € |
+| Sodapop | 37 | 0 | 0 | 0 | 0 | 12.00 € |
+| glytter | 15 | 13 | 13 | 0 | 0 | 49.95 € |
 | Asiafoodland | 12 | 0 | 3 | 12 | 0 | – |
 | my-choco-world | 2 | 1 | 0 | 2 | 0 | – |
 
 ## Herkunft
 | Herkunft | Produkte |
 | --- | --- |
-| deutschland | 5550 |
-| oesterreich | 935 |
-| usa | 754 |
-| italien | 674 |
-| schweiz | 522 |
-| skandinavien | 461 |
-| uk | 291 |
-| benelux | 277 |
-| asien | 204 |
-| frankreich | 153 |
-| spanien | 125 |
-| orient | 75 |
-| mexiko | 64 |
+| deutschland | 5605 |
+| oesterreich | 940 |
+| usa | 747 |
+| italien | 684 |
+| schweiz | 526 |
+| skandinavien | 456 |
+| uk | 290 |
+| benelux | 278 |
+| asien | 207 |
+| frankreich | 152 |
+| spanien | 120 |
+| orient | 74 |
+| mexiko | 65 |
 | europa | 6 |
 | osteuropa | 3 |
 
 ## Art
 | Art | Produkte |
 | --- | --- |
-| schokolade | 3575 |
-| kekse | 1499 |
-| getraenke | 1303 |
-| bonbons | 1160 |
-| snacks | 794 |
+| schokolade | 3595 |
+| kekse | 1503 |
+| getraenke | 1309 |
+| bonbons | 1165 |
+| snacks | 792 |
 | feinkost | 779 |
-| gummi | 689 |
-| chips | 616 |
-| boxen | 123 |
-| eis | 117 |
-| pralinen | 61 |
+| gummi | 686 |
+| chips | 625 |
+| eis | 128 |
+| boxen | 119 |
+| pralinen | 59 |
 | tee | 26 |
 
 ## Themenwelten
 | Welt | Produkte | Saison |
 | --- | --- | --- |
 | Halloween | 101 |  |
-| Adventskalender | 183 | aktiv |
-| Weihnachten & Geschenke | 965 | aktiv |
-| Schokolade & Pralinen | 3491 |  |
-| Japan & Asien | 154 |  |
-| USA | 704 |  |
-| Italien | 585 |  |
-| Schweiz | 500 |  |
-| Mexiko | 35 |  |
-| Skandinavien | 331 |  |
+| Adventskalender | 177 | aktiv |
+| Weihnachten & Geschenke | 960 | aktiv |
+| Schokolade & Pralinen | 3509 |  |
+| Japan & Asien | 157 |  |
+| USA | 697 |  |
+| Italien | 594 |  |
+| Schweiz | 504 |  |
+| Mexiko | 36 |  |
+| Skandinavien | 327 |  |
 | Anders in der EU | 0 |  |
-| Sauer & scharf | 794 |  |
-| Getränke | 1020 |  |
-| Nuss- & Fruchtsnacks | 439 |  |
-| Boxen & Geschenke | 490 |  |
-| Supermarkt-Klassiker | 1770 |  |
-| Filmabend | 1509 |  |
+| Sauer & scharf | 801 |  |
+| Getränke | 1019 |  |
+| Nuss- & Fruchtsnacks | 438 |  |
+| Boxen & Geschenke | 483 |  |
+| Supermarkt-Klassiker | 1816 |  |
+| Filmabend | 1508 |  |
 | Party & Teilen | 927 |  |
-| Mitbringsel & Danke | 863 |  |
-| Geburtstag | 479 |  |
-| Für Naschkatzen | 1022 |  |
+| Mitbringsel & Danke | 862 |  |
+| Geburtstag | 481 |  |
+| Für Naschkatzen | 1019 |  |
 
 ## Lücken
 Häufigste Marken ohne Herkunft (Kandidaten für `brands.json`):
 
 | Marke | Produkte |
 | --- | --- |
-| (ohne Marke) | 297 |
-| Cool | 35 |
-| World of Sweets | 31 |
+| (ohne Marke) | 296 |
+| Cool | 36 |
 | Yummi Yummi | 30 |
-| AHEAD | 27 |
+| AHEAD | 28 |
+| World of Sweets | 26 |
 | Becky's | 25 |
-| Sweet Flash | 25 |
+| Sweet Flash | 24 |
 | Mellow Mellow | 23 |
-| Maxi Nutrition | 21 |
+| Maxi Nutrition | 22 |
 | Barkleys | 17 |
 | Gönrgy | 16 |
 | Edel | 15 |
 | Power System | 15 |
 | Bites we Love | 13 |
+| Argenta | 13 |
 | burghardt-delicious.com | 11 |
 | Suntjens | 11 |
-| Nestlé | 11 |
 | Wick | 11 |
-| elephant | 10 |
+| Nestlé | 10 |
 | Amore Sweets | 10 |
+| elephant | 10 |
 | N.A! Nature Addicts | 10 |
-| Argenta | 10 |
 | BIO PRIMO | 9 |
 | Sunshine Delights | 9 |
-| PiCK UP! | 9 |
+| Pulmoll | 9 |
 
 Häufigste Namen ohne Art (Kandidaten für Stichwörter in `site.json → filter`):
 
 | Name | Produkte |
 | --- | --- |
-| glytterpulver | 15 |
+| glytterpulver | 12 |
 | veggie mix beste | 10 |
 | bunter mix beste | 10 |
 | saurer mix beste | 10 |
@@ -125,22 +125,22 @@ Häufigste Namen ohne Art (Kandidaten für Stichwörter in `site.json → filter
 | veggie mix bester | 8 |
 | bunter mix bester | 8 |
 | emil reimann stollenkonfekt | 7 |
-| lakrids by bülow | 6 |
 | haribo lakritz schnecken | 5 |
 | niederegger männersache marzipan | 5 |
+| lakrids by bülow | 5 |
 | niederegger marzipan torte | 5 |
 | kölln hafer müsli | 5 |
+| rewe beste wahl | 4 |
 | wicklein meistersinger feine | 4 |
 | wicklein mini elisen | 4 |
 | wicklein bio nürnberger | 4 |
 | carstens lübecker edelmarzipan | 4 |
+| küchle knabber esspapier | 4 |
 | bunter mix happy | 4 |
 | saurer mix happy | 4 |
 | veggie mix happy | 4 |
 | de bron zoute | 4 |
 | vitalis knusper müsli | 4 |
-| henry lambertz lebkuchenkonfekt | 4 |
-| bonne maman petits | 4 |
 
 ## Dubletten (gleiche Sorte, mehrere Shops)
 | Sorte | Shops | Preis |
@@ -154,11 +154,12 @@ Häufigste Namen ohne Art (Kandidaten für Stichwörter in `site.json → filter
 | schwartau coffee shop | GOURVITA, REWE, World of Sweets | 2.79–11.29 € |
 | manner snack minis | Haushalt-und-Genuss, Piccantino, World of Sweets | 1.79–5.89 € |
 | ritter sport edelkakao | Haushalt-und-Genuss, REWE, World of Sweets | 2.19–2.49 € |
+| coca cola zero | Piccantino, REWE, World of Sweets | 1.24–20.99 € |
 | corny free schoko | GOURVITA, Haushalt-und-Genuss, World of Sweets | 2.39–40.99 € |
-| alnatura bio schoko | Haushalt-und-Genuss, Piccantino, REWE | 1.99–4.69 € |
+| alnatura bio schoko | Haushalt-und-Genuss, Piccantino, REWE | 1.99–4.79 € |
 | dr oetker original | Haushalt-und-Genuss, Piccantino, REWE | 0.99–1.79 € |
-| pringles sweet paprika | Haushalt-und-Genuss, REWE, World of Sweets | 2.79–3.29 € |
 | pringles sour cream | Piccantino, REWE, World of Sweets | 2.79–3.49 € |
+| pringles sweet paprika | Haushalt-und-Genuss, REWE, World of Sweets | 2.79–3.29 € |
 | corny nussvoll dreierlei | Haushalt-und-Genuss, Piccantino, World of Sweets | 2.39–3.29 € |
 | bahlsen hermann bahlsen | Haushalt-und-Genuss, REWE, World of Sweets | 3.79–60.49 € |
 | lindt excellence orange | Piccantino, REWE, World of Sweets | 2.79–4.99 € |
@@ -166,13 +167,12 @@ Häufigste Namen ohne Art (Kandidaten für Stichwörter in `site.json → filter
 | lakrids by bülow | Der Feinschmecker Shop, World of Sweets | 8.95–79.00 € |
 | lindt lindor kugeln | Piccantino, World of Sweets | 4.99–139.99 € |
 | rauch happy day | Piccantino, REWE | 1.29–3.99 € |
-| red bull energy | REWE, World of Sweets | 1.49–17.88 € |
+| red bull energy | REWE, World of Sweets | 1.44–17.88 € |
 | farmer s snack | REWE, World of Sweets | 0.99–8.99 € |
 | mövenpick gourmet frühstück | GOURVITA, REWE | 3.19–3.69 € |
+| funny frisch chipsfrisch | REWE, World of Sweets | 1.99–39.99 € |
 | monster energy ultra | REWE, World of Sweets | 1.59–5.39 € |
 | sal de ibiza | Piccantino, World of Sweets | 2.49–59.99 € |
-| funny frisch chipsfrisch | REWE, World of Sweets | 1.99–39.99 € |
 | maryland snack nüsse | REWE, World of Sweets | 3.99–6.49 € |
 | red band fruchtgummi | REWE, World of Sweets | 2.79–39.99 € |
-| kelly s chips | Haushalt-und-Genuss, Piccantino | 2.79–8.99 € |
 
