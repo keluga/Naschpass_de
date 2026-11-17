@@ -1,85 +1,85 @@
-# Sortiment – Stand 2026-11-14
+# Sortiment – Stand 2026-11-16
 
 Automatisch aus `/sortiment.json` (nächtliche Action, `tools/sortiment_md.py`). Volle Tabellen: `/pruefen/sortiment/` auf der Seite.
 
-**11953 Produkte** · ohne Herkunft 1932 · ohne Art 1284 · Preisvergleich-Karten 928 (1301 Doppel-Karten zusammengefasst) · übrige Sorten bei mehreren Shops 280
+**11866 Produkte** · ohne Herkunft 1914 · ohne Art 1280 · Preisvergleich-Karten 922 (1299 Doppel-Karten zusammengefasst) · übrige Sorten bei mehreren Shops 274
 
 ## Je Shop
 | Shop | Produkte | ohne Herkunft | ohne Art | ohne Preis | Bild schwach | Preis median |
 | --- | --- | --- | --- | --- | --- | --- |
-| World of Sweets | 6886 | 1449 | 971 | 0 | 10 | 3.50 € |
-| REWE | 1850 | 136 | 85 | 0 | 0 | 2.79 € |
-| Piccantino | 1362 | 36 | 12 | 0 | 41 | 4.39 € |
-| GOURVITA | 635 | 11 | 24 | 1 | 9 | 3.99 € |
-| Haushalt-und-Genuss | 475 | 0 | 29 | 0 | 0 | 4.09 € |
-| Der Feinschmecker Shop | 352 | 208 | 89 | 0 | 0 | 12.93 € |
-| Burghardt Delicious | 162 | 65 | 0 | 3 | 3 | 14.95 € |
+| World of Sweets | 6811 | 1432 | 965 | 0 | 10 | 3.49 € |
+| REWE | 1849 | 136 | 85 | 0 | 0 | 2.79 € |
+| Piccantino | 1363 | 36 | 12 | 0 | 41 | 4.39 € |
+| GOURVITA | 636 | 11 | 24 | 1 | 6 | 3.99 € |
+| Haushalt-und-Genuss | 472 | 0 | 29 | 0 | 0 | 4.09 € |
+| Der Feinschmecker Shop | 347 | 205 | 87 | 0 | 0 | 12.90 € |
+| Burghardt Delicious | 161 | 64 | 0 | 3 | 3 | 14.95 € |
 | decocino | 92 | 4 | 56 | 0 | 0 | 3.09 € |
-| SugarGang | 75 | 10 | 3 | 0 | 0 | 4.80 € |
+| SugarGang | 66 | 8 | 3 | 0 | 0 | 4.89 € |
 | Sodapop | 36 | 0 | 0 | 0 | 0 | 8.50 € |
-| glytter | 14 | 12 | 12 | 0 | 0 | 49.95 € |
+| glytter | 19 | 17 | 16 | 0 | 0 | 19.90 € |
 | Asiafoodland | 12 | 0 | 3 | 12 | 0 | – |
 | my-choco-world | 2 | 1 | 0 | 2 | 0 | – |
 
 ## Herkunft
 | Herkunft | Produkte |
 | --- | --- |
-| deutschland | 5565 |
-| oesterreich | 939 |
-| usa | 700 |
-| italien | 663 |
-| schweiz | 517 |
-| skandinavien | 450 |
-| uk | 293 |
-| benelux | 277 |
-| asien | 204 |
-| frankreich | 147 |
-| spanien | 123 |
+| deutschland | 5544 |
+| oesterreich | 938 |
+| usa | 687 |
+| italien | 655 |
+| schweiz | 510 |
+| skandinavien | 443 |
+| uk | 292 |
+| benelux | 273 |
+| asien | 201 |
+| frankreich | 145 |
+| spanien | 121 |
 | orient | 74 |
-| mexiko | 61 |
-| europa | 5 |
+| mexiko | 60 |
+| europa | 6 |
 | osteuropa | 3 |
 
 ## Art
 | Art | Produkte |
 | --- | --- |
-| schokolade | 3520 |
-| kekse | 1497 |
-| getraenke | 1297 |
-| bonbons | 1163 |
-| snacks | 789 |
-| feinkost | 783 |
-| gummi | 684 |
-| chips | 605 |
+| schokolade | 3481 |
+| kekse | 1489 |
+| getraenke | 1291 |
+| bonbons | 1145 |
+| snacks | 790 |
+| feinkost | 782 |
+| gummi | 675 |
+| chips | 602 |
 | eis | 127 |
-| boxen | 118 |
-| pralinen | 60 |
+| boxen | 119 |
+| pralinen | 59 |
 | tee | 26 |
 
 ## Themenwelten
 | Welt | Produkte | Saison |
 | --- | --- | --- |
-| Halloween | 94 |  |
-| Adventskalender | 150 | aktiv |
-| Weihnachten & Geschenke | 911 | aktiv |
-| Schokolade & Pralinen | 3433 |  |
-| Japan & Asien | 152 |  |
-| USA | 652 |  |
-| Italien | 573 |  |
-| Schweiz | 494 |  |
-| Mexiko | 32 |  |
-| Skandinavien | 321 |  |
+| Halloween | 95 |  |
+| Adventskalender | 141 | aktiv |
+| Weihnachten & Geschenke | 896 | aktiv |
+| Schokolade & Pralinen | 3393 |  |
+| Japan & Asien | 149 |  |
+| USA | 638 |  |
+| Italien | 567 |  |
+| Schweiz | 487 |  |
+| Mexiko | 31 |  |
+| Skandinavien | 314 |  |
 | Anders in der EU | 0 |  |
-| Sauer & scharf | 796 |  |
-| Getränke | 1011 |  |
-| Nuss- & Fruchtsnacks | 436 |  |
-| Boxen & Geschenke | 458 |  |
-| Supermarkt-Klassiker | 1850 |  |
-| Filmabend | 1480 |  |
-| Party & Teilen | 907 |  |
-| Mitbringsel & Danke | 837 |  |
-| Geburtstag | 477 |  |
-| Für Naschkatzen | 965 |  |
+| Sauer & scharf | 786 |  |
+| Getränke | 1012 |  |
+| Nuss- & Fruchtsnacks | 435 |  |
+| Boxen & Geschenke | 450 |  |
+| Supermarkt-Klassiker | 1849 |  |
+| Filmabend | 1469 |  |
+| Party & Teilen | 894 |  |
+| Mitbringsel & Danke | 831 |  |
+| Geburtstag | 473 |  |
+| Für Naschkatzen | 948 |  |
 
 ## Lücken
 Häufigste Marken ohne Herkunft (Kandidaten für `brands.json`):
@@ -87,36 +87,36 @@ Häufigste Marken ohne Herkunft (Kandidaten für `brands.json`):
 | Marke | Produkte |
 | --- | --- |
 | (ohne Marke) | 296 |
-| Cool | 36 |
+| Cool | 35 |
 | Yummi Yummi | 31 |
-| World of Sweets | 29 |
-| AHEAD | 29 |
+| AHEAD | 28 |
+| World of Sweets | 27 |
 | Maxi Nutrition | 25 |
-| Sweet Flash | 23 |
 | Mellow Mellow | 22 |
+| Sweet Flash | 22 |
 | Becky's | 21 |
 | Edel | 17 |
 | Gönrgy | 16 |
 | Power System | 15 |
 | Barkleys | 15 |
-| More | 13 |
-| Suntjens | 12 |
+| More | 12 |
 | N.A! Nature Addicts | 12 |
 | Argenta | 12 |
 | burghardt-delicious.com | 11 |
+| Suntjens | 11 |
 | Bites we Love | 11 |
 | Wick | 11 |
-| Nestlé | 10 |
 | elephant | 10 |
 | PiCK UP! | 10 |
 | Neoh | 10 |
 | BIO PRIMO | 9 |
+| Nestlé | 9 |
 
 Häufigste Namen ohne Art (Kandidaten für Stichwörter in `site.json → filter`):
 
 | Name | Produkte |
 | --- | --- |
-| glytterpulver | 11 |
+| glytterpulver | 15 |
 | veggie mix beste | 10 |
 | bunter mix beste | 10 |
 | saurer mix beste | 10 |
@@ -125,12 +125,12 @@ Häufigste Namen ohne Art (Kandidaten für Stichwörter in `site.json → filter
 | veggie mix bester | 8 |
 | bunter mix bester | 8 |
 | emil reimann stollenkonfekt | 7 |
-| niederegger männersache marzipan | 5 |
 | lakrids by bülow | 5 |
 | niederegger marzipan torte | 5 |
 | haribo lakritz schnecken | 4 |
 | wicklein meistersinger feine | 4 |
 | wicklein mini elisen | 4 |
+| niederegger männersache marzipan | 4 |
 | wicklein bio nürnberger | 4 |
 | carstens lübecker edelmarzipan | 4 |
 | bunter mix happy | 4 |
@@ -171,8 +171,8 @@ Häufigste Namen ohne Art (Kandidaten für Stichwörter in `site.json → filter
 | mövenpick gourmet frühstück | GOURVITA, REWE | 3.19–3.69 € |
 | sal de ibiza | Piccantino, World of Sweets | 2.49–16.99 € |
 | funny frisch chipsfrisch | REWE, World of Sweets | 1.99–39.99 € |
-| monster energy ultra | REWE, World of Sweets | 1.59–5.39 € |
-| maryland snack nüsse | REWE, World of Sweets | 3.99–6.49 € |
 | red band fruchtgummi | REWE, World of Sweets | 2.79–39.99 € |
 | kelly s chips | Haushalt-und-Genuss, Piccantino | 2.79–8.99 € |
+| monster energy ultra | REWE, World of Sweets | 1.59–5.39 € |
+| maryland snack nüsse | REWE, World of Sweets | 3.99–6.49 € |
 
