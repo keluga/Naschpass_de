@@ -408,6 +408,26 @@ def make(dist, products, cats, cat_items, facets, euro, today, top_brands, log=p
                           title=f"Süßigkeiten günstig kaufen: {len(gut)} Sorten mit gutem Preis je kg",
                           desc=f"Schokolade, Fruchtgummi, Chips und mehr mit gutem Preis je kg, aus mehreren Online-Shops verglichen. "
                                "Süßigkeiten günstig kaufen, sparen beim Naschen, Großpackungen. Anzeige: Links zu Partner-Shops."))
+    # 4c) Wichteln & Nikolaus -> /wichtelgeschenke/ (Saison 15.11.–20.12.)
+    if (11, 15) <= (today.month, today.day) <= (12, 20):
+        pool = [p for c in cats if c["id"] in ("weihnachten", "mitbringsel") for p in cat_items(c)]
+        pool = list({id(p): p for p in pool}.values())  # ohne Doppelte
+        w = [p for p in pool if p.get("price") and p["price"] <= 10 and p.get("shop") != "REWE" and usable(p)
+             and not re.search(r"adventskalender|chips|tortilla|backmischung|streusel|anr(ü|ue)hren|kürbis|halloween|pimp your|drip|zuckerschrift|gewürz", p["name"], re.I)]
+        seen, sel = set(), []
+        for p in w:
+            b = (p.get("brand") or p["name"].split()[0]).lower()
+            if b not in seen:
+                seen.add(b)
+                sel.append(want(p))
+            if len(sel) == 5:
+                break
+        if len(sel) >= 4:
+            plans.append(dict(kind="anlass", slug="anlass-wichteln", board="Süße Weihnachtsgeschenke", items=sel, head="WICHTELN?",
+                              sub="Süße Ideen unter 10 €", n=len(w), link="/wichtelgeschenke/", cid="weihnachten",
+                              title="Wichtelgeschenke & Nikolausgeschenke unter 10 Euro: süße Ideen aus aller Welt",
+                              desc="Kleine süße Geschenke unter 10 Euro zum Wichteln, für Kollegen oder zu Nikolaus: Marzipan, Lebkuchen, "
+                                   "Lakritz und Süßes aus aller Welt. Anzeige: Links zu Partner-Shops."))
     # 5) Quiz
     quiz_items = []
     for art in ("schokolade", "gummi", "chips", "getraenke"):
