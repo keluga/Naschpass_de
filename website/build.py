@@ -1303,9 +1303,22 @@ def fav_data(p):
     return html.escape(json.dumps(d, ensure_ascii=False), quote=True)
 
 
+# § 4 Abs. 3 Nr. 2 PAngV: kein Grundpreis nötig bei „Waren, die verschiedenartige Erzeugnisse enthalten, die nicht miteinander
+# vermischt oder vermengt sind“ – z. B. Adventskalender oder Boxen mit verschiedenen Süßigkeiten. Bewusst eng gefasst.
+SORTIMENT = re.compile(r"adventskalender|mystery|probier|sortiment|geschenkbox|snackbox|s(ü|ue)(ß|ss)igkeiten-?box|candy box|box\b", re.I)
+SORTIMENT_MIX = re.compile(r"mix|sortiment|auswahl|verschiedene|sorten|box|probier|mystery|usa|amerika|american|asia|japan|korea|"
+                           r"international|aus aller welt|world of sweets|sweets|candy|snacks", re.I)
+
+
+def sortiment(p):
+    n = p.get("name", "")
+    return bool(SORTIMENT.search(n) and SORTIMENT_MIX.search(n.lower().replace("adventskalender", "")))
+
+
 def preis_ok(p):
-    """Preis nur zeigen, wenn wir auch den Grundpreis (€/kg bzw. €/l) kennen. Pflicht nach § 4 PAngV, auch für Affiliates."""
-    return bool(p.get("price") and grundpreis(p)[1])
+    """Preis nur zeigen, wenn wir auch den Grundpreis (€/kg bzw. €/l) kennen (§ 4 PAngV, auch für Affiliates),
+    außer bei Sortimenten aus verschiedenen Süßigkeiten (§ 4 Abs. 3 Nr. 2 PAngV)."""
+    return bool(p.get("price") and (grundpreis(p)[1] or sortiment(p)))
 
 
 def price_extra(p):
@@ -2441,6 +2454,7 @@ def write_llms(live, urls):
     lines += ["", "## Kontakt", "", f"- E-Mail: {site['impressum']['email']}",
               f"- Betreiber: {site['impressum']['name']}, {site['impressum']['firma']}", ""]
     write("llms.txt", "\n".join(lines))
+    write(f"{INDEXNOW_KEY}.txt", INDEXNOW_KEY)  # Schlüsseldatei für IndexNow (Bing, Yandex …), Ping macht die nächtliche Action
 
 
 LAND_NAME = {o["id"]: o["name"] for g in FILTER if g["id"] == "land" for o in g["options"]}
@@ -2538,6 +2552,59 @@ ART_NAME = {"schokolade": "Schokolade", "gummi": "Fruchtgummi", "chips": "Chips"
              "snacks": "Nüsse & Snacks", "pralinen": "Pralinen", "getraenke": "Getränke", "eis": "Eis", "boxen": "Boxen"}
 
 
+KEIN_WICHTEL = re.compile(r"anr(ü|ue)hren|backmischung|streusel|backzutat|k(ü|ue)rbis|halloween|tortilla|chips|großpackung|drip\b|pimp your|zuckerschrift|gew(ü|ue)rz|grissini|\b\d+\s*kg\b", re.I)
+INDEXNOW_KEY = "9f2c4e7a1b8d4c63a5e0f1d2c3b4a596"  # öffentlich gewollt: Bing/IndexNow prüft damit, dass die Seite uns gehört
+
+
+def write_saison(adv):
+    """Saisonseiten mit fester Adresse (altern bei Google von Jahr zu Jahr):
+    /adventskalender-reduziert/ (Suche „adventskalender reduziert“ ab Dezember) und /wichtelgeschenke/ (unter 10 €)."""
+    if adv:
+        red = sorted((p for p in adv if (p.get("spar") or 0) > 0), key=lambda p: -(p.get("spar") or 0))
+        if red:
+            kopf = (f"{len(red)} Adventskalender mit Süßigkeiten sind gerade bei unseren Partner-Shops reduziert, "
+                    f"die größte Ersparnis zuerst. Stand {TODAY.strftime('%d.%m.%Y')}, täglich aktualisiert, maßgeblich ist der Shop.")
+            grid = prod_grid(red[:60], "g-adv-red")
+        else:
+            kopf = (f"Gerade ist bei unseren Partner-Shops kein Adventskalender reduziert (Stand {TODAY.strftime('%d.%m.%Y')}). "
+                    "Viele Shops senken die Preise erst im Dezember. Die Seite wird täglich neu erstellt, reduzierte Kalender erscheinen hier automatisch. "
+                    "Bis dahin: die günstigsten Adventskalender.")
+            grid = prod_grid([p for p in adv if preis_ok(p)][:24] or adv[:24], "g-adv-red")
+        write("adventskalender-reduziert/index.html", page(
+            f"Adventskalender reduziert {TODAY.year}: Süßigkeiten-Kalender im Angebot | Naschpass",
+            f'<a class="back" href="/adventskalender-vergleich/">← Adventskalender-Vergleich</a>'
+            f'<section style="padding-top:14px"><h1 style="margin:0 0 6px">Adventskalender reduziert</h1><p class="lead">{e(kopf)}</p>{grid}'
+            '<section class="prose wissen"><h2>Gut zu wissen</h2><details><summary>Ab wann werden Adventskalender reduziert?</summary>'
+            '<p>Das entscheidet jeder Shop selbst. Oft sinken die Preise im Lauf des Dezembers, je näher Weihnachten rückt. '
+            'Ein Kalender, der erst am 10. Dezember ankommt, ist trotzdem nicht verloren: Die verpassten Türchen kann man nachholen.</p></details>'
+            '<details><summary>Welche Shops sind dabei?</summary><p>Nur unsere Partner-Shops, siehe „So vergleichen und sortieren wir“ auf der Über-Seite. '
+            'Woanders kann es günstiger sein.</p></details></section></section>',
+            kopf, "/adventskalender-reduziert/"))
+
+    wichtel = [p for p in products if preis_ok(p) and p["price"] <= 10 and p.get("shop") != "REWE"
+               and ({"boxen", "mitbringsel", "weihnachten"} & set(themes_of(p)))
+               and not KEIN_WICHTEL.search(p.get("name", "")) and haupt_art(p) not in ("chips", "getraenke")]
+    if len(wichtel) >= 12:
+        body = ""
+        for lo, hi, lab, gid in [(0, 5, "Bis 5 €", "g-w5"), (5, 10, "5 bis 10 €", "g-w10")]:
+            part = [p for p in wichtel if lo < p["price"] <= hi][:24]
+            if part:
+                body += f'<h2 style="margin-top:20px">{lab}</h2>{prod_grid(part, gid)}'
+        txt = ("Wichtelgeschenke unter 10 Euro: Süßes aus aller Welt, Pralinen und Weihnachtliches, das man nicht im Supermarkt um die Ecke findet. "
+               f"Preise vom {TODAY.strftime('%d.%m.%Y')}, maßgeblich ist der Shop.")
+        write("wichtelgeschenke/index.html", page(
+            "Wichtelgeschenke & Nikolausgeschenke unter 10 Euro: süße Ideen | Naschpass",
+            f'<section style="padding-top:14px"><h1 style="margin:0 0 6px">Wichtel- &amp; Nikolausgeschenke unter 10 €</h1><p class="lead">{e(txt)}</p>'
+            f'<p><a class="btn dark" href="/geschenke-unter-20-euro/">Mehr Budget? Geschenke bis 35 €</a></p>{body}'
+            '<section class="prose wissen"><h2>Gut zu wissen</h2><details><summary>Was ist ein gutes Wichtelgeschenk für Kollegen?</summary>'
+            '<p>Etwas Kleines, das fast jeder mag und das man nicht selbst kauft: Süßigkeiten aus einem anderen Land, eine kleine Pralinenschachtel '
+            'oder etwas Weihnachtliches. Versand und Lieferzeit stehen im jeweiligen Shop, vor Weihnachten früh bestellen.</p></details>'
+            '<details><summary>Kleines Nikolausgeschenk für Erwachsene?</summary><p>Statt Schoko-Nikolaus aus dem Supermarkt: Marzipan, Lebkuchen, '
+            'Lakritz aus Skandinavien oder eine Süßigkeit aus einem anderen Land. Für den 6. Dezember rechtzeitig bestellen, die Lieferzeit steht im Shop.</p></details>'
+            '</section></section>',
+            txt, "/wichtelgeschenke/"))
+
+
 def write_guenstig():
     """/guenstig/: je Art die günstigsten Sorten je kg (Alltagspackungen bis 1 kg, Großpackungen extra).
     Je Marke nur eine Karte, damit es nicht 8x Lindt wird."""
@@ -2610,10 +2677,13 @@ def write_landings():
             f"Adventskalender-Vergleich {TODAY.year}: {len(adv)} Süßigkeiten-Kalender | Naschpass",
             f'<a class="back" href="/kategorie/adventskalender/">← Themenwelt Adventskalender</a>'
             f'<section style="padding-top:14px"><h1 style="margin:0 0 6px">Adventskalender-Vergleich {TODAY.year}</h1><p class="lead">{e(txt)}</p>'
-            f'<nav class="chips" aria-label="Springen zu" style="display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 4px">{nav}</nav>{body}</section>',
+            f'<nav class="chips" aria-label="Springen zu" style="display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 4px">{nav}'
+            f'<a class="chip" style="text-decoration:none" href="/adventskalender-reduziert/">Reduziert</a></nav>{body}</section>',
             txt, "/adventskalender-vergleich/"))
     write_guenstig()
-    gesch = [p for p in products if p.get("price") and ({"boxen", "mitbringsel", "weihnachten"} & set(themes_of(p)))]
+    write_saison(adv)
+    gesch = [p for p in products if preis_ok(p) and p.get("shop") != "REWE" and ({"boxen", "mitbringsel", "weihnachten"} & set(themes_of(p)))
+             and not KEIN_WICHTEL.search(p.get("name", "")) and haupt_art(p) not in ("chips", "getraenke")]
     if len(gesch) >= 12:
         body = ""
         for hi, lab, gid in [(10, "Unter 10 €", "g-g10"), (20, "10 bis 20 €", "g-g20"), (35, "20 bis 35 €", "g-g35")]:
@@ -2625,7 +2695,8 @@ def write_landings():
             "Süßigkeiten-Geschenke unter 10 und 20 Euro | Naschpass",
             f'<section style="padding-top:14px"><h1 style="margin:0 0 6px">Süße Geschenke nach Budget</h1>'
             f'<p class="lead">Boxen, Mitbringsel und Weihnachtliches aus unseren Partner-Shops, nach Preis gruppiert. Für Wichteln, Adventskalender-Füllung oder einfach als Danke.</p>'
-            f'<p><a class="btn dark" href="/geschenk/">🎁 Lieber persönlich? Geschenk-Finder in 3 Fragen</a></p>{body}</section>',
+            f'<p><a class="btn dark" href="/geschenk/">🎁 Lieber persönlich? Geschenk-Finder in 3 Fragen</a> '
+            f'<a class="btn" href="/wichtelgeschenke/">Wichtelgeschenke unter 10 €</a></p>{body}</section>',
             "Süßigkeiten-Geschenke unter 10 €, unter 20 € und bis 35 €: Boxen, Mitbringsel und Weihnachtliches aus mehreren Shops.", "/geschenke-unter-20-euro/"))
 
 
@@ -3148,9 +3219,8 @@ Vollständige Angaben im <a href="/impressum/">Impressum</a>.</p></section>"""
 
 
     urls = sorted({"/" + str(f.relative_to(DIST)).replace("index.html", "") for f in DIST.rglob("index.html")} - set(NOINDEX_PATHS))
-    lm = TODAY.isoformat()  # Produkte und Preise ändern sich täglich
     (DIST / "sitemap.xml").write_text('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-                                      + "".join(f"<url><loc>{BASE}{u}</loc><lastmod>{lm}</lastmod></url>\n" for u in urls) + "</urlset>\n", encoding="utf-8")
+                                      + "".join(f"<url><loc>{BASE}{u}</loc></url>\n" for u in urls) + "</urlset>\n", encoding="utf-8")  # kein lastmod: täglich neu wäre unglaubwürdig
     write_llms(live, urls)
     try:  # /favicon.ico (manche Suchmaschinen fragen nur diese Adresse ab)
         from PIL import Image

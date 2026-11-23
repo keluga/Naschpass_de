@@ -1,0 +1,33 @@
+# Meldet einmal pro Woche alle Seiten aus der Sitemap an IndexNow (Bing, Yandex u. a.; Bing liefert auch die Websuche von ChatGPT & Co.).
+# Kostenlos, ohne Konto. Schlüsseldatei liegt auf der Seite (build.py: INDEXNOW_KEY).
+name: IndexNow melden
+on:
+  schedule:
+    - cron: "23 15 * * 1"   # montags 15:23 UTC, nach dem täglichen Neubau
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Sitemap an IndexNow schicken
+        run: |
+          python3 - <<'PY'
+          import json, re, urllib.request
+          HOST = "naschpass.oneflowsolution.de"
+          KEY = "9f2c4e7a1b8d4c63a5e0f1d2c3b4a596"
+          UA = {"User-Agent": "Mozilla/5.0 (compatible; NaschpassIndexNow/1.0)"}
+          xml = urllib.request.urlopen(urllib.request.Request(f"https://{HOST}/sitemap.xml", headers=UA), timeout=60).read().decode()
+          urls = re.findall(r"<loc>([^<]+)</loc>", xml)[:10000]
+          body = json.dumps({"host": HOST, "key": KEY, "keyLocation": f"https://{HOST}/{KEY}.txt", "urlList": urls}).encode()
+          req = urllib.request.Request("https://api.indexnow.org/IndexNow", data=body, method="POST",
+                                       headers={**UA, "Content-Type": "application/json; charset=utf-8"})
+          try:
+              with urllib.request.urlopen(req, timeout=60) as r:
+                  print("IndexNow:", r.status, len(urls), "URLs")
+          except urllib.error.HTTPError as e:
+              print("IndexNow-Fehler:", e.code, e.read()[:300])
+              raise
+          PY
