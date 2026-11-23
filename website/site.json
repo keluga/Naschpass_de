@@ -640,6 +640,80 @@
         "land:mexiko",
         "land:asien"
       ]
+    },
+    {
+      "id": "valentinstag",
+      "name": "Valentinstag",
+      "teaser": "Süße Geschenkideen für Verliebte, Freunde und dich selbst.",
+      "season": [
+        "01-10",
+        "02-14"
+      ],
+      "keywords": [
+        "valentin",
+        "i love you",
+        "love you",
+        "alles liebe",
+        "kuss",
+        "küsschen",
+        "herzchen",
+        "herzen",
+        "herz-",
+        "liebesperlen",
+        "sweetheart"
+      ],
+      "text": "Pralinen, Schokoherzen und Süßes aus aller Welt zum Valentinstag: kleine Geschenke, die mehr sagen als Blumen.",
+      "top": [
+        "valentin",
+        "herz-",
+        "herzen"
+      ],
+      "seo_title": "Valentinstag Süßigkeiten: süße Geschenkideen aus aller Welt | Naschpass",
+      "h1": "Süßes zum Valentinstag",
+      "more": [
+        "Zum Valentinstag muss es nicht immer die Pralinenschachtel von der Tankstelle sein. Hier findest du Schokoherzen, Pralinen und Süßigkeiten aus anderen Ländern, mit Links zu Shops, die nach Deutschland liefern.",
+        "Tipp: Rechtzeitig bestellen, die Lieferzeit steht im jeweiligen Shop."
+      ],
+      "faq": [
+        [
+          "Wann ist Valentinstag?",
+          "Am 14. Februar."
+        ]
+      ]
+    },
+    {
+      "id": "ostern",
+      "name": "Ostern",
+      "teaser": "Schoko-Hasen, Eier und Süßes aus aller Welt fürs Osternest.",
+      "season": "ostern",
+      "keywords": [
+        "oster",
+        "easter",
+        "goldhase",
+        "schokohase",
+        "schoko-hase",
+        "häschen",
+        "lämmchen",
+        "schokoeier",
+        "schoko-eier"
+      ],
+      "text": "Schokohasen, Ostereier und Süßes aus aller Welt: Ideen fürs Osternest, für Kinder und Erwachsene.",
+      "top": [
+        "oster",
+        "easter",
+        "goldhase"
+      ],
+      "seo_title": "Ostersüßigkeiten kaufen: Ideen fürs Osternest aus aller Welt | Naschpass",
+      "h1": "Süßes zu Ostern",
+      "more": [
+        "Goldhase, Schoko-Eier und Ostergebäck, aber auch Süßes aus anderen Ländern für ein Osternest, das nicht jeder hat. Hier sammeln wir die Ostersachen unserer Partner-Shops, sobald sie im Sortiment sind."
+      ],
+      "faq": [
+        [
+          "Ab wann gibt es Ostersüßigkeiten?",
+          "Die Shops nehmen sie meist ab Februar ins Sortiment. Diese Seite aktualisiert sich täglich."
+        ]
+      ]
     }
   ],
   "partner_shops": {

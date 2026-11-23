@@ -46,6 +46,8 @@ ANLASS = {
     "adventskalender": ("Adventskalender aus aller Welt", "ADVENTSKALENDER", "24 Türchen, aber mal anders", "Adventskalender Süßigkeiten, Adventskalender für Erwachsene"),
     "halloween": ("Halloween-Süßigkeiten", "HALLOWEEN", "Süßes für die Gruselparty", "Halloween Süßigkeiten, Halloween Party Snacks"),
     "geburtstag": ("Süße Geburtstagsideen", "GEBURTSTAG?", "Süße Ideen zum Verschenken", "Geburtstagsgeschenk Süßigkeiten, Naschbox"),
+    "valentinstag": ("Valentinstag: süße Geschenkideen", "VALENTINSTAG?", "Süßes für Verliebte & Freunde", "Valentinstag Geschenk, Süßigkeiten Valentinstag, Pralinen, Schokoherz"),
+    "ostern": ("Ostern: Süßes fürs Osternest", "OSTERNEST?", "Schoko-Hasen & Süßes aus aller Welt", "Osternest füllen, Ostergeschenk, Ostersüßigkeiten, Schokohase"),
     "weihnachten": ("Süße Weihnachtsgeschenke", "WEIHNACHTEN", "Süße Geschenkideen aus aller Welt", "Weihnachtsgeschenk Süßigkeiten, Wichtelgeschenk, Nikolaus, Geschenkideen"),
 }
 SPAR_BOARD = "Snacks günstiger finden – Preisvergleich"
@@ -54,7 +56,9 @@ ANLASS_TITEL = {"adventskalender": "Adventskalender mit Süßigkeiten aus aller 
                 "filmabend": "Snacks für den Filmabend: Chips, Popcorn & Süßes aus aller Welt",
                 "mitbringsel": "Süße Mitbringsel & kleine Danke-Geschenke",
                 "geburtstag": "Süße Geburtstagsideen: Naschgeschenke aus aller Welt",
-                "halloween": "Halloween-Süßigkeiten für die Gruselparty"}
+                "halloween": "Halloween-Süßigkeiten für die Gruselparty",
+                "valentinstag": "Valentinstag Süßigkeiten: süße Geschenkideen aus aller Welt",
+                "ostern": "Ostersüßigkeiten: Ideen fürs Osternest aus aller Welt"}
 QUIZ_NAME = {"schokolade": re.compile(r"schoko|chocolate|choco|kitkat|reese|hershey|m&m", re.I),
              "gummi": re.compile(r"gummi|gummy|sour|jelly|fruchtgummi|candy|warheads|nerds", re.I),
              "chips": re.compile(r"chips|crisps|takis|cheetos|doritos|pringles|tortilla", re.I),
@@ -78,6 +82,8 @@ TAGS = {
     "adventskalender": "#adventskalender #adventskalenderideen #weihnachten #advent #süßigkeiten",
     "halloween": "#halloween #halloweenparty #halloweensüßigkeiten #süßesodersaures #gruselparty",
     "geburtstag": "#geburtstag #geburtstagsgeschenk #geschenkidee #naschbox",
+    "valentinstag": "#valentinstag #valentinstagsgeschenk #geschenkidee #pralinen #naschpass",
+    "ostern": "#ostern #osternest #ostergeschenk #schokohase #naschpass",
     "weihnachten": "#weihnachtsgeschenk #wichtelgeschenk #geschenkidee #weihnachten #süßigkeiten",
     "boxen": "#snackbox #süßigkeitenbox #geschenkbox #geschenkidee #naschen",
     "guenstig-seite": "#sparen #günstignaschen #sparfuchs #süßigkeiten #spartipps",

@@ -739,6 +739,29 @@ def pic_html(p, w, alt, cid):
 CAT_COLORS = ["#8B6CFF", "#FF8FB1", "#FFB547", "#9EE3C6", "#9FD3FF", "#FFD966"]
 POST_COLORS = ["#FF8FB1", "#8B6CFF", "#FFB547", "#5FCFA0", "#7DBEFF"]
 cats = site["categories"]
+
+
+def ostersonntag(jahr):
+    """Gaußsche Osterformel (Anonymer Gregorianischer Algorithmus)."""
+    a, b, c = jahr % 19, jahr // 100, jahr % 100
+    d, e = b // 4, b % 4
+    f = (b + 8) // 25
+    g = (b - f + 1) // 3
+    h = (19 * a + b - d - g + 15) % 30
+    i, k = c // 4, c % 4
+    l = (32 + 2 * e + 2 * i - h - k) % 7
+    m = (a + 11 * h + 22 * l) // 451
+    monat = (h + l - 7 * m + 114) // 31
+    tag = ((h + l - 7 * m + 114) % 31) + 1
+    return _dt.date(jahr, monat, tag)
+
+
+for _c in cats:  # Ostern wandert: Saison = 50 Tage vorher bis Ostermontag (Pins brauchen Vorlauf)
+    if _c.get("season") == "ostern":
+        _o = ostersonntag(TODAY.year)
+        if TODAY > _o + _dt.timedelta(days=1):
+            _o = ostersonntag(TODAY.year + 1)
+        _c["season"] = [(_o - _dt.timedelta(days=50)).strftime("%m-%d"), (_o + _dt.timedelta(days=1)).strftime("%m-%d")]
 cat_by_id = {c["id"]: c for c in cats}
 cat_color = {c["id"]: CAT_COLORS[i % len(CAT_COLORS)] for i, c in enumerate(cats)}
 
@@ -2717,6 +2740,8 @@ def build():
     # --- Kategorie-Seiten
     for c in cats:
         items = cat_items(c)
+        if c.get("season") and (not items or (not in_season(c) and len(items) < 24)):
+            NOINDEX_PATHS.append(f"/kategorie/{c['id']}/")  # Saison-Welt noch leer (z. B. Ostern im Januar): nicht in Google
         more_link = (f'<div class="morebar"><button class="morebtn" type="button" id="cmore" data-grid="g-cat" data-cat="{e(c["id"])}">Mehr zeigen ({len(items) - 48})</button>'
                      f' <a class="morebtn" href="/shop/?t={c["id"]}#alle">Im Shop filtern</a></div>'
                      if len(items) > 48 else "")
