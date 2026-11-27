@@ -1,20 +1,25 @@
 {
  "_info": "Automatisch (tools/check_links.py). Nicht von Hand bearbeiten, dafür gibt es sperrliste.json.",
  "eintraege": {
-  "https://www.awin1.com/pclick.php?p=44499501916&a=3111189&m=115505": {
-   "shop": "Burghardt Delicious",
-   "seit": "2026-11-25",
-   "shop_url": "https://shop.burghardt-delicious.com/products/medjoul-datteln-xl-ohne-stein?variant=54627170910543&om=105&utm_source=awin&utm_medium=feeds&utm_campaign=awin_feed"
-  },
-  "https://www.awin1.com/pclick.php?p=46580525517&a=3111189&m=14403": {
+  "https://www.awin1.com/pclick.php?p=46317252448&a=3111189&m=14403": {
    "shop": "GOURVITA",
-   "seit": "2026-11-25",
-   "shop_url": "https://www.gourvita.com/geschenkbox-it-s-x-mas-time-festliche-genussmomente.html"
+   "seit": "2026-11-27",
+   "shop_url": "https://www.gourvita.com/hussel-schokoladenkringel-125g.html"
   },
-  "https://www.awin1.com/pclick.php?p=41889812720&a=3111189&m=112586": {
+  "https://www.awin1.com/pclick.php?p=45864270507&a=3111189&m=112586": {
    "shop": "World of Sweets",
-   "seit": "2026-11-25",
-   "shop_url": "https://www.worldofsweets.de/Milka-Joghurt-100g.305117.html"
+   "seit": "2026-11-27",
+   "shop_url": "https://www.worldofsweets.de/Schulte-Dominosteine-Weisse-Schokolade-3kg.805910.html"
+  },
+  "https://www.awin1.com/pclick.php?p=46196784336&a=3111189&m=14403": {
+   "shop": "GOURVITA",
+   "seit": "2026-11-27",
+   "shop_url": "https://www.gourvita.com/heilemann-tisch-adventskalender-mini-pralinen-154g.html"
+  },
+  "https://www.awin1.com/pclick.php?p=43997469803&a=3111189&m=112586": {
+   "shop": "World of Sweets",
+   "seit": "2026-11-27",
+   "shop_url": "https://www.worldofsweets.de/Jimmy-s-Popcorn-Sweet-Chili-BBQ-with-Tabasco-90g.316483.html"
   }
  }
 }
